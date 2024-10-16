@@ -148,4 +148,50 @@ fit_sparse <- twoStepSDFM(FM$X, delay, selected, R, l2 = 1e+4)
 
 ```
 
+## License
+
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+
+© 2024 Domenic Franjic
+
+This project is licensed under the **GNU General Public License v3.0**. See the [LICENSE](LICENSE) file for details.
+
+## Acknowledgements
+
+This work is partially based on the LARS-EN and SPCA algorithms found in @Zou2020elasticnet.
+
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
+
+**To Contribute:**
+
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix.
+3. Commit your changes with descriptive messages.
+4. Push to your fork and submit a pull request.
+
+## Support
+
+If you have any questions or need assistance, please open an issue on the GitHub repository or contact us via email.
+
+## Contact
+
+- **Name**: Domenic Franjic
+- **Institution**: University of Hohenheim
+- **Department**: Econometrics and Statistics, Core Facility Hohenheim
+- **E-Mail**: franjic@uni-hohenheim.de
+
+### References
+
+- Bates, Douglas, and Dirk Eddelbuettel. 2013. “Fast and Elegant Numerical Linear Algebra Using the RcppEigen Package.” Journal of Statistical Software 52 (5): 1–24. https://doi.org/10.18637/jss.v052.i05.
+- Doz, Catherine, Domenico Giannone, and Lucrezia Reichlin. 2011. “A two-step estimator for large approximate dynamic factor models based on Kalman filtering.” Journal of Econometrics 164 (1): 188–205. https://doi.org/10.1016/j.jeconom.2011.02.012.
+- Eddelbuettel, Dirk, and Romain François. 2011. “Rcpp: Seamless R and C++ Integration.” Journal of Statistical Software 40 (8): 1–18. https://doi.org/10.18637/jss.v040.i08.
+- Franjic, Domenic, and Karsten Schweikert. 2024. “Nowcasting Macroeconomic Variables with a Sparse Mixed Frequency Dynamic Factor Model.” Available at SSRN.
+- Giannone, Domenico, Lucrezia Reichlin, and David Small. 2008. “Nowcasting: The Real-Time Informational Content of Macroeconomic Data.” Journal of Monetary Economics 55 (4): 665–76. https://doi.org/10.1016/j.jmoneco.2008.05.010.
+- Guennebaud, Gaël, Benoît Jacob, et al. 2010. “Eigen V3.” http://eigen.tuxfamily.org.
+- Koopman, Siem Jan, and James Durbin. 2000. “Fast Filtering and Smoothing for Multivariate State Space Models.” Journal of Time Series Analysis 21 (3): 281–96.
+- Mariano, Roberto S., and Yasutomo Murasawa. 2003. “A New Coincident Index of Business Cycles Based on Monthly and Quarterly Series.” Journal of Applied Econometrics 18 (4): 427–43. https://doi.org/10.1002/jae.695.
+- Zou, Hui, and Trevor Hastie. 2020. Elasticnet: Elastic-Net for Sparse Estimation and Sparse PCA. https://CRAN.R-project.org/package=elasticnet.
+- Zou, Hui, Trevor Hastie, and Robert Tibshirani. 2006. “Sparse Principal Component Analysis.” Journal of Computational and Graphical Statistics 15 (2): 265–86.
 
