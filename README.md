@@ -11,5 +11,14 @@ xₜ = Λ fₜ + ξₜ
 
 fₜ = Σₚ Φₚ fₜ₋ₚ + εₜ
 
-for t = 1, ..., T. We use SPCA to estimate Λ, resulting in exact zero elements due to regularization. We also explicitly model the non-diagonal variance-covariance matrix of the measurement error ξₜ.
+for t = 1, ..., T. We use SPCA to estimate Λ, resulting in exact zero elements due to regularization. We also explicitly model the non-diagonal variance-covariance matrix of the measurement error ξₜ (for more details see Franjic and Schweikert (2024)).
+
+## Features
+
+As this is an early beta version of the package, only a limited set of functions is currently available. Additional functions, such as validation wrappers, may be added in future updates.
+
+- **Fast Model Simulation**: The ``simFM()`` function provides a flexible framework to simulate approximate DFMs.
+- **FFast Model Estimation**: The ``twoStepSDFM()`` function provides a fast and convenient implementation of the two-step estimator outlined in @franjic2024nowcasting.
+- **Compatibility**: All functions take advantage of ``C++`` for enhanced speed.
+- **Open-Source**: Distributed under the GNU General Public License v3.0.
 
