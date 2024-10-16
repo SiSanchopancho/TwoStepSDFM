@@ -26,8 +26,15 @@ As this is an early beta version of the package, only a limited set of functions
 - **Eigen** (version 3.4.0 or later): A `C++` template library for linear algebra [@eigenweb]. [Eigen Website](https://eigen.tuxfamily.org/)
 - **Rcpp**: A package for integrating `C++` code into `R` [@Eddelbuettel2011Rcpp]. [Rcpp CRAN repository](https://cran.r-project.org/web/packages/Rcpp/index.html)
 - **RcppEigen**: A package for integrating the `Eigen` linear algebra library into `R` [@Bates2013EcppEigen]. [RcppEigen CRAN repository](https://cran.r-project.org/web/packages/RcppEigen/index.html)
+- **GCC compiler** (version 5.0 or later) [GCC Website](https://gcc.gnu.org/).
 
 ## Installation
+
+### Installing from source
+
+A pre-compiled binary for Windows is provided (TwoStepSDFM_xx.xx.xx.xx.zip).
+
+### Compile from scratch
 
 Currently, the package source files come with a zipped version of ``Eigen3``. `Rcpp` and `RcppEigen` can be downloaded from CRAN or directly installed from within `R`by calling ``install.packages("...")``.
 
@@ -35,7 +42,7 @@ To install the package itself, a short `R` script is provided (see `PackageBuild
 ```{R, eval=FALSE}
 system("R CMD INSTALL --preclean --no-multiarch --no-test-load .")
 ```
-to compile and install the functions.
+to compile and install the functions. However, the package currently only compiles with the ``g++``/``gcc`` compiler. All tests and precompiled binaries have been performed and created using the ``C++14`` standard, so this is recommended for compilation from scratch.
 
 ## Usage
 
@@ -143,7 +150,8 @@ FM <- simFM(T = T, N = N, R = R, Lambda = Lambda, mu_xi = mu_xi, Sigma_xi = Sigm
             check_staionarity = TRUE, stationarity_check_threshold = 1e-10)
 
 # Fitting a sparse model with l2 regularisation and non-orthogonal measurement errors
-selected <- c(round(N * 0.8), round(N * 0.75))
+selected <- c(round(N * 0.8), round(N * 0.5))
+delay <- round(runif(N, 0, 10))
 fit_sparse <- twoStepSDFM(FM$X, delay, selected, R, l2 = 1e+4)
 
 ```
