@@ -37,3 +37,115 @@ system("R CMD INSTALL --preclean --no-multiarch --no-test-load .")
 ```
 to compile and install the functions.
 
+## Usage
+
+### ``simFM()`` -- Simulating a dynamic factor model
+
+#### Parameters
+
+- ``T`` -- Number of observations
+- ``N`` -- Number of variables
+- ``R`` -- Number of factors
+- ``Sigma_epsilon`` -- Variance-covariance matrix of the transition errors
+- ``Lambda`` -- Factor loadings matrix
+- ``mu_xi`` -- Mean of the measurement error
+- ``Sigma_xi`` -- Variance-covariance matrix of the measurement error
+- ``Phi`` -- Factor VAR coefficient matrix (either a list of length $P$ of $(R\times R)$ matrices or a matrix of dimensions $(R\times RP)$)
+- ``P`` -- Order of the factor VAR process
+- ``quarterfy`` -- Indicating whether or not some of the variables should be aggregated to quarterly observations (i.e., quarterfied)
+- ``corr`` -- Indicating whether or not the measurement error should be internatlly, randomly, cross-crossectionally correlated (default is ``FALSE``)
+- ``beta_param`` -- Beta parameter governing the degree of correlation of the measurement error (default is ``Inf``, i.e., disabled)
+- ``m`` -- Ratio of monthly predictors ought to be quarterfied (default is ``0``)
+- ``seed`` -- Seed for everything random (default is ``20022024``)
+- ``burn_in`` -- Burn-in period (default is ``1000``)
+- ``rescale`` -- Indicating whether the variance of the measurement error should be scaled according to the variance of the common-component (default is ``TRUE``)
+- ``check_stationarity`` -- Indicating whether the factor VAR process should be checked for stationarity (default is ``FALSE``)
+- ``stationarity_check_threshold`` -- Threshold for checking for a unit root (default is ``1e-5``)
+
+#### Example
+
+```R
+
+# Draw from an approximate mixed frequency factor model
+T <- 600 # Number of observations
+N <- 100 # Number of variabes
+R <- 2 # Number of factors
+Sigma_epsilon <- diag(1, R) # Variance-covariance matrix of the transition errors
+Lambda <- matrix(rnorm(N * R), N, R) # Factor loadings matrix
+mu_xi <- rep(0, N) # Mean of the measurement error
+Sigma_xi <- diag(1, N) # Variance-covariance matrix of the measurement error
+Phi <- cbind(diag(0.5, R), -diag(0.25, R)) # Factor VAR coefficient matrix
+P <- 2 # Order of the factor VAR process
+quarterfy <- TRUE # Indicating whether or not some of the variables should be aggregated to quarterly observations (i.e., quarterfied)
+corr <- TRUE # Indicating whether or not the measurement error should be internatlly cross-crossectionally correlated
+beta_param <- 1 # Beta parameter governing the degree of correlation of the measurement error
+m <- 0.03 # Ratio of monthly predictors ought to be quarterfied
+seed <- 16022024 # Seed
+set.seed(seed)
+burn_in <- 999 # Burn-in period
+rescale <- TRUE # Indicating whether the variance of the measurement error should be scaled according to the variance of the common-component 
+
+# Draw data
+FM_mf <- simFM(T = T, N = N, R = R, Lambda = Lambda, mu_xi = mu_xi, Sigma_xi = Sigma_xi,
+            Sigma_epsilon = Sigma_epsilon, Phi = Phi, P = P, quarterfy = quarterfy, m = m,
+            corr = corr, beta_param = beta_param, seed = seed, burn_in = burn_in, rescale = rescale)
+
+
+```
+
+### ``TwoStepSDFM()`` -- Estimating the model parameters and higher-frequency factors
+
+#### Parameters
+
+- ``X`` -- $(N\times T)$ matrix of observations
+- ``delay`` -- $(N \times 1)$ vector of publication lag (in months)
+- ``selected`` -- $(R\times 1)$ vector of the number of non-zero loadings for each factor
+- ``R`` -- Number of factors
+- ``P`` -- Maximum lag length of the factor VAR processes (default is ``10``)
+- ``decorr_errors`` -- Indicating whether the measurement error should be treated as cross-sectionally correlated (default is ``TRUE``)
+- ``crit`` -- Information criterion to choose the factor VAR process lag length (available are ``"BIC"``, ``"AIC"``, ``"HC"``; default is ``"BIC"``)
+- ``l2`` -- Ridge penalty (default is ``1e-6``)
+- ``l1`` -- $(R\times 1)$ vector of LASSO penalties for each factor when using LARS (default is ``NaN``,i.e., disabled and ``selected`` is used as stopping criterion)
+- ``max_iterations`` -- Maximum number of iterations (default is ``1000``)
+- ``steps`` -- Maximum number of steps when using the LARS algorithm (default is ``NaN``, i.e., disabled and ``selected`` is used as stopping criterion)
+- ``comp_null`` -- Computational zero (default is ``1e-15``)
+- ``check_rank`` -- Indicating whether to check the rank of the variance-covariance matrix of the data (default is ``FALSE``)
+- ``conv_crit`` -- Conversion criterion for the iterative SPCA algorithm (default is ``1e-4``)
+- ``conv_threshold`` -- Conversion threshold when using coordinate descent (default is ``1e-4``)
+- ``log`` -- Indicating whether to print output for monitoring purposes (default is ``FALSE``)
+
+#### Example
+
+```R
+
+# Simulate a DGP using simFM
+T <- 600 # Number of observations
+N <- 10 # Number of variabes
+R <- 2 # Number of factors
+Sigma_epsilon <- diag(1, R) # Variance-covariance matrix of the transition errors
+Lambda <- matrix(rnorm(N * R), N, R) # Factor loadings matrix
+mu_xi <- rep(0, N) # Mean of the measurement error
+Sigma_xi <- diag(1, N) # Variance-covariance matrix of the measurement error
+Phi <- cbind(diag(0.5, R), -diag(0.25, R)) # Factor VAR coefficient matrix
+P <- 2 # Order of the factor VAR process
+quarterfy <- FALSE # Indicating whether or not some of the variables should be aggregated to quarterly observations (i.e., quarterfied)
+corr <- TRUE # Indicating whether or not the measurement error should be internatlly cross-crossectionally correlated
+beta_param <- 1 # Beta parameter governing the degree of correlation of the measurement error
+seed <- 16022024 # Seed
+set.seed(seed)
+burn_in <- 999 # Burn-in period
+rescale <- TRUE # Indicating whether the variance of the measurement error should be scaled according to the variance of the common-component 
+
+# Draw the FM object
+FM <- simFM(T = T, N = N, R = R, Lambda = Lambda, mu_xi = mu_xi, Sigma_xi = Sigma_xi,
+            Sigma_epsilon = Sigma_epsilon, Phi = Phi, P = P, quarterfy = quarterfy, m = m,
+            corr = corr, beta_param = beta_param, seed = seed, burn_in = burn_in, rescale = rescale,
+            check_staionarity = TRUE, stationarity_check_threshold = 1e-10)
+
+# Fitting a sparse model with l2 regularisation and non-orthogonal measurement errors
+selected <- c(round(N * 0.8), round(N * 0.75))
+fit_sparse <- twoStepSDFM(FM$X, delay, selected, R, l2 = 1e+4)
+
+```
+
+
