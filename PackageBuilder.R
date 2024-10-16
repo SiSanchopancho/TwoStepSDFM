@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+#  Copyright \u00A9 2024 Domenic Franjic
+#
+#  This file is part of TwoStepSDFM.
+#
+#  TwoStepSDFM is free software: you can redistribute
+#  it and/or modify it under the terms of the GNU General Public License as
+#  published by the Free Software Foundation, either version 3 of the License,
+#  or (at your option) any later version.
+#
+#  TwoStepSDFM is distributed in the hope that it
+#  will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+#  of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with TwoStepSDFM. If not, see <https://www.gnu.org/licenses/>.
+
+# Convinient package builder #
+
+# Load libraries
+library(rstudioapi)
+library(roxygen2)
+
+# Set directory
+setwd(dirname(getActiveDocumentContext()$path))
+
+# Clean project for safety reason
+unlink("src/*.o", recursive = TRUE)
+unlink("src/*.dll", recursive = TRUE)
+
+# Compile Rcpp attributes 
+Rcpp::compileAttributes()
+
+# Build a .tar.gz-Archivs (optional)
+system("R CMD build .")
+
+# Compile and install the package
+system("R CMD INSTALL --preclean --no-multiarch --no-test-load .")
+
+
+

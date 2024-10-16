@@ -1,0 +1,4 @@
+CXX_STD = CXX14
+PKG_CXXFLAGS += -mtune=native -march=native -Wall  -fdiagnostics-color -Wfatal-errors
+PKG_CPPFLAGS = $(SHLIB_CPPFLAGS) $(shell ${R_HOME}/bin/Rscript -e "Rcpp:::CxxFlags()") $(shell ${R_HOME}/bin/Rscript -e "RcppEigen:::CxxFlags()") -I../inst/include
+PKG_LIBS = $(shell ${R_HOME}/bin/Rscript -e "Rcpp:::LdFlags()")
