@@ -8,6 +8,7 @@ The ``TwoStepSDFM`` package provides a fast implementation of the Kalman Filter 
 We estimate the loadings matrix Λ and factors fₜ of the following state-space model:
 
 xₜ = Λ fₜ + ξₜ
+
 fₜ = Σₚ Φₚ fₜ₋ₚ + εₜ
 
 for t = 1, ..., T. We use SPCA to estimate Λ, resulting in exact zero elements due to regularization. We also explicitly model the non-diagonal variance-covariance matrix of the measurement error ξₜ.
