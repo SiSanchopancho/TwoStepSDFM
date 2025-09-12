@@ -26,18 +26,27 @@ library(roxygen2)
 # Set directory
 setwd(dirname(getActiveDocumentContext()$path))
 
-# Clean project for safety reason
-unlink("src/*.o", recursive = TRUE)
-unlink("src/*.dll", recursive = TRUE)
+# Clean up
+unlink("src/*.o")
+unlink("src/*.so")
+unlink("src/*.dll")
+devtools::clean_dll()
+devtools::clean_vignettes()
 
-# Compile Rcpp attributes 
+# Compile Rcpp attributes
 Rcpp::compileAttributes()
 
-# Build a .tar.gz-Archivs (optional)
-system("R CMD build .")
+# Create Rd + NAMESPACE
+devtools::document()
 
-# Compile and install the package
-system("R CMD INSTALL --preclean --no-multiarch --no-test-load .")
+# Install the package
+devtools::build()
+
+detach("package:TwoStepSDFM", unload = TRUE)
+
+.rs.restartR()
+
+install.packages("../TwoStepSDFM_0.0.0.2.tar.gz", repos = NULL, type = "source")
 
 
 
