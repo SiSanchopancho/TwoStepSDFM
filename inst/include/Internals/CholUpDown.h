@@ -24,7 +24,7 @@
 #define CHOL_UP_DOWN
 
 // Including external libraries
-#include <Eigen/Eigen>
+#include <RcppEigen.h>
 #include <math.h>
 #include <cfloat>
 

@@ -24,7 +24,7 @@
 #define FC
 
 // Including external libraries
-#include <Eigen/Eigen>
+#include <RcppEigen.h>
 #include <stdlib.h>
 #include <math.h>
 #include <stdlib.h>

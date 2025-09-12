@@ -25,7 +25,7 @@
 #define ENET_SOLVER
 
 // Including external libraries
-#include <Eigen/Eigen>
+#include <RcppEigen.h>
 #include <stdlib.h>
 #include <math.h>
 #include <cfloat>

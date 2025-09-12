@@ -26,7 +26,7 @@
 // Include necessary Rcpp and Eigen libraries
 #include <RcppCommon.h>
 #include <Rcpp.h>
-#include <Eigen/Eigen>
+#include <RcppEigen.h>
 
 // Results structure to store the outcomes of the optimization process
 struct Results {

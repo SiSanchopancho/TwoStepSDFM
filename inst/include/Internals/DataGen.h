@@ -28,7 +28,7 @@
 #include <cfloat>
 #include <random>
 #include <stdlib.h>
-#include <Eigen/Eigen>
+#include <RcppEigen.h>
 
 // Including internal libraries
 #include "DataHandle.h"

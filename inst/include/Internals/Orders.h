@@ -26,7 +26,7 @@
 #define _USE_MATH_DEFINES
 
 // Including external libraries
-#include <Eigen/Eigen>
+#include <RcppEigen.h>
 #include <stdlib.h>
 #include <math.h>
 

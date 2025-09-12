@@ -31,7 +31,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <fstream>
-#include <Eigen/Eigen>
+#include <RcppEigen.h>
 #include <string.h>
 #include <sys/stat.h>
 #ifdef _WIN32
