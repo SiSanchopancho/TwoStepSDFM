@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+#  Copyright \u00A9 2024 Domenic Franjic
+#
+#  This file is part of TwoStepSDFM.
+#
+#  TwoStepSDFM is free software: you can redistribute
+#  it and/or modify it under the terms of the GNU General Public License as
+#  published by the Free Software Foundation, either version 3 of the License,
+#  or (at your option) any later version.
+#
+#  TwoStepSDFM is distributed in the hope that it
+#  will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+#  of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with TwoStepSDFM. If not, see <https://www.gnu.org/licenses/>.
+
+
+# A workflow to run R CMD check on multiple platforms
+name: check-r-package
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  check:
+    # Use a matrix strategy to run the job on multiple OS
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Define the operating systems to test on
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        # Optional: Define R versions if you need to test compatibility
+        r-version: ['4.3.0']
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.r-version }}
+      
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: testthat
+
+      - name: Run R CMD check
+        run: R CMD check .

@@ -63,11 +63,9 @@ Eigen::MatrixXd DataGen::rndCorrMat(std::mt19937& gen, const double& beta_param,
     }
 
     // Permute S
-    Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic> Pi(N);
-    Pi.setIdentity();
-    std::random_shuffle(Pi.indices().data(), Pi.indices().data() + Pi.indices().size());
-
-    return S(Pi.indices(), Pi.indices());
+    Eigen::VectorXi idx = Eigen::VectorXi::LinSpaced(N, 0, N - 1);
+    std::shuffle(idx.data(), idx.data() + idx.size(), gen);
+    return S(idx, idx);
 }
 
 /* Draw Standard Multivariate Normal Data */

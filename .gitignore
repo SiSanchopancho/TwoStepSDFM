@@ -1,0 +1,6 @@
+# R-Paket-Build-Artefakte
+/src/*.o
+/src/*.so
+/src/*.dll
+/src/tmp.def
+*.tar.gz

@@ -25,6 +25,7 @@ library(roxygen2)
 
 # Set directory
 setwd(dirname(getActiveDocumentContext()$path))
+rm(list = ls())
 
 # Clean up
 unlink("src/*.o")
@@ -36,15 +37,22 @@ devtools::clean_vignettes()
 # Compile Rcpp attributes
 Rcpp::compileAttributes()
 
-# Create Rd + NAMESPACE
-devtools::document()
-
 # Install the package
+devtools::install()
+
+# Build
 devtools::build()
 
 detach("package:TwoStepSDFM", unload = TRUE)
 
 .rs.restartR()
+
+# Load libraries
+library(rstudioapi)
+library(roxygen2)
+
+# Set directory
+setwd(dirname(getActiveDocumentContext()$path))
 
 install.packages("../TwoStepSDFM_0.0.0.2.tar.gz", repos = NULL, type = "source")
 
@@ -53,17 +61,17 @@ ls("package:TwoStepSDFM")
 # Test
 
 # Simulate a DGP using simFM
-T <- 600 # Number of observations
-N <- 10 # Number of variabes
-R <- 2 # Number of factors
-Sigma_epsilon <- diag(1, R) # Variance-covariance matrix of the transition errors
-Lambda <- matrix(rnorm(N * R), N, R) # Factor loadings matrix
-mu_xi <- rep(0, N) # Mean of the measurement error
-Sigma_xi <- diag(1, N) # Variance-covariance matrix of the measurement error
-Phi <- cbind(diag(0.5, R), -diag(0.25, R)) # Factor VAR coefficient matrix
-P <- 2 # Order of the factor VAR process
+no_of_observations <- 100 # Number of observations
+no_of_variables <- 10 # Number of variabes
+no_of_factors <- 2 # Number of factors
+trans_error_var_cov <- diag(1, no_of_factors) # Variance-covariance matrix of the transition errors
+loading_matrix <- matrix(rnorm(no_of_variables * no_of_factors), no_of_variables, no_of_factors) # Factor loadings matrix
+meas_error_mean <- rep(0, no_of_variables) # Mean of the measurement error
+meas_error_var_cov <- diag(1, no_of_variables) # Variance-covariance matrix of the measurement error
+trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors)) # Factor VAR coefficient matrix
+factor_lag_order <- 2 # Order of the factor VAR process
 quarterfy <- FALSE # Indicating whether or not some of the variables should be aggregated to quarterly observations (i.e., quarterfied)
-m <- 0
+quarterly_variable_ratio  <- 0
 corr <- TRUE # Indicating whether or not the measurement error should be internatlly cross-crossectionally correlated
 beta_param <- 1 # Beta parameter governing the degree of correlation of the measurement error
 seed <- 16022024 # Seed
@@ -72,14 +80,20 @@ burn_in <- 999 # Burn-in period
 rescale <- TRUE # Indicating whether the variance of the measurement error should be scaled according to the variance of the common-component 
 
 # Draw the FM object
-FM <- simFM(T = T, N = N, R = R, Lambda = Lambda, mu_xi = mu_xi, Sigma_xi = Sigma_xi,
-            Sigma_epsilon = Sigma_epsilon, Phi = Phi, P = P, quarterfy = quarterfy, m = m,
+FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, no_of_factors = no_of_factors, loading_matrix = loading_matrix, meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+            trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, factor_lag_order = factor_lag_order, quarterfy = quarterfy, quarterly_variable_ratio  = quarterly_variable_ratio ,
             corr = corr, beta_param = beta_param, seed = seed, burn_in = burn_in, rescale = rescale,
-            check_staionarity = TRUE, stationarity_check_threshold = 1e-10)
+            check_stationarity = TRUE, stationarity_check_threshold = 1e-10)
 
 # Fitting a sparse model with l2 regularisation and non-orthogonal measurement errors
-selected <- c(round(N * 0.8), round(N * 0.5))
-delay <- round(runif(N, 0, 10))
-fit_sparse <- twoStepSDFM(FM$X, delay, selected, R, l2 = 1e+4)
+selected <- c(round(no_of_variables * 0.8), round(no_of_variables * 0.5))
+delay <- rep(0, no_of_variables)
+fit_sparse <- twoStepSDFM(data = FM$data, delay = delay, selected = selected, no_of_factors = no_of_factors, 
+                          max_factor_lag_order  = 10, decorr_errors = TRUE, 
+                          lag_estim_criterion  = "BIC", ridge_penalty = 1e-06, 
+                          lasso_penalty = NaN, max_iterations = 1000, max_no_steps = NaN, 
+                          comp_null = 1e-15,  check_rank = FALSE,  conv_crit = 1e-04, 
+                          conv_threshold = 1e-04, log = FALSE, parallel = FALSE)
+fit_sparse
 
 

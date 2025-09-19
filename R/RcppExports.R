@@ -6,8 +6,8 @@
 #' without notice. Users should use `SimFM()` instead for a stable and
 #' supported interface.
 #'
-runSDFMKFS <- function(X_in, delay, selected, R, order, decorr_errors, crit, l2, l1, max_iterations, steps, comp_null, check_rank, conv_crit, conv_threshold, log, KFS_conv_crit) {
-    .Call('_TwoStepSDFM_runSDFMKFS', PACKAGE = 'TwoStepSDFM', X_in, delay, selected, R, order, decorr_errors, crit, l2, l1, max_iterations, steps, comp_null, check_rank, conv_crit, conv_threshold, log, KFS_conv_crit)
+runSDFMKFS <- function(X_in, delay, selected, R, order, decorr_errors, crit, l2, l1, max_iterations, steps, comp_null, check_rank, conv_crit, conv_threshold, log, KFS_conv_crit, parallel) {
+    .Call('_TwoStepSDFM_runSDFMKFS', PACKAGE = 'TwoStepSDFM', X_in, delay, selected, R, order, decorr_errors, crit, l2, l1, max_iterations, steps, comp_null, check_rank, conv_crit, conv_threshold, log, KFS_conv_crit, parallel)
 }
 
 #' @description
@@ -15,7 +15,7 @@ runSDFMKFS <- function(X_in, delay, selected, R, order, decorr_errors, crit, l2,
 #' without notice. Users should use `SimFM()` instead for a stable and
 #' supported interface.
 #'
-runStaticFM <- function(T, N, S, Lambda, mu_e, Sigma_e, A, order, quarterfy, corr, beta_param, m, seed, R, burn_in, rescale) {
-    .Call('_TwoStepSDFM_runStaticFM', PACKAGE = 'TwoStepSDFM', T, N, S, Lambda, mu_e, Sigma_e, A, order, quarterfy, corr, beta_param, m, seed, R, burn_in, rescale)
+runStaticFM <- function(T, N, S, Lambda, mu_e, Sigma_e, A, order, quarterfy, corr, beta_param, m, seed, R, burn_in, rescale, parallel) {
+    .Call('_TwoStepSDFM_runStaticFM', PACKAGE = 'TwoStepSDFM', T, N, S, Lambda, mu_e, Sigma_e, A, order, quarterfy, corr, beta_param, m, seed, R, burn_in, rescale, parallel)
 }
 

@@ -13,8 +13,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // runSDFMKFS
-Rcpp::List runSDFMKFS(Rcpp::NumericMatrix X_in, Rcpp::IntegerVector delay, Rcpp::IntegerVector selected, int R, int order, bool decorr_errors, const char* crit, double l2, Rcpp::NumericVector l1, int max_iterations, int steps, double comp_null, bool check_rank, double conv_crit, double conv_threshold, bool log, int KFS_conv_crit);
-RcppExport SEXP _TwoStepSDFM_runSDFMKFS(SEXP X_inSEXP, SEXP delaySEXP, SEXP selectedSEXP, SEXP RSEXP, SEXP orderSEXP, SEXP decorr_errorsSEXP, SEXP critSEXP, SEXP l2SEXP, SEXP l1SEXP, SEXP max_iterationsSEXP, SEXP stepsSEXP, SEXP comp_nullSEXP, SEXP check_rankSEXP, SEXP conv_critSEXP, SEXP conv_thresholdSEXP, SEXP logSEXP, SEXP KFS_conv_critSEXP) {
+Rcpp::List runSDFMKFS(Rcpp::NumericMatrix X_in, Rcpp::IntegerVector delay, Rcpp::IntegerVector selected, int R, int order, bool decorr_errors, const char* crit, double l2, Rcpp::NumericVector l1, int max_iterations, int steps, double comp_null, bool check_rank, double conv_crit, double conv_threshold, bool log, double KFS_conv_crit, const bool parallel);
+RcppExport SEXP _TwoStepSDFM_runSDFMKFS(SEXP X_inSEXP, SEXP delaySEXP, SEXP selectedSEXP, SEXP RSEXP, SEXP orderSEXP, SEXP decorr_errorsSEXP, SEXP critSEXP, SEXP l2SEXP, SEXP l1SEXP, SEXP max_iterationsSEXP, SEXP stepsSEXP, SEXP comp_nullSEXP, SEXP check_rankSEXP, SEXP conv_critSEXP, SEXP conv_thresholdSEXP, SEXP logSEXP, SEXP KFS_conv_critSEXP, SEXP parallelSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -34,14 +34,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type conv_crit(conv_critSEXP);
     Rcpp::traits::input_parameter< double >::type conv_threshold(conv_thresholdSEXP);
     Rcpp::traits::input_parameter< bool >::type log(logSEXP);
-    Rcpp::traits::input_parameter< int >::type KFS_conv_crit(KFS_conv_critSEXP);
-    rcpp_result_gen = Rcpp::wrap(runSDFMKFS(X_in, delay, selected, R, order, decorr_errors, crit, l2, l1, max_iterations, steps, comp_null, check_rank, conv_crit, conv_threshold, log, KFS_conv_crit));
+    Rcpp::traits::input_parameter< double >::type KFS_conv_crit(KFS_conv_critSEXP);
+    Rcpp::traits::input_parameter< const bool >::type parallel(parallelSEXP);
+    rcpp_result_gen = Rcpp::wrap(runSDFMKFS(X_in, delay, selected, R, order, decorr_errors, crit, l2, l1, max_iterations, steps, comp_null, check_rank, conv_crit, conv_threshold, log, KFS_conv_crit, parallel));
     return rcpp_result_gen;
 END_RCPP
 }
 // runStaticFM
-Rcpp::List runStaticFM(int T, const int& N, Rcpp::NumericMatrix S, Rcpp::NumericMatrix Lambda, Rcpp::NumericVector mu_e, Rcpp::NumericMatrix Sigma_e, Rcpp::NumericMatrix A, int order, bool quarterfy, bool corr, double beta_param, double m, int seed, int R, int burn_in, bool rescale);
-RcppExport SEXP _TwoStepSDFM_runStaticFM(SEXP TSEXP, SEXP NSEXP, SEXP SSEXP, SEXP LambdaSEXP, SEXP mu_eSEXP, SEXP Sigma_eSEXP, SEXP ASEXP, SEXP orderSEXP, SEXP quarterfySEXP, SEXP corrSEXP, SEXP beta_paramSEXP, SEXP mSEXP, SEXP seedSEXP, SEXP RSEXP, SEXP burn_inSEXP, SEXP rescaleSEXP) {
+Rcpp::List runStaticFM(int T, const int& N, Rcpp::NumericMatrix S, Rcpp::NumericMatrix Lambda, Rcpp::NumericVector mu_e, Rcpp::NumericMatrix Sigma_e, Rcpp::NumericMatrix A, int order, bool quarterfy, bool corr, double beta_param, double m, int seed, int R, int burn_in, bool rescale, const bool parallel);
+RcppExport SEXP _TwoStepSDFM_runStaticFM(SEXP TSEXP, SEXP NSEXP, SEXP SSEXP, SEXP LambdaSEXP, SEXP mu_eSEXP, SEXP Sigma_eSEXP, SEXP ASEXP, SEXP orderSEXP, SEXP quarterfySEXP, SEXP corrSEXP, SEXP beta_paramSEXP, SEXP mSEXP, SEXP seedSEXP, SEXP RSEXP, SEXP burn_inSEXP, SEXP rescaleSEXP, SEXP parallelSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -61,14 +62,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type R(RSEXP);
     Rcpp::traits::input_parameter< int >::type burn_in(burn_inSEXP);
     Rcpp::traits::input_parameter< bool >::type rescale(rescaleSEXP);
-    rcpp_result_gen = Rcpp::wrap(runStaticFM(T, N, S, Lambda, mu_e, Sigma_e, A, order, quarterfy, corr, beta_param, m, seed, R, burn_in, rescale));
+    Rcpp::traits::input_parameter< const bool >::type parallel(parallelSEXP);
+    rcpp_result_gen = Rcpp::wrap(runStaticFM(T, N, S, Lambda, mu_e, Sigma_e, A, order, quarterfy, corr, beta_param, m, seed, R, burn_in, rescale, parallel));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_TwoStepSDFM_runSDFMKFS", (DL_FUNC) &_TwoStepSDFM_runSDFMKFS, 17},
-    {"_TwoStepSDFM_runStaticFM", (DL_FUNC) &_TwoStepSDFM_runStaticFM, 16},
+    {"_TwoStepSDFM_runSDFMKFS", (DL_FUNC) &_TwoStepSDFM_runSDFMKFS, 18},
+    {"_TwoStepSDFM_runStaticFM", (DL_FUNC) &_TwoStepSDFM_runStaticFM, 17},
     {NULL, NULL, 0}
 };
 

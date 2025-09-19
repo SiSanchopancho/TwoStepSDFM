@@ -41,7 +41,7 @@ void SparseDFM::SDFMKFS(
 	const double& conv_crit, // conversion criterion for the sparse pca algorithm
 	const double& conv_threshold, // conversion criterion for the conversion loop in the CD program (currently disabled)
 	const bool& log, // talk to me
-	const int& KFS_conv_crit //KFS conversion criterion
+	const double& KFS_conv_crit //KFS conversion criterion
 )
 {
 	/* Dummies */

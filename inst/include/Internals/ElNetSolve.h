@@ -111,7 +111,16 @@ Eigen::MatrixXd LARS(
     {
 
         // Calculate current maximum correlation and retrieve the index of the corresponding variable evaluated at the current step
-        C_hat = c(A_C_set.head(size_A_C)).cwiseAbs().maxCoeff(&just_left);
+        Eigen::VectorXd c_abs = c(A_C_set.head(size_A_C)).cwiseAbs();
+        C_hat = c_abs.maxCoeff(&just_left);
+        if ((c_abs.array() == C_hat).count() > 1) { // Tie breaker for when correlations are equal
+          for (unsigned i = 0; i < c_abs.size(); ++i) {
+            if (c_abs(i) == C_hat) {
+              just_left = i;
+              break;
+            }
+          }
+        }
 
         if (drop == 0)
         {

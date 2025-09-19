@@ -64,7 +64,8 @@ Rcpp::List runSDFMKFS(
 	double conv_crit,
 	double conv_threshold,
 	bool log,
-	int KFS_conv_crit
+	double KFS_conv_crit,
+	const bool parallel
 )
 {
 
@@ -76,6 +77,7 @@ Rcpp::List runSDFMKFS(
 	Eigen::Map<Eigen::VectorXi> delay_eigen(Rcpp::as<Eigen::Map<Eigen::VectorXi>>(delay));
 	Eigen::Map<Eigen::VectorXi> selected_eigen(Rcpp::as<Eigen::Map<Eigen::VectorXi>>(selected));
 	Eigen::Map<Eigen::VectorXd> l1_eigen(Rcpp::as<Eigen::Map<Eigen::VectorXd>>(l1));
+
 
 	// Handle the case where l1, l1_start and or steps is not provided
 	if (steps == -2147483647)
@@ -93,7 +95,17 @@ Rcpp::List runSDFMKFS(
 		l1_eigen.setConstant(NAN);
 	}
 
+	// Enable/disable parallelisation in Eigen
+
+
 	// Estimate the sparse DFM
+	if (parallel) {
+		Eigen::setNbThreads(0);
+	}
+	else {
+		Eigen::setNbThreads(1);
+	}
+
 	SparseDFM::SDFMKFS(results, X_in_eigen, delay_eigen, selected_eigen, R, order, decorr_errors, crit,
 		l2, l1_eigen, max_iterations, steps, comp_null, check_rank, conv_crit, conv_threshold, log,
 		KFS_conv_crit);
@@ -113,7 +125,7 @@ Rcpp::List runSDFMKFS(
 
 	}
 
-
+	Eigen::setNbThreads(0);
 
 	// Convert the results back to Rcpp types and return
 	return Rcpp::List::create(Rcpp::Named("Lambda_hat") = Rcpp::wrap(results.Lambda_hat),
@@ -149,7 +161,8 @@ Rcpp::List runStaticFM(
 	int seed,
 	int R,
 	int burn_in,
-	bool rescale
+	bool rescale,
+	const bool parallel
 )
 {
 
@@ -169,8 +182,19 @@ Rcpp::List runStaticFM(
 	else if ((burn_in + 1) % 3 == 0) {
 		++burn_in;
 	}
+
+	// Enable/disable parallelisation in Eigen
+	if (parallel) {
+		Eigen::setNbThreads(0);
+	}
+	else {
+		Eigen::setNbThreads(1);
+	}
+
 	DataGen::staticFM(results, T, N, S_eigen, Lambda_eigen, mu_e_eigen, Sigma_e_eigen, A_eigen, gen, order, quarterfy, corr,
 		beta_param, m, R, burn_in, rescale);
+
+	Eigen::setNbThreads(0);
 
 	return Rcpp::List::create(Rcpp::Named("F") = Rcpp::wrap(results.F),
 		Rcpp::Named("Phi") = Rcpp::wrap(results.Phi),
