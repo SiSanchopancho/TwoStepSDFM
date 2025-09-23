@@ -51,4 +51,6 @@ jobs:
           extra-packages: testthat
 
       - name: Run R CMD check
-        run: R CMD check .
+        shell: bash
+        run: |
+          R CMD check .
