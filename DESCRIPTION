@@ -1,7 +1,13 @@
 Package: TwoStepSDFM
 Title: Estimate a sparse mixed frequency Gaussian Factor model using a two-step procedure
 Version: 0.0.0.2
-Authors@R: person(given = "Domenic", family = "Franjic", email = "franjic@uni-hohenheim.de", role = c("aut", "cre"), comment = c(GitHub = "SiSanchopancho"))
+Authors@R: person(
+    given = "Domenic",
+    family = "Franjic",
+    email = "franjic@uni-hohenheim.de",
+    role = c("aut", "cre"),
+    comment = c(GitHub = "SiSanchopancho")
+)
 Maintainer: Domenic Franjic <franjic@uni-hohenheim.de>
 Description: The package uses a combination of sparse principal components analysis and the Kalman filter and smoother to estimate a sparse Gaussian state-space model using high frequency predictors relative to a lower frequency variable of interest.
 License: GPL-3
