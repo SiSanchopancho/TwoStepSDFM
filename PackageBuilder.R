@@ -67,13 +67,13 @@ ls("package:TwoStepSDFM")
 # Simulate a DGP using simFM
 no_of_observations <- 100 # Number of observations
 no_of_variables <- 10 # Number of variabes
-no_of_factors <- 2 # Number of factors
+no_of_factors <- 3 # Number of factors
 trans_error_var_cov <- diag(1, no_of_factors) # Variance-covariance matrix of the transition errors
 loading_matrix <- matrix(rnorm(no_of_variables * no_of_factors), no_of_variables, no_of_factors) # Factor loadings matrix
 meas_error_mean <- rep(0, no_of_variables) # Mean of the measurement error
 meas_error_var_cov <- diag(1, no_of_variables) # Variance-covariance matrix of the measurement error
-trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors)) # Factor VAR coefficient matrix
-factor_lag_order <- 2 # Order of the factor VAR process
+trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors), -diag(0.25, no_of_factors), -diag(0.25, no_of_factors), -diag(0.25, no_of_factors)) # Factor VAR coefficient matrix
+factor_lag_order <- 5 # Order of the factor VAR process
 quarterfy <- FALSE # Indicating whether or not some of the variables should be aggregated to quarterly observations (i.e., quarterfied)
 quarterly_variable_ratio  <- 0
 corr <- TRUE # Indicating whether or not the measurement error should be internatlly cross-crossectionally correlated
@@ -90,7 +90,7 @@ FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_var
             check_stationarity = TRUE, stationarity_check_threshold = 1e-10)
 
 # Fitting a sparse model with l2 regularisation and non-orthogonal measurement errors
-selected <- c(round(no_of_variables * 0.8), round(no_of_variables * 0.5))
+selected <- c(round(no_of_variables * 0.8), round(no_of_variables * 0.5), round(no_of_variables * 0.5))
 delay <- rep(0, no_of_variables)
 fit_sparse <- twoStepSDFM(data = FM$data, delay = delay, selected = selected, no_of_factors = no_of_factors, 
                           max_factor_lag_order  = 10, decorr_errors = TRUE, 
@@ -98,5 +98,6 @@ fit_sparse <- twoStepSDFM(data = FM$data, delay = delay, selected = selected, no
                           lasso_penalty = NaN, max_iterations = 1000, max_no_steps = NaN, 
                           comp_null = 1e-15,  check_rank = FALSE,  conv_crit = 1e-04, 
                           conv_threshold = 1e-04, log = FALSE, parallel = FALSE)
-fit_sparse
+fit_sparse$factor_estimate
+
 

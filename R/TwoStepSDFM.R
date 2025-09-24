@@ -78,7 +78,7 @@ twoStepSDFM <- function(data,
                         parallel = FALSE) {
   
   no_of_variables <- dim(data)[1]
-  no_of_observations <- dim(data)[1]
+  no_of_observations <- dim(data)[2]
   
   # Misshandling of the loadings matrix
   
@@ -167,10 +167,23 @@ twoStepSDFM <- function(data,
   )
   
   # Rename the results
-  names(result) <- c("loading_matrix_estimate", "filtered_state_variance", "factor_estimate",
+  names(result) <- c("loading_matrix_estimate", "filtered_state_variance", "companion_form_smoothed_factors",
                      "smoothed_state_variance", "error_var_cov_cholesky_factor",
                      "factor_var_lag_order")
-    
+  
+  # Create the non-companion-form factors
+  if(result$factor_var_lag_order == 1){
+    result$smoothed_factors <- result$companion_form_smoothed_factors
+  }else{
+    smoothed_factors <- matrix(NaN, no_of_factors, no_of_observations + 1)
+    for(p in 1:(result$factor_var_lag_order - 1)){
+      smoothed_factors[, p] <- result$companion_form_smoothed_factors[(no_of_factors * p + 1):(no_of_factors * (p + 1)), 1]
+    }
+    smoothed_factors[, result$factor_var_lag_order:(no_of_observations + 1)] <- result$companion_form_smoothed_factors[1:no_of_factors, ]
+    result$smoothed_factors <- smoothed_factors
+  }
+  
+  
   # Return the result
   return(result)
 }

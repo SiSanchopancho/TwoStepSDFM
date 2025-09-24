@@ -59,7 +59,7 @@ inline void computeVAROrder(
         Eigen::MatrixXd F_curr(K * o, T);
         for (int oo = 0; oo < o; ++oo)
         {
-            F_curr.block(K * oo, oo, K, T - oo) = F.block(0, 0, K, T - oo);
+            F_curr.block(K * oo, oo, K, T - oo) = F.block(0, 0, K, T - oo).eval();
         }
 
         // OLS
