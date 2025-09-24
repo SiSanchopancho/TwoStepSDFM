@@ -34,9 +34,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Define the operating systems to test on
         os: [ubuntu-latest, windows-latest, macos-latest]
-        # Optional: Define R versions if you need to test compatibility
         r-version: ['4.3.0']
 
     steps:
@@ -46,7 +44,12 @@ jobs:
         with:
           r-version: ${{ matrix.r-version }}
 
+      - name: Install dependencies
+        run: |
+          install.packages(c("Rcpp", "RcppEigen", "testthat"))
+
       - name: Run R CMD check
         shell: bash
         run: |
+
           R CMD check .
