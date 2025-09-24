@@ -48,8 +48,21 @@ jobs:
         run: |
           Rscript -e 'install.packages(c("Rcpp", "RcppEigen", "testthat"))'
 
+      - name: Install TeX (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra
+
+      - name: Install TeX (macOS)
+        if: runner.os == 'macOS'
+        run: brew install --cask mactex-no-gui
+
+      - name: Install TeX (Windows)
+        if: runner.os == 'Windows'
+        run: choco install miktex
+
       - name: Run R CMD check
         shell: bash
         run: |
           R CMD check .
+
 
