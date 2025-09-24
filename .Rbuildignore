@@ -1,2 +1,6 @@
-^\.github$
-^PackageBuilder.R
+^\\.Rhistory$
+^\\.Rproj.user$
+^\\.git$
+^\\.github$
+^\\.Rcheck$
+^PackageBuilder\\.R$
