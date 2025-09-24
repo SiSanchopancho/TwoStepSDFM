@@ -12,13 +12,12 @@ Maintainer: Domenic Franjic <franjic@uni-hohenheim.de>
 Description: The package uses sparse principal components analysis and the Kalman filter
     and smoother to estimate a sparse Gaussian state-space model with mixed frequency
     data.
-License: GPL-3
+License: GPL-3 + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.2.3
 Imports:
-    Rcpp (>= 1.0.8),
-    RcppEigen (>= 0.3.3.9.2)
+    Rcpp (>= 1.0.8)
 LinkingTo:
     Rcpp,
     RcppEigen

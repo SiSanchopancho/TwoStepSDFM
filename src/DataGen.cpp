@@ -237,7 +237,7 @@ void DataGen::staticFM(
         Eigen::MatrixXd R = rndCorrMat(gen, beta_param, N);
         if (!R.isApprox(R.transpose()))
         {
-            std::cout << '\n' << "Error! Random Covariance-Matrix is not symmetric." << '\n';
+            Rcpp::Rcout << '\n' << "Error! Random Covariance-Matrix is not symmetric." << '\n';
             return;
         }
         VarCov = Sigma_e.cwiseSqrt() * R * Sigma_e.cwiseSqrt();

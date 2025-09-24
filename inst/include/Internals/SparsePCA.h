@@ -28,6 +28,7 @@
 #include <RcppEigen.h>
 #include <stdlib.h>
 #include <math.h>
+#include <Rcpp.h>
 
 // Including internal libraries
 #include "ElNetSolve.h"

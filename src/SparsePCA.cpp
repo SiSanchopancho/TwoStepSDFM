@@ -79,12 +79,12 @@ void SparsePCA::SparsePC(
         Eigen::FullPivLU<Eigen::MatrixXd> Gram_LU(Gram);
         if (Gram_LU.rank() < N)
         {
-            std::cout << '\n' << "Error! The Matrix product XT * X does not have full rank." << '\n';
+            Rcpp::Rcout << '\n' << "Error! The Matrix product XT * X does not have full rank." << '\n';
             return;
         }
         else
         {
-            std::cout << '\n' << "The Matrix product XT * X has full rank." << '\n';
+           Rcpp::Rcout << '\n' << "The Matrix product XT * X has full rank." << '\n';
         }
     }
 

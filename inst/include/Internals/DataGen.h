@@ -29,6 +29,7 @@
 #include <random>
 #include <stdlib.h>
 #include <RcppEigen.h>
+#include <Rcpp.h>
 
 // Including internal libraries
 #include "DataHandle.h"

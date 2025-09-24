@@ -2,7 +2,9 @@
 % Please edit documentation in R/TwoStepSDFM.R
 \name{simFM}
 \alias{simFM}
-\title{Draw data from a dynamic factor model}
+\title{Draw data from a dynamic factor model
+
+The function simulates an (approximate) Dynamic Factor Model}
 \usage{
 simFM(
   no_of_observations,
@@ -67,18 +69,9 @@ simFM(
 }
 \value{
 Returns an \code{simFM} object containing the DFM parameters expressed in the factor VAR companion form.
-The object includes:
-\describe{
-\item{\code{F}}{A \eqn{RP \times no_of_observations} matrix of simulated factors.}
-\item{\code{trans_var_coeff}}{The \eqn{no_of_factors \times RP} factor VAR coefficients matrix.}
-\item{\code{loading_matrix}}{The \eqn{no_of_variables \times RP} loadings matrix.}
-\item{\code{meas_error_var_cov}}{The \eqn{no_of_variables \times no_of_variables} variance-covariance matrix of the measurement errors.}
-\item{\code{trans_error_var_cov}}{The \eqn{no_of_factors \times no_of_factors} variance-covariance matrix of the transition errors.}
-\item{\code{Xi}}{A \eqn{no_of_variables \times no_of_observations} matrix representing the measurement errors.}
-\item{\code{data}}{The \eqn{no_of_variables \times no_of_observations} matrix of simulated observed variables.}
-\item{\code{frequency}}{The \eqn{no_of_variables \times 1} vector of frequency of the data.}
-}
 }
 \description{
+Draw data from a dynamic factor model
+
 The function simulates an (approximate) Dynamic Factor Model
 }

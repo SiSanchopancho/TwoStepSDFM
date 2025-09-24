@@ -33,12 +33,14 @@ unlink("src/*.so")
 unlink("src/*.dll")
 devtools::clean_dll()
 devtools::clean_vignettes()
+devtools::build_vignettes()
 
 # Compile Rcpp attributes
 Rcpp::compileAttributes()
 
 # Install the package
-devtools::install()
+#devtools::install()
+devtools::check()
 
 # Build
 devtools::build()
@@ -53,10 +55,12 @@ library(roxygen2)
 
 # Set directory
 setwd(dirname(getActiveDocumentContext()$path))
+rm(list  = ls())
 
 install.packages("../TwoStepSDFM_0.0.0.2.tar.gz", repos = NULL, type = "source")
 
 library(TwoStepSDFM)
+library(testthat)
 ls("package:TwoStepSDFM")
 # Test
 
@@ -95,5 +99,4 @@ fit_sparse <- twoStepSDFM(data = FM$data, delay = delay, selected = selected, no
                           comp_null = 1e-15,  check_rank = FALSE,  conv_crit = 1e-04, 
                           conv_threshold = 1e-04, log = FALSE, parallel = FALSE)
 fit_sparse
-
 

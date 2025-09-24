@@ -2,7 +2,11 @@
 % Please edit documentation in R/TwoStepSDFM.R
 \name{twoStepSDFM}
 \alias{twoStepSDFM}
-\title{Run Sparse DFM KFS}
+\title{Run Sparse DFM KFS
+
+This function wraps the C++ implementation of the Sparse DFM KFS to
+provide default parameters and potentially pre-process inputs or
+post-process outputs.}
 \usage{
 twoStepSDFM(
   data,
@@ -37,7 +41,7 @@ twoStepSDFM(
 
 \item{decorr_errors}{Logical, whether or not the errors should be decorrelated.}
 
-\item{lag_estim_criterion}{Character string, information criterion used for the estimation.}
+\item{lag_estim_criterion}{Character string, information criterion used for the estimation of the factor VAR order ("BIC", "AIC", "HIC").}
 
 \item{ridge_penalty}{Numeric, ridge penalty.}
 
@@ -58,8 +62,6 @@ twoStepSDFM(
 \item{log}{Logical, whether or not output should be printed along the algorithm.}
 
 \item{parallel}{Make use of Eigen internal parallel matrix operations}
-
-\item{method}{Character string, method used for estimation ("BIC", "AIC", "HIC").}
 }
 \value{
 The \code{twoStepSDFM} function returns an object \code{fit} which, contains the following elements:
@@ -73,12 +75,9 @@ The \code{twoStepSDFM} function returns an object \code{fit} which, contains the
 }
 }
 \description{
+Run Sparse DFM KFS
+
 This function wraps the C++ implementation of the Sparse DFM KFS to
 provide default parameters and potentially pre-process inputs or
 post-process outputs.
-}
-\examples{
-\dontrun{
-result <- TwoStepSDFM(data = matrix_data, delay = delays, selected = selections)
-}
 }

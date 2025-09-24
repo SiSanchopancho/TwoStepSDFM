@@ -24,7 +24,8 @@ NULL
 #  along with TwoStepSDFM. If not, see <https://www.gnu.org/licenses/>.
 
 
-#' Run Sparse DFM KFS
+#' @name twoStepSDFM
+#' @title Run Sparse DFM KFS
 #'
 #' This function wraps the C++ implementation of the Sparse DFM KFS to
 #' provide default parameters and potentially pre-process inputs or
@@ -36,8 +37,7 @@ NULL
 #' @param no_of_factors Integer, number of factors.
 #' @param max_factor_lag_order Integer, max P of the VAR(P) process of the factors.
 #' @param decorr_errors Logical, whether or not the errors should be decorrelated.
-#' @param lag_estim_criterion Character string, information criterion used for the estimation.
-#' @param method Character string, method used for estimation ("BIC", "AIC", "HIC").
+#' @param lag_estim_criterion Character string, information criterion used for the estimation of the factor VAR order ("BIC", "AIC", "HIC").
 #' @param ridge_penalty Numeric, ridge penalty.
 #' @param lasso_penalty Numeric vector, lasso penalties for each factor (set to NaN if not intended as stopping criterion).
 #' @param max_iterations Integer, maximum number of iterations.
@@ -59,10 +59,6 @@ NULL
 #'   \item{\code{max_factor_lag_order}}{The order of the VAR(max_factor_lag_order) model used in the factor model process.}
 #' }
 #' @export
-#' @examples
-#' \dontrun{
-#' result <- TwoStepSDFM(data = matrix_data, delay = delays, selected = selections)
-#' }
 twoStepSDFM <- function(data,
                         delay,
                         selected,
@@ -80,6 +76,9 @@ twoStepSDFM <- function(data,
                         conv_threshold = 1e-4,
                         log = FALSE,
                         parallel = FALSE) {
+  
+  no_of_variables <- dim(data)[1]
+  no_of_observations <- dim(data)[1]
   
   # Misshandling of the loadings matrix
   
@@ -177,7 +176,8 @@ twoStepSDFM <- function(data,
 }
 
 
-#' Draw data from a dynamic factor model
+#' @name simFM
+#' @title Draw data from a dynamic factor model
 #'
 #' The function simulates an (approximate) Dynamic Factor Model
 #'
@@ -201,17 +201,6 @@ twoStepSDFM <- function(data,
 #' @param stationarity_check_threshold Threshold of the stationarity check for when to deem an eigenvalue negative beyond the numerical error.
 #' @param parallel Make use of Eigen internal parallel matrix operations
 #' @return Returns an `simFM` object containing the DFM parameters expressed in the factor VAR companion form.
-#' The object includes:
-#' \describe{
-#'   \item{\code{F}}{A \eqn{RP \times no_of_observations} matrix of simulated factors.}
-#'   \item{\code{trans_var_coeff}}{The \eqn{no_of_factors \times RP} factor VAR coefficients matrix.}
-#'   \item{\code{loading_matrix}}{The \eqn{no_of_variables \times RP} loadings matrix.}
-#'   \item{\code{meas_error_var_cov}}{The \eqn{no_of_variables \times no_of_variables} variance-covariance matrix of the measurement errors.}
-#'   \item{\code{trans_error_var_cov}}{The \eqn{no_of_factors \times no_of_factors} variance-covariance matrix of the transition errors.}
-#'   \item{\code{Xi}}{A \eqn{no_of_variables \times no_of_observations} matrix representing the measurement errors.}
-#'   \item{\code{data}}{The \eqn{no_of_variables \times no_of_observations} matrix of simulated observed variables.}
-#'   \item{\code{frequency}}{The \eqn{no_of_variables \times 1} vector of frequency of the data.}
-#' }
 #' @export
 simFM <- function(no_of_observations, no_of_variables, no_of_factors, loading_matrix, meas_error_mean, meas_error_var_cov, trans_error_var_cov, trans_var_coeff, factor_lag_order, quarterfy, quarterly_variable_ratio = 0, corr = FALSE,
                   beta_param = Inf, seed = 20022024, burn_in = 1000, rescale = TRUE,
