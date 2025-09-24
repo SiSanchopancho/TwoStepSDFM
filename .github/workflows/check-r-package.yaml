@@ -46,10 +46,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          install.packages(c("Rcpp", "RcppEigen", "testthat"))
+          Rscript -e 'install.packages(c("Rcpp", "RcppEigen", "testthat"))'
 
       - name: Run R CMD check
         shell: bash
         run: |
-
           R CMD check .
+
