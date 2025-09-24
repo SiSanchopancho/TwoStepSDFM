@@ -8,6 +8,7 @@ Authors@R: person(
     role = c("aut", "cre"),
     comment = c(GitHub = "SiSanchopancho")
 	)
+Author: Domenic Franjic [aut, cre] (<franjic@uni-hohenheim.de>)
 Maintainer: Domenic Franjic <franjic@uni-hohenheim.de>
 Description: The package uses sparse principal components analysis and the Kalman filter
     and smoother to estimate a sparse Gaussian state-space model with mixed frequency
