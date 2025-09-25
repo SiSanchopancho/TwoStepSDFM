@@ -51,10 +51,10 @@ void Filtering::UVMVKalmanFilter(
     double Vt = 0.;
 
     // Vectors
-    Eigen::VectorXd Ftt(K);
+    Eigen::VectorXd Ftt = Eigen::VectorXd::Zero(K);
 
     // Matrices
-    Eigen::MatrixXd Ptt(K, K), Lambda_T = Lambda.transpose(), X = X_in;
+    Eigen::MatrixXd Ptt = Eigen::MatrixXd::Zero(K, K), Lambda_T = Lambda.transpose(), X = X_in;
 
     // Initialisation
     results.F.col(0) = Ft0;
@@ -130,10 +130,10 @@ void Filtering::UVMVKalmanSmoother(
     /* Dummies */
      
     // Vectors
-    Eigen::VectorXd rtt(K);
+    Eigen::VectorXd rtt = Eigen::VectorXd::Zero(K);
 
     // Matrices
-    Eigen::MatrixXd Lt(K, K), Ntt(K, K), Lambda_T = Lambda.transpose(), IdentK = Eigen::MatrixXd::Identity(K, K);
+    Eigen::MatrixXd Lt = Eigen::MatrixXd::Zero(K, K), Ntt = Eigen::MatrixXd::Zero(K, K), Lambda_T = Lambda.transpose(), IdentK = Eigen::MatrixXd::Identity(K, K);
 
 
     /* Smoother loop */

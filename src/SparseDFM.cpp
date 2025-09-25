@@ -66,7 +66,7 @@ void SparseDFM::SDFMKFS(
 	int o = VARorder<BIC>(fit.F_hat, order, comp_null);
 
 	// Calculate inital values for the Kalman filter
-	Eigen::MatrixXd F_l(R * o, T - delay.maxCoeff()), Pt0 = Eigen::MatrixXd::Zero(R * o, R * o), Lambda_l = Eigen::MatrixXd::Zero(N, R * o), Sigma_epsilon = Eigen::MatrixXd::Zero(R * o, R * o),
+	Eigen::MatrixXd F_l = Eigen::MatrixXd::Zero(R * o, T - delay.maxCoeff()), Pt0 = Eigen::MatrixXd::Zero(R * o, R * o), Lambda_l = Eigen::MatrixXd::Zero(N, R * o), Sigma_epsilon = Eigen::MatrixXd::Zero(R * o, R * o),
 		Sigma_e = Eigen::MatrixXd::Zero(N, N), Phi = Eigen::MatrixXd::Zero(R * o, R * o);
 
 	for (int oo = 0; oo < o; ++oo)

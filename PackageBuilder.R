@@ -98,6 +98,13 @@ fit_sparse <- twoStepSDFM(data = FM$data, delay = delay, selected = selected, no
                           lasso_penalty = NaN, max_iterations = 1000, max_no_steps = NaN, 
                           comp_null = 1e-15,  check_rank = FALSE,  conv_crit = 1e-04, 
                           conv_threshold = 1e-04, log = FALSE, parallel = FALSE)
-fit_sparse$factor_estimate
 
+fit_sparse_2 <- twoStepSDFM(data = FM$data, delay = delay, selected = selected, no_of_factors = no_of_factors, 
+                          max_factor_lag_order  = 10, decorr_errors = TRUE, 
+                          lag_estim_criterion  = "BIC", ridge_penalty = 1e-06, 
+                          lasso_penalty = NaN, max_iterations = 1000, max_no_steps = NaN, 
+                          comp_null = 1e-15,  check_rank = FALSE,  conv_crit = 1e-04, 
+                          conv_threshold = 1e-04, log = FALSE, parallel = FALSE)
 
+fit_sparse_2$smoothed_factors - fit_sparse$smoothed_factors
+mean(fit_sparse_2$smoothed_factors - fit_sparse$smoothed_factors)
