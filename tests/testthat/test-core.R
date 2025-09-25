@@ -91,7 +91,7 @@ test_that("Estimation function twoStepSDFM works", {
                                       comp_null = 1e-15,  check_rank = FALSE,  conv_crit = 1e-04, 
                                       conv_threshold = 1e-04, log = FALSE, parallel = FALSE)
   expect_equal(fit_sparse$smoothed_factors, fit_determinism_chec$smoothed_factors, tolerance = 1e-4)
-  expect_equal(fit_sparse$loading_matrix_estimate, fit_determinism_chec$loading_matrix_estimate, tolerance = 1e-4)
+  expect_equal(fit_sparse$loading_matrix_estimate, fit_determinism_chec$loading_matrix_estimate, tolerance = 1e-10)
   
   
 })
