@@ -3,11 +3,19 @@
 
 #' @description
 #' This function is for internal use only and may change in future releases
+#' without notice. 
+#'
+runARDL <- function(target_variable, target_variable_predictor, predictor_variable, max_target_lags, max_predictor_lags, crit) {
+    .Call('_TwoStepSDFM_runARDL', PACKAGE = 'TwoStepSDFM', target_variable, target_variable_predictor, predictor_variable, max_target_lags, max_predictor_lags, crit)
+}
+
+#' @description
+#' This function is for internal use only and may change in future releases
 #' without notice. Users should use `SimFM()` instead for a stable and
 #' supported interface.
 #'
-runSDFMKFS <- function(X_in, delay, selected, R, order, decorr_errors, crit, l2, l1, max_iterations, steps, comp_null, check_rank, conv_crit, conv_threshold, log, KFS_conv_crit, parallel) {
-    .Call('_TwoStepSDFM_runSDFMKFS', PACKAGE = 'TwoStepSDFM', X_in, delay, selected, R, order, decorr_errors, crit, l2, l1, max_iterations, steps, comp_null, check_rank, conv_crit, conv_threshold, log, KFS_conv_crit, parallel)
+runSDFMKFS <- function(X_in, delay, selected, R, order, decorr_errors, crit, l2, l1, max_iterations, steps, comp_null, check_rank, conv_crit, conv_threshold, log, KFS_conv_crit, parallel, fcast_horizon) {
+    .Call('_TwoStepSDFM_runSDFMKFS', PACKAGE = 'TwoStepSDFM', X_in, delay, selected, R, order, decorr_errors, crit, l2, l1, max_iterations, steps, comp_null, check_rank, conv_crit, conv_threshold, log, KFS_conv_crit, parallel, fcast_horizon)
 }
 
 #' @description

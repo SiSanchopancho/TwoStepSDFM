@@ -56,7 +56,8 @@ namespace SparseDFM {
             const double& conv_crit = 0.0001,
             const double& conv_threshold = 10e-7,
             const bool& log = 0,
-            const double& KFS_conv_crit = 10e+2
+            const double& KFS_conv_crit = 10e+2,
+            const unsigned& fcast_horizon = 0
         );
 
 };

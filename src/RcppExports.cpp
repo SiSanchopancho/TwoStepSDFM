@@ -12,9 +12,25 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// runARDL
+Rcpp::List runARDL(Rcpp::NumericVector target_variable, Rcpp::NumericVector target_variable_predictor, Rcpp::NumericVector predictor_variable, const unsigned max_target_lags, const unsigned max_predictor_lags, const std::string crit);
+RcppExport SEXP _TwoStepSDFM_runARDL(SEXP target_variableSEXP, SEXP target_variable_predictorSEXP, SEXP predictor_variableSEXP, SEXP max_target_lagsSEXP, SEXP max_predictor_lagsSEXP, SEXP critSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type target_variable(target_variableSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type target_variable_predictor(target_variable_predictorSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type predictor_variable(predictor_variableSEXP);
+    Rcpp::traits::input_parameter< const unsigned >::type max_target_lags(max_target_lagsSEXP);
+    Rcpp::traits::input_parameter< const unsigned >::type max_predictor_lags(max_predictor_lagsSEXP);
+    Rcpp::traits::input_parameter< const std::string >::type crit(critSEXP);
+    rcpp_result_gen = Rcpp::wrap(runARDL(target_variable, target_variable_predictor, predictor_variable, max_target_lags, max_predictor_lags, crit));
+    return rcpp_result_gen;
+END_RCPP
+}
 // runSDFMKFS
-Rcpp::List runSDFMKFS(Rcpp::NumericMatrix X_in, Rcpp::IntegerVector delay, Rcpp::IntegerVector selected, int R, int order, bool decorr_errors, const char* crit, double l2, Rcpp::NumericVector l1, int max_iterations, int steps, double comp_null, bool check_rank, double conv_crit, double conv_threshold, bool log, double KFS_conv_crit, const bool parallel);
-RcppExport SEXP _TwoStepSDFM_runSDFMKFS(SEXP X_inSEXP, SEXP delaySEXP, SEXP selectedSEXP, SEXP RSEXP, SEXP orderSEXP, SEXP decorr_errorsSEXP, SEXP critSEXP, SEXP l2SEXP, SEXP l1SEXP, SEXP max_iterationsSEXP, SEXP stepsSEXP, SEXP comp_nullSEXP, SEXP check_rankSEXP, SEXP conv_critSEXP, SEXP conv_thresholdSEXP, SEXP logSEXP, SEXP KFS_conv_critSEXP, SEXP parallelSEXP) {
+Rcpp::List runSDFMKFS(Rcpp::NumericMatrix X_in, Rcpp::IntegerVector delay, Rcpp::IntegerVector selected, int R, int order, bool decorr_errors, const char* crit, double l2, Rcpp::NumericVector l1, int max_iterations, int steps, double comp_null, bool check_rank, double conv_crit, double conv_threshold, bool log, double KFS_conv_crit, const bool parallel, const unsigned fcast_horizon);
+RcppExport SEXP _TwoStepSDFM_runSDFMKFS(SEXP X_inSEXP, SEXP delaySEXP, SEXP selectedSEXP, SEXP RSEXP, SEXP orderSEXP, SEXP decorr_errorsSEXP, SEXP critSEXP, SEXP l2SEXP, SEXP l1SEXP, SEXP max_iterationsSEXP, SEXP stepsSEXP, SEXP comp_nullSEXP, SEXP check_rankSEXP, SEXP conv_critSEXP, SEXP conv_thresholdSEXP, SEXP logSEXP, SEXP KFS_conv_critSEXP, SEXP parallelSEXP, SEXP fcast_horizonSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -36,7 +52,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type log(logSEXP);
     Rcpp::traits::input_parameter< double >::type KFS_conv_crit(KFS_conv_critSEXP);
     Rcpp::traits::input_parameter< const bool >::type parallel(parallelSEXP);
-    rcpp_result_gen = Rcpp::wrap(runSDFMKFS(X_in, delay, selected, R, order, decorr_errors, crit, l2, l1, max_iterations, steps, comp_null, check_rank, conv_crit, conv_threshold, log, KFS_conv_crit, parallel));
+    Rcpp::traits::input_parameter< const unsigned >::type fcast_horizon(fcast_horizonSEXP);
+    rcpp_result_gen = Rcpp::wrap(runSDFMKFS(X_in, delay, selected, R, order, decorr_errors, crit, l2, l1, max_iterations, steps, comp_null, check_rank, conv_crit, conv_threshold, log, KFS_conv_crit, parallel, fcast_horizon));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -69,7 +86,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_TwoStepSDFM_runSDFMKFS", (DL_FUNC) &_TwoStepSDFM_runSDFMKFS, 18},
+    {"_TwoStepSDFM_runARDL", (DL_FUNC) &_TwoStepSDFM_runARDL, 6},
+    {"_TwoStepSDFM_runSDFMKFS", (DL_FUNC) &_TwoStepSDFM_runSDFMKFS, 19},
     {"_TwoStepSDFM_runStaticFM", (DL_FUNC) &_TwoStepSDFM_runStaticFM, 17},
     {NULL, NULL, 0}
 };

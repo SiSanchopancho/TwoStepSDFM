@@ -2,11 +2,7 @@
 % Please edit documentation in R/TwoStepSDFM.R
 \name{twoStepSDFM}
 \alias{twoStepSDFM}
-\title{Run Sparse DFM KFS
-
-This function wraps the C++ implementation of the Sparse DFM KFS to
-provide default parameters and potentially pre-process inputs or
-post-process outputs.}
+\title{Estimate an SDFM via SPCA and Kalman Filter and Smoother}
 \usage{
 twoStepSDFM(
   data,
@@ -17,67 +13,65 @@ twoStepSDFM(
   decorr_errors = TRUE,
   lag_estim_criterion = "BIC",
   ridge_penalty = 1e-06,
-  lasso_penalty = NaN,
+  lasso_penalty = NULL,
   max_iterations = 1000,
-  max_no_steps = NaN,
+  max_no_steps = NULL,
   comp_null = 1e-15,
   check_rank = FALSE,
   conv_crit = 1e-04,
   conv_threshold = 1e-04,
   log = FALSE,
-  parallel = FALSE
+  parallel = FALSE,
+  fcast_horizon = 0
 )
 }
 \arguments{
-\item{data}{Numeric "no_of_variables x no_of_observations" matrix of data.}
+\item{data}{Numeric (no_of_variables x no_of_observations) matrix of data or zoo/xts object.}
 
-\item{delay}{Integer vector of predictor delays.}
+\item{delay}{Integer vector of variable delays.}
 
 \item{selected}{Integer vector of the number of selected variables for each factor.}
 
-\item{no_of_factors}{Integer, number of factors.}
+\item{no_of_factors}{Integer number of factors.}
 
-\item{max_factor_lag_order}{Integer, max P of the VAR(P) process of the factors.}
+\item{max_factor_lag_order}{Integer max P of the VAR(P) process of the factors.}
 
 \item{decorr_errors}{Logical, whether or not the errors should be decorrelated.}
 
-\item{lag_estim_criterion}{Character string, information criterion used for the estimation of the factor VAR order ("BIC", "AIC", "HIC").}
+\item{lag_estim_criterion}{Information criterion used for the estimation of the factor VAR order ("BIC", "AIC", "HIC").}
 
-\item{ridge_penalty}{Numeric, ridge penalty.}
+\item{ridge_penalty}{Ridge penalty.}
 
 \item{lasso_penalty}{Numeric vector, lasso penalties for each factor (set to NaN if not intended as stopping criterion).}
 
-\item{max_iterations}{Integer, maximum number of iterations.}
+\item{max_iterations}{Integer maximum number of iterations.}
 
-\item{max_no_steps}{Integer, number of max_no_steps (used for LARS-EN as an alternative).}
+\item{max_no_steps}{Integer number of max_no_steps (used for LARS-EN as an alternative).}
 
-\item{comp_null}{Numeric, computational zero.}
+\item{comp_null}{Computational zero.}
 
 \item{check_rank}{Logical, whether or not the rank of the variance-covariance matrix should be checked.}
 
-\item{conv_crit}{Numeric, conversion criterion for the SPCA algorithm.}
+\item{conv_crit}{Conversion criterion for the SPCA algorithm.}
 
-\item{conv_threshold}{Numeric, conversion criterion for the coordinate descent algorithm.}
+\item{conv_threshold}{Conversion criterion for the coordinate descent algorithm.}
 
 \item{log}{Logical, whether or not output should be printed along the algorithm.}
 
-\item{parallel}{Make use of Eigen internal parallel matrix operations}
+\item{parallel}{Logical, whether or not to use Eigen's internal parallel matrix operations.}
+
+\item{fcast_horizon}{Integer forecasting horizon for factor forecasts}
 }
 \value{
 The \code{twoStepSDFM} function returns an object \code{fit} which, contains the following elements:
 \describe{
-\item{\code{Lambda_hat}}{A matrix of estimated loadings for each factor on each observed variable.}
-\item{\code{F}}{The factor estimates.}
-\item{\code{Pt}}{The estimated precision matrix of the factors.}
-\item{\code{Wt}}{The estimated variance-covariance matrix of the residuals/errors.}
-\item{\code{C}}{A matrix representing any transformations applied to the factors for error decorrelation, if \code{decorr_errors} is TRUE.}
-\item{\code{max_factor_lag_order}}{The order of the VAR(max_factor_lag_order) model used in the factor model process.}
+\item{\code{loading_matrix_estimate}}{A matrix of estimated loadings for each factor on each observed variable.}
+\item{\code{smoothed_factors}}{The smoothed factor estimates.}
+\item{\code{smoothed_state_variance}}{The estimated variance-covariance matrix of the residuals/errors.}
+\item{\code{factor_var_lag_order}}{The order of the VAR(max_factor_lag_order) model used in the factor model process.}
+\item{\code{error_var_cov_cholesky_factor}}{A matrix representing any transformations applied to the factors for error decorrelation, if \code{decorr_errors} is TRUE.}
 }
 }
 \description{
-Run Sparse DFM KFS
-
-This function wraps the C++ implementation of the Sparse DFM KFS to
-provide default parameters and potentially pre-process inputs or
-post-process outputs.
+Estimate an SDFM via SPCA and Kalman Filter and Smoother
 }

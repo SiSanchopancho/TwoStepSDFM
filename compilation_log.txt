@@ -1,0 +1,7 @@
+* installing to library 'C:/Users/Domen/AppData/Local/R/win-library/4.4'
+* installing *source* package 'TwoStepSDFM' ...
+ERROR: cannot remove earlier installation, is it in use?
+* removing 'C:/Users/Domen/AppData/Local/R/win-library/4.4/TwoStepSDFM'
+* restoring previous 'C:/Users/Domen/AppData/Local/R/win-library/4.4/TwoStepSDFM'
+Warnung in file.copy(lp, dirname(pkgdir), recursive = TRUE, copy.date = TRUE)
+  Problem C:\Users\Domen\AppData\Local\R\win-library\4.4\00LOCK-TwoStepSDFM\TwoStepSDFM\libs\x64\TwoStepSDFM.dll nach C:\Users\Domen\AppData\Local\R\win-library\4.4\TwoStepSDFM\libs\x64\TwoStepSDFM.dll zu kopieren: Permission denied

@@ -1,6 +1,6 @@
 Package: TwoStepSDFM
 Title: Estimate a Sparse Mixed Frequency Gaussian Factor Model Using a Two-Step Procedure
-Version: 0.0.0.2
+Version: 0.1.0
 Authors@R: person(
     given = "Domenic",
     family = "Franjic",
@@ -16,9 +16,14 @@ Description: The package uses sparse principal components analysis and the Kalma
 License: GPL-3 + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Imports:
-    Rcpp (>= 1.0.8)
+    Rcpp (>= 1.0.8),
+    zoo,
+    xts,
+    lubridate,
+    ggplot2,
+    patchwork
 LinkingTo:
     Rcpp,
     RcppEigen

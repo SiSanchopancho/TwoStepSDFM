@@ -4,3 +4,4 @@
 ^\\.github$
 ^\\.Rcheck$
 ^PackageBuilder\\.R$
+^UPDATE_NOTES\\.md$

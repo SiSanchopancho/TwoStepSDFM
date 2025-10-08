@@ -3,25 +3,17 @@ A ``C++``-based ``R`` implementation of a two-step estimation procedure for a (l
 
 ## Introduction
 
-The ``TwoStepSDFM`` package provides a fast implementation of the Kalman Filter and Smoother (hereinafter KFS, see Koopman and Durbin, 2000) to estimate factors in a mixed-frequency SDFM framework, explicitly accounting for cross-sectional correlation in the measurement error. The KFS is initialized using results from Sparse Principal Components Analysis (SPCA) by Zou and Hastie (2006) in a preliminary step. This approach generalizes the two-step estimator for approximate dynamic factor models by Giannone, Reichlin, and Small (2008) and Doz, Giannone, and Reichlin (2011).
-We estimate the loading matrix $\boldsymbol{\Lambda}:=(\lambda_{n,r})_{n,r=1}^{N,R}$ and factors $\mathbf{f}_t := (f_{r,t})_{t=1}^T$ₜ of the following state-space model:
-$$
-\mathbf{x}_t = \boldsymbol{\Lambda}\mathbf{f}_t + \boldsymbol{\xi}_t\\
-\mathbf{f}_t = \sum_{p=0}^P\boldsymbol{\Phi}_p\mathbf{f}_{t-p} + \boldsymbol{\epsilon}_t
-$$
-for $t=1,\dots,T$. We use SPCA to estimate $\boldsymbol{\Lambda}$, resulting in exact zero elements due to regularization. We also explicitly model the non-diagonal variance-covariance matrix of the measurement error $\boldsymbol{\xi}_t$ₜ (for more details see Franjic and Schweikert (2024)).
+The ``TwoStepSDFM`` package provides a fast implementation of the Kalman Filter and Smoother (hereinafter KFS, see Koopman and Durbin, 2000) to estimate factors in a mixed-frequency SDFM framework, explicitly accounting for cross-sectional correlation in the measurement error. The KFS is initialized using results from Sparse Principal Components Analysis (SPCA) by Zou and Hastie (2006) in a preliminary step. This approach generalizes the two-step estimator for approximate dynamic factor models by Giannone, Reichlin, and Small (2008) and Doz, Giannone, and Reichlin (2011). For more details see Franjic and Schweikert (2024).
 
 ## Features
 
-As this is an early beta version of the package, only a limited set of functions is currently available. Additional functions, such as validation wrappers, may be added in future updates.
-
 - **Fast Model Simulation**: The ``simFM()`` function provides a flexible framework to simulate approximate DFMs.
 - **Fast Model Estimation**: The ``twoStepSDFM()`` function provides a fast and convenient implementation of the two-step estimator outlined in Franjic and Schweikert (2024).
+- **Fast Model Prediction**: The ``nowcast()`` function is a highly convenient prediction function that automatically takes care of many issues that arise with mixed frequency data and ragged edges.
 - **Compatibility**: All functions take advantage of ``C++`` for enhanced speed.
 
 ## Prerequisites
 
-- **Eigen** (version 3.4.0 or later): A `C++` template library for linear algebra [@eigenweb]. [Eigen Website](https://eigen.tuxfamily.org/)
 - **Rcpp**: A package for integrating `C++` code into `R` [@Eddelbuettel2011Rcpp]. [Rcpp CRAN repository](https://cran.r-project.org/web/packages/Rcpp/index.html)
 - **RcppEigen**: A package for integrating the `Eigen` linear algebra library into `R` [@Bates2013EcppEigen]. [RcppEigen CRAN repository](https://cran.r-project.org/web/packages/RcppEigen/index.html)
 - **GCC compiler** (version 5.0 or later) [GCC Website](https://gcc.gnu.org/).
@@ -36,126 +28,289 @@ To install the package itself, a short `R` script is provided (see `PackageBuild
 
 ## Usage
 
-### ``simFM()`` -- Simulating a dynamic factor model
+### ``simFM()``: Simulating a dynamic factor model
 
 #### Parameters
 
-- ``no_of_observations`` -- Number of observations
-- ``no_of_variables`` -- Number of variables
-- ``no_of_factors`` -- Number of factors
-- ``loading_matrix`` -- Factor loadings matrix
-- ``meas_error_mean`` -- Mean of the measurement error
-- ``meas_error_var_cov`` -- Variance-covariance matrix of the measurement error
-- ``trans_error_var_cov`` -- Variance-covariance matrix of the transition errors
-- ``trans_var_coeff`` -- Factor VAR coefficient matrix (either a list of length $P$ of $(R\times R)$ matrices or a matrix of dimensions $(R\times RP)$)
-- ``factor_lag_order`` -- Order of the factor VAR process
-- ``quarterfy`` -- Indicating whether or not some of the variables should be aggregated to quarterly observations (i.e., quarterfied)
-- ``quarterly_variable_ratio `` -- Ratio of monthly predictors ought to be quarterfied (default is ``0``)
-- ``corr`` -- Indicating whether or not the measurement error should be internatlly, randomly, cross-crossectionally correlated (default is ``FALSE``)
-- ``beta_param`` -- Beta parameter governing the degree of correlation of the measurement error (default is ``Inf``, i.e., disabled)
-- ``seed`` -- Seed for everything random (default is ``20022024``)
-- ``burn_in`` -- Burn-in period (default is ``1000``)
-- ``rescale`` -- Indicating whether the variance of the measurement error should be scaled according to the variance of the common-component (default is ``TRUE``)
-- ``check_stationarity`` -- Indicating whether the factor VAR process should be checked for stationarity (default is ``FALSE``)
-- ``stationarity_check_threshold`` -- Threshold for checking for a unit root (default is ``1e-5``)
-- ``parallel`` -- Enable (``TRUE``) or disable (``FALSE``) Eigen's internal parallel matrix operations
+- ``no_of_observations`` Integer number of observations.
+- ``no_of_variables`` Integer number of Variables.
+- ``no_of_factors`` Integer number of factors.
+- ``loading_matrix`` Numeric (no_of_variables x no_of_factors) loading matrix.
+- ``meas_error_mean`` Numeric vector/matrix of the means of the measurement errors.
+- ``meas_error_var_cov`` Numeric (no_of_factors x no_of_factors) varianceNumeric (no_of_variables x no_of_factors)-covariance matrix of the measurement errors.
+- ``trans_error_var_cov`` Numeric (no_of_variables x no_of_variables) variance-covariance matrix of the transition errors.
+- ``trans_var_coeff`` Either a list of length max_factor_lag_order with each entry a numeric (no_of_factors x no_of_factors) VAR coefficient matrix or a matrix of dimensions (no_of_factors x(no_of_factors * max_factor_lag_order)) holding the VAR coefficients of the factor VAR process in each (no_of_factors x no_of_factors) block.
+- ``factor_lag_order`` Integer order of the VAR process in the state equation.
+- ``delay`` Integer vector of delays imposed onto the end of the data in months (ragged edges)
+- ``quarterfy`` Logical, whether or not some of the data should be aggregated to quarterly representations.
+- ``quarterly_variable_ratio`` Ratio of variables ought to be quarterfied.
+- ``corr`` Logical, whether or not the measurement error should be randomly correlated inside the function using a random correlation matrix with off-diagonal elements governed by a beta-distribution.
+- ``beta_param`` Parameter of the beta-distribution governing the off-diagonal elements of the variance-covariance matrix of the measurement error.
+- ``seed`` 32-bit unsigned integer seed for all random processes inside the function.
+- ``burn_in`` Integer burn-in period of the simulated data ought to be discarded at the beginning of the data.
+- ``rescale`` Logical, whether or not the variance of the measurement error should be rescaled by the common component to equalise the signal-to-noise ratio.
+- ``starting_date`` A date type object indicating the start of the dataset. If NULL (default), the function returns matrices with observations along the second dimension (i.e., time in columns). If specified, the function treats the data as a time series, aligning it accordingly.
+- ``check_stationarity`` Logical, whether or not the stationarity properties of the factor VAR process should be checked.
+- ``stationarity_check_threshold`` Threshold of the stationarity check for when to deem an eigenvalue negative beyond the numerical error.
+- ``parallel`` Logical, make use of Eigen internal parallel matrix operations
 
 #### Example
 
 ```R
-# Simulate a DGP using simFM
-no_of_observations <- 100 # Number of observations
-no_of_variables <- 10 # Number of variabes
-no_of_factors <- 2 # Number of factors
-trans_error_var_cov <- diag(1, no_of_factors) # Variance-covariance matrix of the transition errors
-loading_matrix <- matrix(rnorm(no_of_variables * no_of_factors), no_of_variables, no_of_factors) # Factor loadings matrix
-meas_error_mean <- rep(0, no_of_variables) # Mean of the measurement error
-meas_error_var_cov <- diag(1, no_of_variables) # Variance-covariance matrix of the measurement error
-trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors)) # Factor VAR coefficient matrix
-factor_lag_order <- 2 # Order of the factor VAR process
-quarterfy <- FALSE # Indicating whether or not some of the variables should be aggregated to quarterly observations (i.e., quarterfied)
-quarterly_variable_ratio  <- 0
-corr <- TRUE # Indicating whether or not the measurement error should be internatlly cross-crossectionally correlated
-beta_param <- 1 # Beta parameter governing the degree of correlation of the measurement error
-seed <- 16022024 # Seed
-set.seed(seed)
-burn_in <- 999 # Burn-in period
-rescale <- TRUE # Indicating whether the variance of the measurement error should be scaled according to the variance of the common-component 
-
-# Draw the FM object
-FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, no_of_factors = no_of_factors, loading_matrix = loading_matrix, meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
-            trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, factor_lag_order = factor_lag_order, quarterfy = quarterfy, quarterly_variable_ratio  = quarterly_variable_ratio ,
-            corr = corr, beta_param = beta_param, seed = seed, burn_in = burn_in, rescale = rescale,
-            check_stationarity = TRUE, stationarity_check_threshold = 1e-10)
+  set.seed(02102025)
+  no_of_observations <- 200
+  no_of_variables <- 150
+  no_of_factors <- 3
+  trans_error_var_cov <- diag(1, no_of_factors)
+  loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+  meas_error_mean <- rep(0, no_of_variables)
+  meas_error_var_cov <- diag(1, no_of_variables)
+  trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+  factor_lag_order <- 2 # Order of the factor VAR process
+  simul_delay <- c(6, 3, 6, 0, 3, rep(0, 45), floor(rexp(100, 1)))
+  quarterfy <- TRUE
+  quarterly_variable_ratio  <- 1/3
+  corr <- TRUE
+  beta_param <- 2 
+  seed <- 01102025 
+  set.seed(seed)
+  burn_in <- 999 
+  starting_date <- "1970-01-01"
+  rescale <- TRUE
+  check_stationarity <- TRUE
+  stationarity_check_threshold <- 1e-10
+  
+  FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
+              no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+              meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+              trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+              factor_lag_order = factor_lag_order, delay = simul_delay, quarterfy = quarterfy, 
+              quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr, 
+              beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
+              rescale = rescale, check_stationarity = check_stationarity, 
+              stationarity_check_threshold = stationarity_check_threshold)
+              
+  print(FM)
+  plot(FM)
 ```
 
-### ``twoStepSDFM()`` -- Estimating the model parameters and higher-frequency factors
+### ``twoStepSDFM()``: Estimating the model parameters and higher-frequency factors
 
 #### Parameters
 
-- ``data`` -- $(N\times T)$ matrix of observations
-- ``delay`` -- $(N \times 1)$ vector of publication lag (in months)
-- ``selected`` -- $(R\times 1)$ vector of the number of non-zero loadings for each factor
-- ``no_of_factors`` -- Number of factors
-- ``max_factor_lag_order `` -- Maximum lag length of the factor VAR processes (default is ``10``)
-- ``decorr_errors`` -- Indicating whether the measurement error should be treated as cross-sectionally correlated (default is ``TRUE``)
-- ``lag_estim_criterion `` -- Information criterion to choose the factor VAR process lag length (available are ``"BIC"``, ``"AIC"``, ``"HC"``; default is ``"BIC"``)
-- ``ridge_penalty `` -- Ridge penalty (default is ``1e-6``)
-- ``lasso_penalty `` -- $(R\times 1)$ vector of LASSO penalties for each factor when using LARS (default is ``NaN``,i.e., disabled and ``selected`` is used as stopping criterion)
-- ``max_iterations`` -- Maximum number of iterations (default is ``1000``)
-- ``max_no_steps `` -- Maximum number of steps when using the LARS algorithm (default is ``NaN``, i.e., disabled and ``selected`` is used as stopping criterion)
-- ``comp_null`` -- Computational zero (default is ``1e-15``)
-- ``check_rank`` -- Indicating whether to check the rank of the variance-covariance matrix of the data (default is ``FALSE``)
-- ``conv_crit`` -- Conversion criterion for the iterative SPCA algorithm (default is ``1e-4``)
-- ``conv_threshold`` -- Conversion threshold when using coordinate descent (default is ``1e-4``)
-- ``log`` -- Indicating whether to print output for monitoring purposes (default is ``FALSE``)
-- ``parallel`` -- Enable (``TRUE``) or disable (``FALSE``) Eigen's internal parallel matrix operations
+- ``data`` Numeric (no_of_variables x no_of_observations) matrix of data or zoo/xts object.
+- ``delay`` Integer vector of variable delays.
+- ``selected`` Integer vector of the number of selected variables for each factor.
+- ``no_of_factors`` Integer number of factors.
+- ``max_factor_lag_order`` Integer max P of the VAR(P) process of the factors.
+- ``decorr_errors`` Logical, whether or not the errors should be decorrelated.
+- ``lag_estim_criterion`` Information criterion used for the estimation of the factor VAR order ("BIC", "AIC", "HIC").
+- ``ridge_penalty`` Ridge penalty.
+- ``lasso_penalty`` Numeric vector, lasso penalties for each factor (set to NaN if not intended as stopping criterion).
+- ``max_iterations`` Integer maximum number of iterations.
+- ``max_no_steps`` Integer number of max_no_steps (used for LARS-EN as an alternative).
+- ``comp_null`` Computational zero.
+- ``check_rank`` Logical, whether or not the rank of the variance-covariance matrix should be checked.
+- ``conv_crit`` Conversion criterion for the SPCA algorithm.
+- ``conv_threshold`` Conversion criterion for the coordinate descent algorithm.
+- ``log`` Logical, whether or not output should be printed along the algorithm.
+- ``parallel`` Logical, whether or not to use Eigen's internal parallel matrix operations.
+- ``fcast_horizon`` Integer forecasting horizon for factor forecasts
 
 #### Example
 
 ```R
-# Simulate a DGP using simFM
-no_of_observations <- 100 # Number of observations
-no_of_variables <- 10 # Number of variabes
-no_of_factors <- 2 # Number of factors
-trans_error_var_cov <- diag(1, no_of_factors) # Variance-covariance matrix of the transition errors
-loading_matrix <- matrix(rnorm(no_of_variables * no_of_factors), no_of_variables, no_of_factors) # Factor loadings matrix
-meas_error_mean <- rep(0, no_of_variables) # Mean of the measurement error
-meas_error_var_cov <- diag(1, no_of_variables) # Variance-covariance matrix of the measurement error
-trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors)) # Factor VAR coefficient matrix
-factor_lag_order <- 2 # Order of the factor VAR process
-quarterfy <- FALSE # Indicating whether or not some of the variables should be aggregated to quarterly observations (i.e., quarterfied)
-quarterly_variable_ratio  <- 0
-corr <- TRUE # Indicating whether or not the measurement error should be internatlly cross-crossectionally correlated
-beta_param <- 1 # Beta parameter governing the degree of correlation of the measurement error
-seed <- 16022024 # Seed
-set.seed(seed)
-burn_in <- 999 # Burn-in period
-rescale <- TRUE # Indicating whether the variance of the measurement error should be scaled according to the variance of the common-component 
+  set.seed(02102025)
+  no_of_observations <- 200
+  no_of_variables <- 10
+  no_of_factors <- 3
+  trans_error_var_cov <- diag(1, no_of_factors)
+  loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+  meas_error_mean <- rep(0, no_of_variables)
+  meas_error_var_cov <- diag(1, no_of_variables)
+  trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+  factor_lag_order <- 2 
+  simul_delay <- c(floor(rexp(10, 1)))
+  quarterfy <- FALSE
+  quarterly_variable_ratio  <- 0
+  corr <- TRUE
+  beta_param <- 2
+  seed <- 01102025
+  set.seed(seed)
+  burn_in <- 999
+  starting_date <- "1970-01-01"
+  rescale <- TRUE
+  check_stationarity <- TRUE
+  stationarity_check_threshold <- 1e-10
+  
+  FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
+              no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+              meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+              trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+              factor_lag_order = factor_lag_order, delay = simul_delay, quarterfy = quarterfy, 
+              quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr, 
+              beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
+              rescale = rescale, check_stationarity = check_stationarity, 
+              stationarity_check_threshold = stationarity_check_threshold)
+  
+  frequency <- FM$frequency
+  delay <- simul_delay
+  selected <- c(10, 8, 5)
+  no_of_factors <- 3 
+  max_factor_lag_order  <- 10
+  decorr_errors <- TRUE 
+  lag_estim_criterion  <- "BIC"
+  ridge_penalty <- 1e-06
+  lasso_penalty <- NULL
+  max_iterations <- 1000
+  max_no_steps <- NULL
+  comp_null <- 1e-15
+  check_rank <- FALSE
+  conv_crit <- 1e-04 
+  conv_threshold <- 1e-04
+  log <- FALSE
+  parallel <- FALSE
+  fcast_horizon <- 10
+  
+  fit <- twoStepSDFM(data = FM$data, delay = delay, selected = selected, 
+                     no_of_factors = no_of_factors,  max_factor_lag_order  = max_factor_lag_order,
+                     decorr_errors = decorr_errors,  lag_estim_criterion  = lag_estim_criterion, 
+                     ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, 
+                     max_iterations = max_iterations, max_no_steps = max_no_steps, 
+                     comp_null = comp_null,  check_rank = check_rank,  conv_crit = conv_crit, 
+                     conv_threshold = conv_threshold, log = log, parallel = parallel,
+                     fcast_horizon = fcast_horizon)
+                     
+  print(fit)
+  plot(fit)
+```
 
-# Draw the FM object
-FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, no_of_factors = no_of_factors, loading_matrix = loading_matrix, meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
-            trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, factor_lag_order = factor_lag_order, quarterfy = quarterfy, quarterly_variable_ratio  = quarterly_variable_ratio ,
-            corr = corr, beta_param = beta_param, seed = seed, burn_in = burn_in, rescale = rescale,
-            check_stationarity = TRUE, stationarity_check_threshold = 1e-10)
+### ``nowcast()``: Predict quarterly data using the two-step SDFM procedure of Franjic & Scheikert (2024).
 
-# Fitting a sparse model with l2 regularisation and non-orthogonal measurement errors
-selected <- c(round(no_of_variables * 0.8), round(no_of_variables * 0.5))
-delay <- rep(0, no_of_variables)
-fit_sparse <- twoStepSDFM(data = FM$data, delay = delay, selected = selected, no_of_factors = no_of_factors, 
-                          max_factor_lag_order  = 10, decorr_errors = TRUE, 
-                          lag_estim_criterion  = "BIC", ridge_penalty = 1e-06, 
-                          lasso_penalty = NaN, max_iterations = 1000, max_no_steps = NaN, 
-                          comp_null = 1e-15,  check_rank = FALSE,  conv_crit = 1e-04, 
-                          conv_threshold = 1e-04, log = FALSE, parallel = FALSE)
-fit_sparse
+#### Usage
+
+Most of the parameters of ``nowcast()`` are directly parsed to ``twoStepSDFM()`` and work thus accordingly. The majour differences, however, lie in the parameter ``data``, ``variables_of_interest``, ``max_fcast_horizon``, ``frequency``, ``max_ar_lag_order``, and ``max_predictor_lag_order``.
+
+``data`` expects a zoo/xts object of mixed frequency data. At least one variable in ``data`` must be of quarterly frequency. All quarterly variables should be stored such that their actual realisations are stored in the last months of each respective quarter. The inter-quarter month should be filled with either the realisation or some other non-NA numerical value. ``NA``s are fine at the end of the panel as long as they align with the delays provided in ``delay``. The function will check for ``NA``s that lie outside of the ragged edges.
+
+``variables_of_interest`` is the vector indicating thos quarterly variables ought to be predicted. Note that currently only quarterly target variables are supported. In general, multiple quarterly series can be predicted at once.
+
+``max_fcast_horizon`` indicates the maximum number of forecasts outside of the final observation of the panel should be computed. Note, the minimum forecasting horizon will be inferred internally for each target variable. Here, the minimum forecasting horizon will be set such that all ragged edges due to publication delay will be predicted. For example: Say the target variable is delayed by six months. ``max_fcast_horizon`` is set to two. The function will then automatically compute a one-step back backcast, a nowcast, a one-step ahead forecast, and a two step-ahead forecast. If the second variable of interest is not published with delay, only the one- and two-step ahead forecast will be computed.
+
+#### Forecasting Method
+
+The ``nowcast()`` function employs a forecast averaging forecasting method. In the first step, the factors are computed using the ``twoStepSDFM()`` function. Next, the computed factors are aggregated according to Mariano and Murasawa (2003) into a quarterly representation. They are then treated as quarterly predictors along the potential additional provided observed quarterly predictors. 
+
+The function is generally able to compute predictions for multiple target variables at once. For each target variable and horizon, a prediction from an ARDL model is computed for each quarterly predictor and each of the aggregated factors. These predictions are then averaged (with equal weights) to a single prediction for each horizon.
+
+#### Parameters
+
+- ``data`` Zoo/xts object.
+- ``variables_of_interest`` Integer vector indicating the index of all target variables
+- ``max_fcast_horizon`` Maximum forecasting horizon
+- ``delay`` Integer vector of predictor delays.
+- ``selected`` Integer vector of the number of selected variables for each factor.
+- ``frequency`` Integer vector of frequencies of the variables in the data set (currently supported: "12" for monthly and "4" for quarterly data)
+- ``no_of_factors`` Integer number of factors.
+- ``max_factor_lag_order`` Integer max P of the VAR(P) process of the factors.
+- ``decorr_errors`` Logical, whether or not the errors should be decorrelated.
+- ``lag_estim_criterion`` Information criterion used for the estimation of the factor VAR order ("BIC", "AIC", "HIC").
+- ``ridge_penalty`` Ridge penalty.
+- ``lasso_penalty`` Numeric vector, lasso penalties for each factor (set to NaN if not intended as stopping criterion).
+- ``max_iterations`` Integer maximum number of iterations.
+- ``max_no_steps`` Integer number of max_no_steps (used for LARS-EN as an alternative).
+- ``comp_null`` Computational zero.
+- ``check_rank`` Logical, whether or not the rank of the variance-covariance matrix should be checked.
+- ``conv_crit`` Conversion criterion for the SPCA algorithm.
+- ``conv_threshold`` Conversion criterion for the coordinate descent algorithm.
+- ``log`` Logical, whether or not output should be printed along the algorithm.
+- ``parallel`` Logical, whether or not to use Eigen's internal parallel matrix operations.
+- ``max_ar_lag_order`` Integer maximum number of lags of the target variable ought to be included in the nowcasting step
+- ``max_predictor_lag_order`` Integer maximum number of lags of the predictors ought to be included in the nowcasting step
+
+#### Example
+
+```R
+  set.seed(02102025)
+  no_of_observations <- 200
+  no_of_variables <- 150
+  no_of_factors <- 3
+  trans_error_var_cov <- diag(1, no_of_factors)
+  loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+  meas_error_mean <- rep(0, no_of_variables)
+  meas_error_var_cov <- diag(1, no_of_variables)
+  trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+  factor_lag_order <- 2 # Order of the factor VAR process
+  simul_delay <- c(6, 3, 6, 0, 3, rep(0, 45), floor(rexp(100, 1)))
+  quarterfy <- TRUE
+  quarterly_variable_ratio  <- 1/3
+  corr <- TRUE 
+  beta_param <- 2 
+  seed <- 01102025 
+  set.seed(seed)
+  burn_in <- 999 
+  starting_date <- "1970-01-01"
+  rescale <- TRUE
+  check_stationarity <- TRUE
+  stationarity_check_threshold <- 1e-10
+  
+  FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
+              no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+              meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+              trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+              factor_lag_order = factor_lag_order, delay = simul_delay, quarterfy = quarterfy, 
+              quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr, 
+              beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
+              rescale = rescale, check_stationarity = check_stationarity, 
+              stationarity_check_threshold = stationarity_check_threshold)
+  
+  data <- FM$data
+  variables_of_interest <- 1:5
+  max_fcast_horizon <- 4
+  delay <- simul_delay
+  selected <- c(round(no_of_variables * 0.5), round(no_of_variables * 0.25))
+  frequency <- c(rep(4, 50), rep(12, 100))
+  no_of_factors <- 2 
+  max_factor_lag_order  <- 10
+  decorr_errors <- TRUE 
+  lag_estim_criterion  <- "BIC"
+  ridge_penalty <- 1e-06
+  lasso_penalty <- NULL
+  max_iterations <- 1000
+  max_no_steps <- NULL
+  comp_null <- 1e-15
+  check_rank <- FALSE
+  conv_crit <- 1e-04 
+  conv_threshold <- 1e-04
+  log <- FALSE
+  parallel <- FALSE
+  max_ar_lag_order <- 5
+  max_predictor_lag_order  <- 5
+  
+  results <- nowcast(data = data, variables_of_interest = variables_of_interest, 
+                     max_fcast_horizon = max_fcast_horizon, delay = delay, selected = selected,
+                     frequency = frequency, no_of_factors = no_of_factors, 
+                     max_factor_lag_order  = max_factor_lag_order,  
+                     decorr_errors = decorr_errors, 
+                     lag_estim_criterion  = lag_estim_criterion,
+                     ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, 
+                     max_iterations = max_iterations, max_no_steps = max_no_steps, 
+                     comp_null = comp_null, check_rank = check_rank,  
+                     conv_crit = conv_crit, conv_threshold = conv_threshold, 
+                     log = log, parallel = parallel, max_ar_lag_order = max_ar_lag_order,
+                     max_predictor_lag_order = max_predictor_lag_order
+  )
+  
+  print(results)
+  plot(results)
+  
 ```
 
 ## License
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
-© 2024 Domenic Franjic
+© 2024-2025 Domenic Franjic
 
 This project is licensed under the **GNU General Public License v3.0**. See the [LICENSE](LICENSE) file for details.
 

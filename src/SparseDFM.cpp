@@ -41,7 +41,8 @@ void SparseDFM::SDFMKFS(
 	const double& conv_crit, // conversion criterion for the sparse pca algorithm
 	const double& conv_threshold, // conversion criterion for the conversion loop in the CD program (currently disabled)
 	const bool& log, // talk to me
-	const double& KFS_conv_crit //KFS conversion criterion
+	const double& KFS_conv_crit, //KFS conversion criterion
+	const unsigned& fcast_horizon
 )
 {
 	/* Dummies */
@@ -125,8 +126,8 @@ void SparseDFM::SDFMKFS(
 		Pt0 = DataHandle::cov(F_temp);
 	}
 
-	results.F = Eigen::MatrixXd::Zero(R * o, (T + 0 + 1));
-	results.Pt = Eigen::MatrixXd::Zero(R * o, R * o * (T + 0 + 1));
+	results.F = Eigen::MatrixXd::Zero(R * o, (T + fcast_horizon + 1));
+	results.Pt = Eigen::MatrixXd::Zero(R * o, R * o * (T + fcast_horizon + 1));
 	results.Wt = Eigen::MatrixXd::Zero(R * o, R * o * T);
 	results.Zero_Indeces = Eigen::MatrixXi::Zero(fit.Lambda_hat.rows(), fit.Lambda_hat.cols());
 
@@ -196,7 +197,7 @@ void SparseDFM::SDFMKFS(
 
 	Eigen::MatrixXd Vt_inv = Eigen::MatrixXd::Zero(N, T), Kt = Eigen::MatrixXd::Zero(R * o, N * T), e = Eigen::MatrixXd::Zero(N, T), Ft0 = F_l.rowwise().mean();
 
-	UVMVKalmanFilter(results, Vt_inv, Kt, e, N, T, R * o, X, Lambda_l, Phi, Sigma_e, Sigma_epsilon, Pt0, Ft0, delay, 0);
+	UVMVKalmanFilter(results, Vt_inv, Kt, e, N, T, R * o, X, Lambda_l, Phi, Sigma_e, Sigma_epsilon, Pt0, Ft0, delay, fcast_horizon);
 	UVMVKalmanSmoother(results, Kt, Vt_inv, e, N, T, R * o, X, Lambda_l, Phi, Sigma_e, Sigma_epsilon, delay);
 
 	// Re-try if the filter did obviously not converge
@@ -204,7 +205,7 @@ void SparseDFM::SDFMKFS(
 	while (KFS_conv_crit < results.F.cwiseAbs().colwise().mean().mean() && 0 < tries)
 	{
 		Pt0 *= 0.5;
-		UVMVKalmanFilter(results, Vt_inv, Kt, e, N, T, R * o, X, Lambda_l, Phi, Sigma_e, Sigma_epsilon, Pt0, Ft0, delay, 0);
+		UVMVKalmanFilter(results, Vt_inv, Kt, e, N, T, R * o, X, Lambda_l, Phi, Sigma_e, Sigma_epsilon, Pt0, Ft0, delay, fcast_horizon);
 		UVMVKalmanSmoother(results, Kt, Vt_inv, e, N, T, R * o, X, Lambda_l, Phi, Sigma_e, Sigma_epsilon, delay);
 		--tries;
 

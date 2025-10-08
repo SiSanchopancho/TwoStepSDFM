@@ -65,7 +65,8 @@ Rcpp::List runSDFMKFS(
 	double conv_threshold,
 	bool log,
 	double KFS_conv_crit,
-	const bool parallel
+	const bool parallel,
+	const unsigned fcast_horizon
 )
 {
 
@@ -108,7 +109,7 @@ Rcpp::List runSDFMKFS(
 
 	SparseDFM::SDFMKFS(results, X_in_eigen, delay_eigen, selected_eigen, R, order, decorr_errors, crit,
 		l2, l1_eigen, max_iterations, steps, comp_null, check_rank, conv_crit, conv_threshold, log,
-		KFS_conv_crit);
+		KFS_conv_crit, fcast_horizon);
 
 	// Re-correlate the loadings fit if necessary
 	if (decorr_errors)
