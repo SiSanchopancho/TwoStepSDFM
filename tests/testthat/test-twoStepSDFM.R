@@ -1,6 +1,4 @@
-
-
-test_that("Estimation function twoStepSDFM works", {
+test_that("twoStepSDFM() works", {
   
   # Simulate a DGP using simFM
   set.seed(02102025)

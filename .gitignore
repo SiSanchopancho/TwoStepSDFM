@@ -4,3 +4,7 @@
 /src/*.dll
 /src/tmp.def
 *.tar.gz
+*.pdf
+.Rdata
+.Rhistory
+compilation_log.txt

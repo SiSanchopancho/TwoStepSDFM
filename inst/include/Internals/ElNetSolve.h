@@ -74,18 +74,7 @@ Eigen::MatrixXd LARS(
   Eigen::VectorXi A_C_set = Eigen::VectorXi::LinSpaced(N, 0, N - 1), A_set = Eigen::VectorXi::Constant(N, -1);
 
   // Special cases and misshandling
-  if (!(std::isnan(l1)) && (selected != INT_MAX))
-  {
-    Rcpp::Rcout << '\n' << "Error! Both penalty and number of variables is provided. Termination criterion is ambiguous. Only provide either of them." << '\n';
-    return EXIT_FAILURE * Eigen::VectorXd::Ones(N);
-  }
-  else if (l1 < 0 || (selected < 0 && selected != INT_MAX) || (steps < 0 && steps != INT_MIN))
-  {
-    Rcpp::Rcout << "l1 = " << l1 << '\t' << "selected = " << selected << '\t' << "steps = " << steps << '\t';
-    Rcpp::Rcout << '\n' << "Error! A termination criterion ('l1', 'selected', or 'steps') has negative value." << '\n';
-    return EXIT_FAILURE * Eigen::VectorXd::Ones(N);
-  }
-  else if ((!(std::isnan(l1)) && ((2 * c.cwiseAbs().col(0).maxCoeff() / l2_sqrt_inv) <= l1)) || selected == 0)
+  if ((!(std::isnan(l1)) && ((2 * c.cwiseAbs().col(0).maxCoeff() / l2_sqrt_inv) <= l1)) || selected == 0)
   {
     return Eigen::VectorXd::Zero(N);
   }

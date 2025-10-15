@@ -97,6 +97,7 @@ twoStepSDFM <- function(data,
   if(any(is.infinite(data_r))){
     stop(paste0("data cannot have (-)Inf values."))
   }
+  data_r[is.na(data_r)] <- 0 # Override R NAs as they seem to not get properly parsed to C++
   
   # Mishandling of delay
   no_of_variables <- dim(data_r)[2]
@@ -176,7 +177,7 @@ twoStepSDFM <- function(data,
   }else{
     lasso_penalty <- rep(-2147483647L, no_of_factors)
   }
-
+  
   # Mishandlilng of max_iterations
   max_iterations <- checkPositiveSignedInteger(max_iterations, "max_iterations")
   
@@ -272,8 +273,14 @@ twoStepSDFM <- function(data,
                      "factor_var_lag_order", "error_var_cov_cholesky_factor")]
   
   # Compute the cholesky of the measurement error var.-cov.
-  result$error_var_cov_cholesky_factor <- solve(result$error_var_cov_cholesky_factor)
-  result$error_var_cov_cholesky_factor[upper.tri(result$error_var_cov_cholesky_factor)] <- 0
+  result$error_var_cov_cholesky_factor <- tryCatch({
+    solve(result$error_var_cov_cholesky_factor)
+  }, error = function(e) {
+    return(paste("ERROR:", conditionMessage(e)))
+  })
+  if (is.matrix(result$error_var_cov_cholesky_factor)) {
+    result$error_var_cov_cholesky_factor[upper.tri(result$error_var_cov_cholesky_factor)] <- 0
+  }
   
   if(is.zoo(data) || is.xts(data)){ # Also convert factors to time series
     start_vector <- c(year(time(data)[1]), month(time(data)[1]))
@@ -387,22 +394,27 @@ plot.SDFMFit <- function(x, ...) {
           panel.grid.minor = element_blank())
   
   # Measurement error var.-cov. matrix heatmap plot
-  measurement_error_var_cov_df <- as.data.frame(x$error_var_cov_cholesky_factor %*% t(x$error_var_cov_cholesky_factor))
-  colnames(measurement_error_var_cov_df) <- series_names
-  stacked_measurement_error_var_cov <- stack(measurement_error_var_cov_df[, series_names])
-  colnames(stacked_measurement_error_var_cov) <- c("(Co-)Variance", "Variable")
-  stacked_measurement_error_var_cov$`(Co-)Variable` <- factor(rep(series_names, length(series_names)), levels = rev(series_names))
-  out_list$`Meas. Error Var.-Cov. Matrix Heatmap` <- 
-    ggplot(stacked_measurement_error_var_cov, aes(x = Variable, y = `(Co-)Variable`)) +
-    geom_tile(data = stacked_measurement_error_var_cov, aes(fill = `(Co-)Variance`), width = 0.8, height = 0.8) +
-    scale_fill_gradient2(low = "#88ccee", high = "#117733", na.value = "#882255", mid = "#FFFFFF") +
-    scale_x_discrete(expand = c(0, 0)) +
-    theme_minimal() +
-    theme(axis.text.x = element_text(vjust = 0.5, hjust = 1, angle = -90),
-          strip.text.y = element_blank(),
-          panel.spacing = unit(0.01, "lines"),
-          panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank())
+  
+  if (!is.character(result$error_var_cov_cholesky_factor)) {
+    measurement_error_var_cov_df <- as.data.frame(x$error_var_cov_cholesky_factor %*% t(x$error_var_cov_cholesky_factor))
+    colnames(measurement_error_var_cov_df) <- series_names
+    stacked_measurement_error_var_cov <- stack(measurement_error_var_cov_df[, series_names])
+    colnames(stacked_measurement_error_var_cov) <- c("(Co-)Variance", "Variable")
+    stacked_measurement_error_var_cov$`(Co-)Variable` <- factor(rep(series_names, length(series_names)), levels = rev(series_names))
+    out_list$`Meas. Error Var.-Cov. Matrix Heatmap` <- 
+      ggplot(stacked_measurement_error_var_cov, aes(x = Variable, y = `(Co-)Variable`)) +
+      geom_tile(data = stacked_measurement_error_var_cov, aes(fill = `(Co-)Variance`), width = 0.8, height = 0.8) +
+      scale_fill_gradient2(low = "#88ccee", high = "#117733", na.value = "#882255", mid = "#FFFFFF") +
+      scale_x_discrete(expand = c(0, 0)) +
+      theme_minimal() +
+      theme(axis.text.x = element_text(vjust = 0.5, hjust = 1, angle = -90),
+            strip.text.y = element_blank(),
+            panel.spacing = unit(0.01, "lines"),
+            panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank())
+  }else{
+    out_list$`Meas. Error Var.-Cov. Matrix Heatmap` <- x$error_var_cov_cholesky_factor
+  }
   
   return(out_list)
 }

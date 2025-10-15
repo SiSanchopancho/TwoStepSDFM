@@ -306,6 +306,132 @@ The function is generally able to compute predictions for multiple target variab
   
 ```
 
+### ``crossVal()``: Validate the model hyperparameters using a random hyper-parameter-candidate-scheme (Bergstra and Bengio, 2021) via BIC (Despois and Doz, 2023) or time series cross-validation (Hyndman and Athanasopoulos,
+2018).
+
+#### Parameters
+
+- ``data`` ``Zoo``/``xts`` object.
+- ``variable_of_interest`` Integer value indicating the index of the single target variable
+- ``fcast_horizon`` Integer value indicating the target horizon
+- ``delay`` Integer vector of predictor delays.
+- ``frequency`` Integer vector of frequencies of the variables in the data set (currently supported: ``12`` for monthly and ``4`` for quarterly data)
+- ``no_of_factors`` Integer number of factors.
+- ``seed`` 32-bit positive integer for drawing the random hyper-parameter candidates
+- ``min_ridge_penalty`` Lower bound for the sampled ridge penalty coefficient
+- ``max_ridge_penalty`` Upper bound for the sampled ridge penalty coefficient
+- ``cv_repititions`` Integer number of predictions ought to be computed for each candidate set
+- ``cv_size`` Integer number of candidate sets
+- ``lasso_penalty_type`` Character indicating the lasso penalty type. ``"selected"`` uses the number of non-zero elements of the loading matrix. ``"penalty"`` uses the lasso size constraint directly. ``"steps"`` uses the number of steps.
+- ``min_max_penalty`` Vector of size tow, where the first element indicates the lower and the second element indicates the upper bound of the lasso penalty equivalent. If lasso_penalty_type is set to ``"selected"`` or ``"steps"``, both elements must be strictly positive integers.
+- ``max_factor_lag_order`` Integer max P of the VAR(P) process of the factors.
+- ``decorr_errors`` Logical, whether or not the errors should be decorrelated.
+- ``lag_estim_criterion`` Information criterion used for the estimation of the factor VAR order (``"BIC"``, ``"AIC"``, ``"HIC"``).
+- ``ridge_penalty`` Ridge penalty.
+- ``lasso_penalty`` Numeric vector, lasso penalties for each factor (set to ``NaN`` if not intended as stopping criterion).
+- ``max_iterations`` Integer maximum number of iterations.
+- ``max_no_steps`` Integer number of max_no_steps (used for LARS-EN as an alternative).
+- ``comp_null`` Computational zero.
+- ``check_rank`` Logical, whether or not the rank of the variance-covariance matrix should be checked.
+- ``conv_crit`` Conversion criterion for the SPCA algorithm.
+- ``conv_threshold`` Conversion criterion for the coordinate descent algorithm.
+- ``parallel`` Logical, whether or not to run the cross-validation loop in parallel.
+- ``max_ar_lag_order`` Integer maximum number of lags of the target variable ought to be included in the nowcasting step
+- ``max_predictor_lag_order`` Integer maximum number of lags of the predictors ought to be included in the nowcasting step
+
+#### Example
+
+```{R}
+  # Simulate a DGP using simFM
+  set.seed(02102025)
+  no_of_observations <- 102 + 3
+  no_of_variables <- 50
+  no_of_factors <- 2
+  trans_error_var_cov <- diag(1, no_of_factors)
+  loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+  meas_error_mean <- rep(0, no_of_variables)
+  meas_error_var_cov <- diag(1, no_of_variables)
+  trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+  factor_lag_order <- 2
+  simul_delay <- c(3, floor(rexp(no_of_variables - 1, 1)))
+  quarterfy <- TRUE
+  quarterly_variable_ratio  <- 1/no_of_variables
+  corr <- TRUE
+  beta_param <- 2 
+  seed <- 01102025 
+  set.seed(seed)
+  burn_in <- 999
+  starting_date <- "1970-01-01"
+  rescale <- TRUE
+  check_stationarity <- TRUE
+  stationarity_check_threshold <- 1e-10
+  
+  # Draw the FM object
+  is_FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
+                 no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+                 meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+                 trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+                 factor_lag_order = factor_lag_order, delay = simul_delay, quarterfy = quarterfy, 
+                 quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr, 
+                 beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
+                 rescale = rescale, check_stationarity = check_stationarity, 
+                 stationarity_check_threshold = stationarity_check_threshold)
+  
+  data <- is_FM$data
+  variable_of_interest <- 1
+  fcast_horizon <- 0
+  delay <- simul_delay
+  frequency <- is_FM$frequency
+  no_of_factors <- 3
+  seed <- 09102025
+  min_ridge_penalty <- 0.01
+  max_ridge_penalty <- 1
+  lasso_penalty_type <- "selected"
+  min_max_penalty <- c(10, no_of_variables - 1)
+  # lasso_penalty_type <- "steps"
+  # min_max_penalty <- c(10, 50 * (no_of_variables - 1))
+  # lasso_penalty_type <- "penalty"
+  # min_max_penalty <- c(0.0001, 10)
+  cv_repititions <- 3
+  cv_size <- 100
+  max_factor_lag_order = 10
+  decorr_errors = TRUE
+  lag_estim_criterion = "BIC"
+  ridge_penalty = 1e-6
+  lasso_penalty = NULL
+  max_iterations = 100
+  max_no_steps = NULL
+  comp_null = 1e-15
+  check_rank = FALSE
+  conv_crit = 1e-4
+  conv_threshold = 1e-4
+  log = FALSE
+  max_ar_lag_order = 5
+  max_predictor_lag_order = 5
+  
+  cv <- crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
+                 delay = delay, frequency = frequency, no_of_factors = no_of_factors,
+                 seed = seed, min_ridge_penalty = min_ridge_penalty, max_ridge_penalty = max_ridge_penalty,
+                 cv_repititions = cv_repititions, cv_size = cv_size, lasso_penalty_type = lasso_penalty_type,
+                 min_max_penalty = min_max_penalty, max_factor_lag_order = max_factor_lag_order,
+                 decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
+                 ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
+                 max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
+                 conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE,
+                 max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order)
+  
+  cv_parallel <- crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
+                          delay = delay, frequency = frequency, no_of_factors = no_of_factors,
+                          seed = seed, min_ridge_penalty = min_ridge_penalty, max_ridge_penalty = max_ridge_penalty,
+                          cv_repititions = cv_repititions, cv_size = cv_size, lasso_penalty_type = lasso_penalty_type,
+                          min_max_penalty = min_max_penalty, max_factor_lag_order = max_factor_lag_order,
+                          decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
+                          ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
+                          max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
+                          conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = TRUE,
+                          max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order)
+```
+
 ## License
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
@@ -343,13 +469,16 @@ If you have any questions or need assistance, please open an issue on the GitHub
 ### References
 
 - Bates, Douglas, and Dirk Eddelbuettel. 2013. “Fast and Elegant Numerical Linear Algebra Using the RcppEigen Package.” Journal of Statistical Software 52 (5): 1–24.
+- Bergstra, J. and Bengio, Y. (2012). "Random search for hyper-parameter optimization." Journal of Machine Learning Research, 13(2).
+- Despois, T. and Doz, C. (2023). "Identifying and interpreting the factors in factor models via sparsity: Different approaches." Journal of Applied Econometrics, 38(4):533–555.
 - Doz, Catherine, Domenico Giannone, and Lucrezia Reichlin. 2011. “A two-step estimator for large approximate dynamic factor models based on Kalman filtering.” Journal of Econometrics 164 (1): 188–205.
 - Eddelbuettel, Dirk, and Romain François. 2011. “Rcpp: Seamless R and C++ Integration.” Journal of Statistical Software 40 (8): 1–18.
 - Franjic, Domenic, and Karsten Schweikert. 2024. “Nowcasting Macroeconomic Variables with a Sparse Mixed Frequency Dynamic Factor Model.” Available at SSRN.
 - Giannone, Domenico, Lucrezia Reichlin, and David Small. 2008. “Nowcasting: The Real-Time Informational Content of Macroeconomic Data.” Journal of Monetary Economics 55 (4): 665–76.
 - Guennebaud, Gaël, Benoît Jacob, et al. 2010. “Eigen V3.” http://eigen.tuxfamily.org.
+- Hyndman, R. J. and Athanasopoulos, G. 2018. "Forecasting: principles and practice". OTexts Melbourne, 3 edition.
 - Koopman, Siem Jan, and James Durbin. 2000. “Fast Filtering and Smoothing for Multivariate State Space Models.” Journal of Time Series Analysis 21 (3): 281–96.
 - Mariano, Roberto S., and Yasutomo Murasawa. 2003. “A New Coincident Index of Business Cycles Based on Monthly and Quarterly Series.” Journal of Applied Econometrics 18 (4): 427–43.
-- Zou, Hui, and Trevor Hastie. 2020. Elasticnet: Elastic-Net for Sparse Estimation and Sparse PCA. https://CRAN.R-project.org/package=elasticnet.
+- Zou, Hui, and Trevor Hastie. 2020. "Elasticnet: Elastic-Net for Sparse Estimation and Sparse PCA."" https://CRAN.R-project.org/package=elasticnet.
 - Zou, Hui, Trevor Hastie, and Robert Tibshirani. 2006. “Sparse Principal Component Analysis.” Journal of Computational and Graphical Statistics 15 (2): 265–86.
 

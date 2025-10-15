@@ -1,4 +1,4 @@
-test_that("Simulaiton function simFM works", {
+test_that("nowcast() works", {
   
   # Simulate a DGP using simFM
   set.seed(02102025)

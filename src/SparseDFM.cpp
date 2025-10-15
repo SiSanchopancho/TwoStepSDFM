@@ -123,7 +123,8 @@ void SparseDFM::SDFMKFS(
 
 		// Calculate initial values for the model uncertainty and factors themselves
 		Eigen::MatrixXd F_temp = F_l(Eigen::seq(0, R * o - 1), Eigen::all).transpose();
-		Pt0 = DataHandle::cov(F_temp);
+		//Pt0 = DataHandle::cov(F_temp);
+		Pt0.diagonal().setConstant(1000);
 	}
 
 	results.F = Eigen::MatrixXd::Zero(R * o, (T + fcast_horizon + 1));
@@ -204,7 +205,7 @@ void SparseDFM::SDFMKFS(
 	int tries = 10;
 	while (KFS_conv_crit < results.F.cwiseAbs().colwise().mean().mean() && 0 < tries)
 	{
-		Pt0 *= 0.5;
+		Pt0 *= 1.5;
 		UVMVKalmanFilter(results, Vt_inv, Kt, e, N, T, R * o, X, Lambda_l, Phi, Sigma_e, Sigma_epsilon, Pt0, Ft0, delay, fcast_horizon);
 		UVMVKalmanSmoother(results, Kt, Vt_inv, e, N, T, R * o, X, Lambda_l, Phi, Sigma_e, Sigma_epsilon, delay);
 		--tries;

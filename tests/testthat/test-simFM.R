@@ -1,4 +1,4 @@
-test_that("Simulaiton function simFM works", {
+test_that("simFM() works", {
   
   # Simulate a DGP using simFM
   set.seed(02102025)

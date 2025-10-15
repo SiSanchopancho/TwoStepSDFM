@@ -144,4 +144,18 @@ checkPositiveDouble <- function(parameter, name) {
   return(parameter)
 }
 
+#' Helper function to check positive double function parameter
+#' @keywords internal
+makeRaggedEdges <- function(data, delay){
+no_of_observations <- dim(data)[1]
+no_of_variables <- dim(data)[2]
+for(n in 1:no_of_variables){
+  if(delay[n] == 0){
+    next
+  }
+  data[(no_of_observations + 1 - delay[n]):(no_of_observations), n] <- NaN
+}
+return(data)
+}
+
 

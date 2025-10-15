@@ -30,7 +30,7 @@ nowcast(
 )
 }
 \arguments{
-\item{data}{Numeric (no_of_variables x no_of_observations) matrix of data or zoo/xts object.}
+\item{data}{Zoo/xts object.}
 
 \item{variables_of_interest}{Integer vector indicating the index of all target variables}
 
@@ -70,9 +70,9 @@ nowcast(
 
 \item{parallel}{Logical, whether or not to use Eigen's internal parallel matrix operations.}
 
-\item{max_ar_lag_order}{Integer maximum number of lags of the target variable ought to be included in the MIDAS nowcasting step}
+\item{max_ar_lag_order}{Integer maximum number of lags of the target variable ought to be included in the nowcasting step}
 
-\item{max_predictor_lag_order}{Integer maximum number of lags of the predictors ought to be included in the MIDAS nowcasting step}
+\item{max_predictor_lag_order}{Integer maximum number of lags of the predictors ought to be included in the nowcasting step}
 }
 \value{
 The \code{nowcast} function returns an object which, contains the following elements:
