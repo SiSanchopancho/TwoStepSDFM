@@ -285,7 +285,6 @@ crossVal <- function(data,
                                "conv_threshold", "max_ar_lag_order", "max_predictor_lag_order",
                                "nowcastSpecificationHelper", "nowcast", "makeRaggedEdges")
     clusterExport(cl, varlist = global_vars_to_export, envir = environment())
-    clusterCall(cl, function() { library(zoo); library(xts); library(TwoStepSDFM); library(lubridate) }) 
     
     h_indices <- 1:cv_size
     results <- foreach(h = h_indices, 
