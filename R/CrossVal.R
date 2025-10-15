@@ -244,7 +244,7 @@ crossVal <- function(data,
     for(h in 1:cv_size){
       
       current_results <- 
-        nowcastSpecificationHelper(cv_repititions = cv_repititions, no_of_factors = no_of_factors,  
+        nowcastSpecificationHelper(cv_repititions = cv_repititions, no_of_factors = no_of_factors, no_of_variables = no_of_variables, 
                                    no_of_observations = no_of_observations, no_of_mtly_variables = no_of_mtly_variables,
                                    lasso_penalty_type = lasso_penalty_type,
                                    data = data, variable_of_interest = variable_of_interest, 
@@ -295,7 +295,7 @@ crossVal <- function(data,
                        .multicombine = TRUE) %dopar% {
                          
                          current_results <- 
-                           nowcastSpecificationHelper(cv_repititions = cv_repititions, no_of_factors = no_of_factors,  
+                           nowcastSpecificationHelper(cv_repititions = cv_repititions, no_of_factors = no_of_factors, no_of_variables = no_of_variables, 
                                                       no_of_observations = no_of_observations, no_of_mtly_variables = no_of_mtly_variables,
                                                       lasso_penalty_type = lasso_penalty_type,
                                                       data = data, variable_of_interest = variable_of_interest, 
@@ -366,7 +366,7 @@ crossVal <- function(data,
 }
 
 #' @keywords internal
-nowcastSpecificationHelper <- function(cv_repititions, no_of_factors, 
+nowcastSpecificationHelper <- function(cv_repititions, no_of_factors, no_of_variables,
                                        no_of_observations, no_of_mtly_variables,
                                        lasso_penalty_type, data, variable_of_interest, 
                                        fcast_horizon, delay,  candidates, frequency, 
