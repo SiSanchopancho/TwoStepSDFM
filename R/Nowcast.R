@@ -278,7 +278,7 @@ plot.SDFMnowcast <- function(x, ...) {
   
   # Single Predictor Density Plots
   absolute_fcast_date <- time(x$`SDFM Fit`$data)[dim(x$`SDFM Fit`$data)[1]]
-  if(dim(x$Forecasts)[2] > 2){
+  if(dim(x$`Single Predictor Forecasts`[[1]])[2] > 2){
     for(h in 1:(dim(x$Forecasts)[2] / 2)){
       current_single_pred_raw <- x$`Single Predictor Forecasts`[[h]]
       current_single_pred <- na.omit(t(coredata(current_single_pred_raw)))

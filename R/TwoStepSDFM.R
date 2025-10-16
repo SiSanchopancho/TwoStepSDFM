@@ -395,7 +395,7 @@ plot.SDFMFit <- function(x, ...) {
   
   # Measurement error var.-cov. matrix heatmap plot
   
-  if (!is.character(result$error_var_cov_cholesky_factor)) {
+  if (!is.character(x$error_var_cov_cholesky_factor)) {
     measurement_error_var_cov_df <- as.data.frame(x$error_var_cov_cholesky_factor %*% t(x$error_var_cov_cholesky_factor))
     colnames(measurement_error_var_cov_df) <- series_names
     stacked_measurement_error_var_cov <- stack(measurement_error_var_cov_df[, series_names])

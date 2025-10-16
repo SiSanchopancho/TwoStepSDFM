@@ -528,8 +528,8 @@ plot.SDFMcrossVal <- function(x, ...) {
     best_combo <- cv_data$`Lasso Penalties`[which.min(cv_data$`CV Errors`)]
     best_ridge <- cv_data$`Ridge Penalty`[which.min(cv_data$`CV Errors`)]
     best_cv_error <- min(cv_data$`CV Errors`)
-    y_min_limit <- best_cv_error / 1.5
-    y_max_limit <- max(cv_data$`CV Errors`) * 1.1
+    y_min_limit <- best_cv_error
+    y_max_limit <- max(cv_data$`CV Errors`)
     out_list$`CV Results` <- ggplot(cv_data, aes(x = `Ridge Penalty`, y = `CV Errors`, colour = `Avg. Lasso Penalty`, 
                                                  shape = `Avg. Lasso Penalty`)) +
       geom_point(size = 2) +
@@ -559,8 +559,8 @@ plot.SDFMcrossVal <- function(x, ...) {
     best_bic_combo <- bic_data$`Lasso Penalties`[which.min(bic_data$`BIC`)]
     best_bic_ridge <- bic_data$`Ridge Penalty`[which.min(bic_data$`BIC`)]
     best_bic <- min(bic_data$`BIC`)
-    y_bic_min_limit <- best_cv_error / 1.5
-    y_bic_max_limit <- max(bic_data$`BIC`) * 1.1
+    y_bic_min_limit <- best_cv_error
+    y_bic_max_limit <- max(bic_data$`BIC`)
     out_list$`BIC Results` <- ggplot(bic_data, aes(x = `Ridge Penalty`, y = `BIC`, colour = `Avg. Lasso Penalty`, 
                                                    shape = `Avg. Lasso Penalty`)) +
       geom_point(size = 2) +
@@ -609,8 +609,8 @@ plot.SDFMcrossVal <- function(x, ...) {
     best_combo <- cv_data$`# non-zero Loadings`[which.min(cv_data$`CV Errors`)]
     best_ridge <- cv_data$`Ridge Penalty`[which.min(cv_data$`CV Errors`)]
     best_cv_error <- min(cv_data$`CV Errors`)
-    y_min_limit <- best_cv_error / 1.5
-    y_max_limit <- max(cv_data$`CV Errors`) * 1.1
+    y_min_limit <- best_cv_error
+    y_max_limit <- max(cv_data$`CV Errors`)
     out_list$`CV Results` <- ggplot(cv_data, aes(x = `Ridge Penalty`, y = `CV Errors`, colour = `Sparsity Ratio`, 
                                                  shape = `Sparsity Ratio`)) +
       geom_point(size = 2) +
@@ -640,8 +640,8 @@ plot.SDFMcrossVal <- function(x, ...) {
     best_bic_combo <- bic_data$`# non-zero Loadings`[which.min(bic_data$`BIC`)]
     best_bic_ridge <- bic_data$`Ridge Penalty`[which.min(bic_data$`BIC`)]
     best_bic <- min(bic_data$`BIC`)
-    y_bic_min_limit <- best_cv_error / 1.5
-    y_bic_max_limit <- max(bic_data$`BIC`) * 1.1
+    y_bic_min_limit <- best_cv_error
+    y_bic_max_limit <- max(bic_data$`BIC`)
     out_list$`BIC Results` <- ggplot(bic_data, aes(x = `Ridge Penalty`, y = `BIC`, colour = `Sparsity Ratio`, 
                                                    shape = `Sparsity Ratio`)) +
       geom_point(size = 2) +
@@ -682,8 +682,8 @@ plot.SDFMcrossVal <- function(x, ...) {
     best_combo <- cv_data$`Maximum No. of LARS Steps`[which.min(cv_data$`CV Errors`)]
     best_ridge <- cv_data$`Ridge Penalty`[which.min(cv_data$`CV Errors`)]
     best_cv_error <- min(cv_data$`CV Errors`)
-    y_min_limit <- best_cv_error / 1.5
-    y_max_limit <- max(cv_data$`CV Errors`) * 1.1
+    y_min_limit <- best_cv_error
+    y_max_limit <- max(cv_data$`CV Errors`)
     out_list$`CV Results` <- ggplot(cv_data, aes(x = `Ridge Penalty`, y = `CV Errors`, colour = `# of LARS Steps`, 
                                                  shape = `# of LARS Steps`)) +
       geom_point(size = 2) +
@@ -707,8 +707,8 @@ plot.SDFMcrossVal <- function(x, ...) {
     best_bic_combo <- bic_data$`Maximum No. of LARS Steps`[which.min(bic_data$`BIC`)]
     best_bic_ridge <- bic_data$`Ridge Penalty`[which.min(bic_data$`BIC`)]
     best_bic <- min(bic_data$`BIC`)
-    y_bic_min_limit <- best_cv_error / 1.5
-    y_bic_max_limit <- max(bic_data$`BIC`) * 1.1
+    y_bic_min_limit <- best_cv_error
+    y_bic_max_limit <- max(bic_data$`BIC`)
     out_list$`BIC Results` <- ggplot(bic_data, aes(x = `Ridge Penalty`, y = `BIC`, colour = `# of LARS Steps`, 
                                                    shape = `# of LARS Steps`)) +
       geom_point(size = 2) +
