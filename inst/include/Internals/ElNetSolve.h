@@ -48,7 +48,7 @@ Eigen::MatrixXd LARS(
   double l1 = NAN, // l1 penalty (used for stopping)
   int selected_in = INT_MAX, // Number of selected variables
   int steps = INT_MIN, // Number of steps until stopping
-  const double& comp_null = 10e-15// Computational zero
+  const double& comp_null = 10e-15 // Computational zero
 )
 {
 

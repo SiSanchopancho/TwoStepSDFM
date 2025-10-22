@@ -336,6 +336,7 @@ The function is generally able to compute predictions for multiple target variab
 - ``conv_crit`` Conversion criterion for the SPCA algorithm.
 - ``conv_threshold`` Conversion criterion for the coordinate descent algorithm.
 - ``parallel`` Logical, whether or not to run the cross-validation loop in parallel.
+- ``no_of_cores`` Integer number of course to use when run in parallel
 - ``max_ar_lag_order`` Integer maximum number of lags of the target variable ought to be included in the nowcasting step
 - ``max_predictor_lag_order`` Integer maximum number of lags of the predictors ought to be included in the nowcasting step
 
@@ -417,7 +418,7 @@ The function is generally able to compute predictions for multiple target variab
                  decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                  ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
                  max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                 conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE,
+                 conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE, no_of_corse = 1,
                  max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order)
   
   cv_parallel <- crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
@@ -428,7 +429,7 @@ The function is generally able to compute predictions for multiple target variab
                           decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                           ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
                           max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                          conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = TRUE,
+                          conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = TRUE, no_of_corse = 2,
                           max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order)
 ```
 

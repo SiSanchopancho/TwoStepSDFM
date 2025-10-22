@@ -39,8 +39,11 @@ devtools::build_vignettes()
 Rcpp::compileAttributes()
 
 # Install the package
-#devtools::install()
+# devtools::install()
 devtools::check()
+
+
+
 
 # Build
 devtools::build()
@@ -57,11 +60,11 @@ library(roxygen2)
 setwd(dirname(getActiveDocumentContext()$path))
 rm(list  = ls())
 
-# output <- system2("R", args = c("CMD", "INSTALL", "../TwoStepSDFM_0.0.0.2.tar.gz"), 
-# stdout = TRUE, stderr = TRUE)
-# writeLines(output, "compilation_log.txt")
+output <- system2("R", args = c("CMD", "INSTALL", "../TwoStepSDFM_0.1.2.tar.gz"),
+stdout = TRUE, stderr = TRUE)
+writeLines(output, "compilation_log.txt")
 
-install.packages("../TwoStepSDFM_0.1.1.tar.gz", repos = NULL, type = "source")
+# install.packages("../TwoStepSDFM_0.1.1.tar.gz", repos = NULL, type = "source")
 
 library(TwoStepSDFM)
 library(testthat)

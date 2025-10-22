@@ -21,6 +21,10 @@
 
 #include "Internals/SparseDFM.h"
 #include <Rcpp.h>
+#include <fstream>
+#include <string>
+#include <chrono>
+#include <ctime>
 
  /* Two-Step Estimator for a LInear Gaussian Sparse Latent (Static) Dynamic Factor Model */
 void SparseDFM::SDFMKFS(
@@ -142,7 +146,13 @@ void SparseDFM::SDFMKFS(
 		// If the idiosyncratic errors are cross-correlated, transofrm the data
 		Eigen::LLT<Eigen::MatrixXd> llt(Sigma_e);
 
-		results.C = llt.matrixL().solve(Eigen::MatrixXd::Identity(N, N));
+		if (llt.info() != Eigen::Success) {
+			Rcpp::Rcerr << "\nWARNING: Decorrelation failed. Using correlated data.\n";
+			results.C = Eigen::MatrixXd::Identity(N, N);
+		}
+		else {
+			results.C = llt.matrixL().solve(Eigen::MatrixXd::Identity(N, N));
+		}
 
 		if (0 < delay.maxCoeff())
 		{
@@ -158,7 +168,7 @@ void SparseDFM::SDFMKFS(
 				{
 					if (T - delay(n) <= t)
 					{
-						Temp(n, t) = NAN;
+						Temp(n, t) = DBL_MAX;
 					}
 					else
 					{
@@ -181,7 +191,7 @@ void SparseDFM::SDFMKFS(
 
 
 
-		Lambda_l.topLeftCorner(N, R) = results.C * Lambda_l.topLeftCorner(N, R);
+		Lambda_l.topLeftCorner(N, R) = (results.C * Lambda_l.topLeftCorner(N, R)).eval();
 
 
 		// Use the diagonalised variance covariance matrix from hereon
@@ -197,9 +207,7 @@ void SparseDFM::SDFMKFS(
 	/* Filtering */
 
 	Eigen::MatrixXd Vt_inv = Eigen::MatrixXd::Zero(N, T), Kt = Eigen::MatrixXd::Zero(R * o, N * T), e = Eigen::MatrixXd::Zero(N, T), Ft0 = F_l.rowwise().mean();
-
 	UVMVKalmanFilter(results, Vt_inv, Kt, e, N, T, R * o, X, Lambda_l, Phi, Sigma_e, Sigma_epsilon, Pt0, Ft0, delay, fcast_horizon);
-	UVMVKalmanSmoother(results, Kt, Vt_inv, e, N, T, R * o, X, Lambda_l, Phi, Sigma_e, Sigma_epsilon, delay);
 
 	// Re-try if the filter did obviously not converge
 	int tries = 10;
@@ -207,11 +215,12 @@ void SparseDFM::SDFMKFS(
 	{
 		Pt0 *= 1.5;
 		UVMVKalmanFilter(results, Vt_inv, Kt, e, N, T, R * o, X, Lambda_l, Phi, Sigma_e, Sigma_epsilon, Pt0, Ft0, delay, fcast_horizon);
-		UVMVKalmanSmoother(results, Kt, Vt_inv, e, N, T, R * o, X, Lambda_l, Phi, Sigma_e, Sigma_epsilon, delay);
 		--tries;
 
 	}
-
+	
+	UVMVKalmanSmoother(results, Kt, Vt_inv, e, N, T, R * o, X, Lambda_l, Phi, Sigma_e, Sigma_epsilon, delay);
+	
 	results.Lambda_hat = Lambda_l;
 	results.order = o;
 

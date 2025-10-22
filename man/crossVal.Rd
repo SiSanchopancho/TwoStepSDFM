@@ -30,6 +30,7 @@ crossVal(
   conv_crit = 1e-04,
   conv_threshold = 1e-04,
   parallel = FALSE,
+  no_of_cores = 1,
   max_ar_lag_order = 5,
   max_predictor_lag_order = 5
 )
@@ -84,6 +85,8 @@ crossVal(
 \item{conv_threshold}{Conversion criterion for the coordinate descent algorithm.}
 
 \item{parallel}{Logical, whether or not to run the cross-validation loop in parallel.}
+
+\item{no_of_cores}{Integer number of course to use when run in parallel}
 
 \item{max_ar_lag_order}{Integer maximum number of lags of the target variable ought to be included in the nowcasting step}
 

@@ -1,3 +1,4 @@
+#' @keywords internal
 #' @name importsTwoStepSDFM
 #' ## usethis namespace: start
 #' @importFrom Rcpp sourceCpp

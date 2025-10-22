@@ -1,3 +1,4 @@
+#' @keywords internal
 #' @name importsNowcast
 #' ## usethis namespace: start
 #' @importFrom Rcpp sourceCpp
@@ -161,7 +162,7 @@ nowcast <- function(data,
   
   
   SDFM_fit <- twoStepSDFM(data = data[, which(frequency == 12)], delay = delay[which(frequency == 12)],
-                          selected = selected,  no_of_factors = no_of_factors,  
+                          selected = selected, no_of_factors = no_of_factors,  
                           max_factor_lag_order = max_factor_lag_order, 
                           decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion, 
                           ridge_penalty = ridge_penalty,  lasso_penalty = lasso_penalty, 

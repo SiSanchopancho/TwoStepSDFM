@@ -1,3 +1,4 @@
+#' @keywords internal
 #' @name importsSimFM
 #' ## usethis namespace: start
 #' @importFrom Rcpp sourceCpp

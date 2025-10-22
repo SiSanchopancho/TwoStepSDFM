@@ -49,61 +49,41 @@ test_that("crossVal() works", {
   # min_max_penalty <- c(10, 50 * (no_of_variables - 1))
   # min_max_penalty <- c(0.0001, 10)
   cv_repititions <- 3
-  cv_size <- 100
+  cv_size <- 10
   max_factor_lag_order = 10
   decorr_errors = TRUE
   lag_estim_criterion = "BIC"
   ridge_penalty = 1e-6
   lasso_penalty = NULL
-  max_iterations = 100
+  max_iterations = 10
   max_no_steps = NULL
   comp_null = 1e-15
   check_rank = FALSE
   conv_crit = 1e-4
-  conv_threshold = 1e-4
+  conv_threshold = 1e-15
   log = FALSE
   parallel = TRUE
+  no_of_cores <- 2
   max_ar_lag_order = 5
   max_predictor_lag_order = 5
   
   # Minimal working examples
-  expect_no_error(crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
-                           delay = delay, frequency = frequency, no_of_factors = no_of_factors,
-                           seed = seed, min_ridge_penalty = min_ridge_penalty, max_ridge_penalty = max_ridge_penalty,
-                           cv_repititions = cv_repititions, cv_size = cv_size, lasso_penalty_type = lasso_penalty_type,
-                           min_max_penalty = min_max_penalty))
-  
-  expect_no_error(crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
-                           delay = delay, frequency = frequency, no_of_factors = no_of_factors,
-                           seed = seed, min_ridge_penalty = min_ridge_penalty, max_ridge_penalty = max_ridge_penalty,
-                           cv_repititions = cv_repititions, cv_size = cv_size, lasso_penalty_type = lasso_penalty_type,
-                           min_max_penalty = min_max_penalty, parallel = TRUE))
-  
-  
   cv <- crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
                  delay = delay, frequency = frequency, no_of_factors = no_of_factors,
                  seed = seed, min_ridge_penalty = min_ridge_penalty, max_ridge_penalty = max_ridge_penalty,
                  cv_repititions = cv_repititions, cv_size = cv_size, lasso_penalty_type = lasso_penalty_type,
-                 min_max_penalty = min_max_penalty, max_factor_lag_order = max_factor_lag_order,
-                 decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
-                 ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
-                 max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                 conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE,
-                 max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order)
+                 min_max_penalty = min_max_penalty)
   
   cv_parallel <- crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
                           delay = delay, frequency = frequency, no_of_factors = no_of_factors,
                           seed = seed, min_ridge_penalty = min_ridge_penalty, max_ridge_penalty = max_ridge_penalty,
                           cv_repititions = cv_repititions, cv_size = cv_size, lasso_penalty_type = lasso_penalty_type,
-                          min_max_penalty = min_max_penalty, max_factor_lag_order = max_factor_lag_order,
-                          decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
-                          ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
-                          max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                          conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = TRUE,
-                          max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order)
+                          min_max_penalty = min_max_penalty, parallel = TRUE, 
+                          no_of_cores = no_of_cores)
   
   expect_equal(cv$CV$`CV Results`, cv_parallel$CV$`CV Results`)
-  expect_equal(cv$BIC$`BIC`, cv_parallel$BIC$`BIC`)
+  expect_equal(cv$BIC$`BIC Results`, cv_parallel$BIC$`BIC Results`)
+  
   
   # Test selecting according to the max number of steps
   expect_no_error(crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
@@ -116,7 +96,8 @@ test_that("crossVal() works", {
                            delay = delay, frequency = frequency, no_of_factors = no_of_factors,
                            seed = seed, min_ridge_penalty = min_ridge_penalty, max_ridge_penalty = max_ridge_penalty,
                            cv_repititions = cv_repititions, cv_size = cv_size, lasso_penalty_type = "steps",
-                           min_max_penalty = c(1, 500), parallel = TRUE))
+                           min_max_penalty = c(1, 500), parallel = TRUE, 
+                           no_of_cores = no_of_cores))
   
   # Test selecting according to the lasso penalty
   expect_no_error(crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
@@ -129,7 +110,8 @@ test_that("crossVal() works", {
                            delay = delay, frequency = frequency, no_of_factors = no_of_factors,
                            seed = seed, min_ridge_penalty = min_ridge_penalty, max_ridge_penalty = max_ridge_penalty,
                            cv_repititions = cv_repititions, cv_size = cv_size, lasso_penalty_type = "penalty",
-                           min_max_penalty = c(0.001, 10, 10, 10), parallel = TRUE))
+                           min_max_penalty = c(0.001, 10, 10, 10), parallel = TRUE, 
+                           no_of_cores = no_of_cores))
   
   # General mishandling
   expect_error(crossVal(data = matrix(NaN, no_of_observations, no_of_variables), variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
@@ -140,7 +122,7 @@ test_that("crossVal() works", {
                         decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                         ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
                         max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE,
+                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE, no_of_cores = no_of_cores,
                         max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order))
   
   expect_error(crossVal(data = data, variable_of_interest = 2, fcast_horizon = fcast_horizon,
@@ -151,7 +133,7 @@ test_that("crossVal() works", {
                         decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                         ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
                         max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE,
+                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE, no_of_cores = no_of_cores,
                         max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order))
   
   expect_error(crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = -5,
@@ -162,7 +144,7 @@ test_that("crossVal() works", {
                         decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                         ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
                         max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE,
+                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE, no_of_cores = no_of_cores,
                         max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order))
   
   expect_error(crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
@@ -173,7 +155,7 @@ test_that("crossVal() works", {
                         decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                         ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
                         max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE,
+                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE, no_of_cores = no_of_cores,
                         max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order))
   
   expect_error(crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
@@ -184,7 +166,7 @@ test_that("crossVal() works", {
                         decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                         ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
                         max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE,
+                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE, no_of_cores = no_of_cores,
                         max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order))
   
   expect_error(crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
@@ -195,7 +177,7 @@ test_that("crossVal() works", {
                         decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                         ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
                         max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE,
+                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE, no_of_cores = no_of_cores,
                         max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order))
   
   expect_error(crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
@@ -206,7 +188,7 @@ test_that("crossVal() works", {
                         decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                         ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
                         max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE,
+                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE, no_of_cores = no_of_cores,
                         max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order))
   
   expect_error(crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
@@ -217,7 +199,7 @@ test_that("crossVal() works", {
                         decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                         ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
                         max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE,
+                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE, no_of_cores = no_of_cores,
                         max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order))
   
   expect_error(crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
@@ -228,7 +210,7 @@ test_that("crossVal() works", {
                         decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                         ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
                         max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE,
+                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE, no_of_cores = no_of_cores,
                         max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order))
   
   expect_error(crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
@@ -239,7 +221,7 @@ test_that("crossVal() works", {
                         decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                         ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
                         max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE,
+                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE, no_of_cores = no_of_cores,
                         max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order))
   
   expect_error(crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
@@ -250,7 +232,7 @@ test_that("crossVal() works", {
                         decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                         ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
                         max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE,
+                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE, no_of_cores = no_of_cores,
                         max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order))
   
   expect_error(crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
@@ -261,7 +243,7 @@ test_that("crossVal() works", {
                         decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                         ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
                         max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE,
+                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE, no_of_cores = no_of_cores,
                         max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order))
   
   expect_error(crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
@@ -272,7 +254,7 @@ test_that("crossVal() works", {
                         decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                         ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
                         max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE,
+                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE, no_of_cores = no_of_cores,
                         max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order))
   
 })

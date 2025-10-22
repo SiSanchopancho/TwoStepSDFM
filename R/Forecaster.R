@@ -1,3 +1,4 @@
+#' @keywords internal
 #' @name importsHelper
 #' ## usethis namespace: start
 #' @importFrom Rcpp sourceCpp

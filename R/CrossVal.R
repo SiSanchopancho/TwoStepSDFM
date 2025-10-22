@@ -1,3 +1,4 @@
+#' @keywords internal
 #' @name importsCrossVal
 #' ## usethis namespace: start
 #' @importFrom Rcpp sourceCpp
@@ -61,6 +62,7 @@ NULL
 #' @param conv_crit Conversion criterion for the SPCA algorithm.
 #' @param conv_threshold Conversion criterion for the coordinate descent algorithm.
 #' @param parallel Logical, whether or not to run the cross-validation loop in parallel.
+#' @param no_of_cores Integer number of course to use when run in parallel
 #' @param max_ar_lag_order Integer maximum number of lags of the target variable ought to be included in the nowcasting step
 #' @param max_predictor_lag_order Integer maximum number of lags of the predictors ought to be included in the nowcasting step
 #' @export
@@ -89,6 +91,7 @@ crossVal <- function(data,
                      conv_crit = 1e-4,
                      conv_threshold = 1e-4,
                      parallel = FALSE,
+                     no_of_cores = 1,
                      max_ar_lag_order = 5,
                      max_predictor_lag_order = 5) {
   
@@ -157,6 +160,18 @@ crossVal <- function(data,
     stop(paste0("cv_size must be striclty greater 1."))
   }
   
+  # Mishandling of no_of_cores
+  no_of_cores <- checkPositiveSignedInteger(no_of_cores, "no_of_cores")
+  if(no_of_cores == 0){
+    stop(paste0("no_of_cores must be a strictly positive integer."))
+  }
+  if(no_of_cores > floor(parallel::detectCores() / 2)){
+    warning(paste0("no_of_cores is bigger than half the number of (physical) cores, i.e., ", floor(parallel::detectCores() / 2), ". For systems with multi-thhreading, it is recommended to use at most the number of physical cores."))
+  }
+  if(no_of_cores > parallel::detectCores()){
+    stop(paste0("no_of_cores cannot be bigger as the maxmimum number of cores, i.e., ", parallel::detectCores()))
+  }
+  
   # Mishandling of lasso_penalty_type
   if(!(lasso_penalty_type %in% c("steps", "selected", "penalty"))){
     stop(paste0("lasso_penalty_type must be one of \"steps\", \"selected\", or \"penalty\"."))
@@ -199,6 +214,7 @@ crossVal <- function(data,
       data <- data[1:(no_of_observations - 1), ]
       no_of_observations <- dim(data)[1]
     }
+    warning(paste0("data must end at the last month of the final quarter. data is cropped for further use."))
     if(month(time(data))[no_of_observations] %in% c(2, 5, 8, 11)){
       data <- data[1:(no_of_observations - 2), ]
       no_of_observations <- dim(data)[1]
@@ -242,7 +258,7 @@ crossVal <- function(data,
     min_cv <- .Machine$double.xmax
     min_bic <- .Machine$double.xmax
     for(h in 1:cv_size){
-      
+
       current_results <- 
         nowcastSpecificationHelper(cv_repititions = cv_repititions, no_of_factors = no_of_factors, no_of_variables = no_of_variables, 
                                    no_of_observations = no_of_observations, no_of_mtly_variables = no_of_mtly_variables,
@@ -273,25 +289,17 @@ crossVal <- function(data,
     progressFunc  <- function(n) setTxtProgressBar(pb, n)
     
     # Set-up parallelisation
-    no_cores <- floor((parallel::detectCores() - 1) /2)
-    cl <- makeCluster(no_cores)
+    cl <- makeCluster(no_of_cores)
     registerDoSNOW(cl)
-    global_vars_to_export <- c("data", "delay", "variable_of_interest", 
-                               "no_of_observations", "cv_repititions", "candidates", 
-                               "frequency", "no_of_factors", "no_of_variables", 
-                               "no_of_mtly_variables", "lasso_penalty_type", "fcast_horizon",
-                               "max_factor_lag_order", "decorr_errors", "lag_estim_criterion", 
-                               "max_iterations", "comp_null", "check_rank", "conv_crit", 
-                               "conv_threshold", "max_ar_lag_order", "max_predictor_lag_order",
-                               "nowcastSpecificationHelper", "nowcast", "makeRaggedEdges")
-    clusterExport(cl, varlist = global_vars_to_export, envir = environment())
+    global_vars_to_export <- c("nowcastSpecificationHelper", "makeRaggedEdges")
     
     h_indices <- 1:cv_size
     results <- foreach(h = h_indices, 
                        .packages = c("zoo", "xts", "TwoStepSDFM", "lubridate"), 
                        .options.snow = list(progress = progressFunc),
                        .combine = 'rbind',
-                       .multicombine = TRUE) %dopar% {
+                       .multicombine = TRUE,
+                       .export = global_vars_to_export) %dopar% {
                          
                          current_results <- 
                            nowcastSpecificationHelper(cv_repititions = cv_repititions, no_of_factors = no_of_factors, no_of_variables = no_of_variables, 
@@ -377,14 +385,14 @@ nowcastSpecificationHelper <- function(cv_repititions, no_of_factors, no_of_vari
   fcast_error <- c()
   fcast_ind <- 1
   for(t in rev(seq(from = delay[variable_of_interest], by = 3, length.out = cv_repititions))){
-    
+
     oos_observation <- data[no_of_observations - t, variable_of_interest]
     is_data <- makeRaggedEdges(data[1:(no_of_observations - t), ], delay)
     current_no_of_obs <- dim(is_data)[1]
     if(lasso_penalty_type %in% "selected"){
       current_nowcast <- nowcast(data = is_data, variables_of_interest = variable_of_interest, 
                                  max_fcast_horizon = fcast_horizon, delay = delay, 
-                                 selected =   candidates[2:(no_of_factors + 1)],
+                                 selected = candidates[2:(no_of_factors + 1)],
                                  frequency = frequency, no_of_factors = no_of_factors, 
                                  max_factor_lag_order = max_factor_lag_order, 
                                  decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
@@ -423,7 +431,7 @@ nowcastSpecificationHelper <- function(cv_repititions, no_of_factors, no_of_vari
                                  max_predictor_lag_order = max_predictor_lag_order)
       
     }
-    
+
     nowcast_indicator <- which(as.yearqtr(time(current_nowcast$Forecasts)) == as.yearqtr(time(is_data)[current_no_of_obs]))
     fcast_error[fcast_ind] <- coredata(current_nowcast$Forecasts[fcast_horizon + nowcast_indicator, 2]) - coredata(oos_observation)
     fcast_ind <- fcast_ind + 1
@@ -473,7 +481,7 @@ print.SDFMcrossVal <- function(x, ...) {
   cat("\n")
   cat("BIC Results\n")
   cat("=========================================================================\n")
-  cat("Cross-Validation Error: ", x$BIC$`Min. BIC`[1], "\n")
+  cat("BIC                   : ", x$BIC$`Min. BIC`[1], "\n")
   cat("Optimum Ridge Penalty : ", x$BIC$`Min. BIC`[2], "\n")
   if(any(grepl("Maximum No. of LARS Steps", colnames(x$CV$`CV Results`), ignore.case = FALSE))){
     cat("# of LARS steps       : ", x$BIC$`Min. BIC`[3], "\n")

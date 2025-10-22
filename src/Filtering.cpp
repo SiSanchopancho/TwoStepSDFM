@@ -126,7 +126,8 @@ void Filtering::UVMVKalmanSmoother(
     const Eigen::VectorXi& missings // Vector indicating the obseravtion index for missing observations for each variable x_n in X
 )
 {
-
+  
+  
     /* Dummies */
      
     // Vectors
@@ -134,14 +135,15 @@ void Filtering::UVMVKalmanSmoother(
 
     // Matrices
     Eigen::MatrixXd Lt = Eigen::MatrixXd::Zero(K, K), Ntt = Eigen::MatrixXd::Zero(K, K), Lambda_T = Lambda.transpose(), IdentK = Eigen::MatrixXd::Identity(K, K);
-
-
+    
     /* Smoother loop */
-    for (int t = T - 1; 0 <= t; --t)
+    
+    for (int t = T - 1; t >= 0; --t)
     {
 
-        for (int n = N - 1; 0 <= n; --n)
+        for (int n = N - 1; n >= 0; --n)
         {
+
             if (T - missings(n) <= t)
             {
                 // Skip missing observations

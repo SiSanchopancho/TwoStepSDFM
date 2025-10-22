@@ -1,7 +1,5 @@
-# Upate notes for version 0.1.1
+# Upate notes for version 0.1.2
 
-* Added a function to validate the hyper-parameters via BIC or cross-validation.
-* Added a generic printing and plotting function for the cross-validation results.
-* Added a Cholesky factor condition check in ``twoStepSDFM()`` to handle ill-behaved matrices.
-* Changed the initial states of the Kalman filter for it to run more smoothly.
-* Several minor bug fixes.
+* The user can now directly set the number of cores in ``crossVal()`` when using parallel computation.
+* Fixed a bug where in some instances internal data containers were not properly initialised leading to crashes.
+* Minor bug fixes.
