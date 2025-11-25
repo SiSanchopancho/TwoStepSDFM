@@ -10,7 +10,7 @@ NULL
 
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-#  Copyright \u00A9 2024 Domenic Franjic
+#  Copyright (C) 2024 Domenic Franjic
 #
 #  This file is part of TwoStepSDFM.
 #
@@ -165,7 +165,7 @@ twoStepSDFM <- function(data,
       stop(paste0("lasso_penalty must be a vector of non-NA numeric values."))
     }
     if(length(lasso_penalty) != no_of_factors){
-      stop(paste0("lasso_penalty must be of length no_of_factors = ", no_of_factors.))
+      stop(paste0("lasso_penalty must be of length no_of_factors = ", no_of_factors))
     }
     if(any(lasso_penalty < 0)){
       stop(paste0("All elements of lasso_penalty non-negative."))

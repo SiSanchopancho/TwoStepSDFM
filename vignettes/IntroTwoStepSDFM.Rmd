@@ -2,10 +2,10 @@
 title: "Introduction to TwoStepSDFM"
 output: rmarkdown::html_vignette
 vignette: >
-%\VignetteIndexEntry{Introduction to TwoStepSDFM}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
-  ---
+ %\VignetteIndexEntry{Introduction to TwoStepSDFM}
+ %\VignetteEngine{knitr::rmarkdown}
+ %\VignetteEncoding{UTF-8}
+---
   
 ```{r, include = FALSE}
 knitr::opts_chunk$set(

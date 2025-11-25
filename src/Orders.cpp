@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 /*
- * Copyright \u00A9 2024 Domenic Franjic
+ * Copyright (C) 2024 Domenic Franjic
  *
  * This file is part of TwoStepSDFM.
  *
@@ -20,6 +20,7 @@
 
 #include "../inst/include/Internals/Orders.h"
 
+// Source: Onatski, A. (2009). Supplement to “Testing hypotheses about the number of factors in large factor models” [Daten & Programme; Anhang mit Beweisen]. In Econometrica, 77(5). The Econometric Society. https://www.econometricsociety.org/publications/econometrica/issue-supplemental-materials/2009/09
  //' @description
   //' This function is for internal use only and may change in future releases
   //' without notice. 

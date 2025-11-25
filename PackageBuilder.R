@@ -31,12 +31,16 @@ unlink("src/*.o")
 unlink("src/*.so")
 unlink("src/*.dll")
 devtools::clean_dll()
+devtools::clean_vignettes()
 
 ## Rcpp-Attribute neu erzeugen
 Rcpp::compileAttributes()
 
 ## Rd + NAMESPACE aus roxygen erzeugen
 roxygen2::roxygenise()
+
+## Vignetten bauen
+devtools::build_vignettes()
 
 ## Paket testen (wie CRAN)
 devtools::check(args = "--as-cran")

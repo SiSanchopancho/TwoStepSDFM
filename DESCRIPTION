@@ -5,8 +5,7 @@ Authors@R: person(
     given = "Domenic",
     family = "Franjic",
     email = "franjic@uni-hohenheim.de",
-    role = c("aut", "cre"),
-    comment = c(GitHub = "SiSanchopancho")
+    role = c("aut", "cre")
 	)
 Author: Domenic Franjic [aut, cre] (<franjic@uni-hohenheim.de>)
 Maintainer: Domenic Franjic <franjic@uni-hohenheim.de>

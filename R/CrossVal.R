@@ -14,7 +14,7 @@ NULL
 
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-#  Copyright \u00A9 2024 Domenic Franjic
+#  Copyright (C) 2024 Domenic Franjic
 #
 #  This file is part of TwoStepSDFM.
 #
