@@ -1,4 +1,4 @@
-_# TwoStepSDFM
+# TwoStepSDFM
 A ``C++``-based ``R`` implementation of a two-step estimation procedure for a (linear Gaussian) Sparse Dynamic Factor Model (SDFM) as outlined in Franjic and Schweikert (2024).
 
 ## Introduction
@@ -94,7 +94,7 @@ To install the package itself, a short `R` script is provided (see `PackageBuild
   plot(FM)
 ```
 
-### ``noOfFactors()``: Estimating the number of latent factors according to Onatski (2010)
+### ``noOfFactors()``: Estimating the number of latent factors according to Onatski (2009a,b)
 
 #### Parameters
 
@@ -614,9 +614,11 @@ If you have any questions or need assistance, please open an issue on the GitHub
 - Hyndman, R. J. and Athanasopoulos, G. 2018. "Forecasting: principles and practice". OTexts Melbourne, 3 edition.
 - Koopman, Siem Jan, and James Durbin. 2000. “Fast Filtering and Smoothing for Multivariate State Space Models.” Journal of Time Series Analysis 21 (3): 281–96.
 - Mariano, Roberto S., and Yasutomo Murasawa. 2003. “A New Coincident Index of Business Cycles Based on Monthly and Quarterly Series.” Journal of Applied Econometrics 18 (4): 427–43.
-- Onatski, A. (2010). Determining the number of factors from empirical distribution of eigenvalues. The Review of Economics and Statistics, 92(4), 1004-1016.
+- Onatski, A. (2009a). Testing hypotheses about the number of factors in large factor models. Econometrica, 77(5), 1447-1479.
+- Onatski, A. (2009b). Supplement to “Testing hypotheses about the number of factors in large factor models” [Daten & Programme; Anhang mit Beweisen]. In Econometrica, 77(5). The Econometric Society. https://www.econometricsociety.org/publications/econometrica/issue-supplemental-materials/2009/09
 - Zou, Hui, and Trevor Hastie. 2020. "Elasticnet: Elastic-Net for Sparse Estimation and Sparse PCA."" https://CRAN.R-project.org/package=elasticnet.
 - Zou, Hui, Trevor Hastie, and Robert Tibshirani. 2006. “Sparse Principal Component Analysis.” Journal of Computational and Graphical Statistics 15 (2): 265–86.
 
 
 _
+
