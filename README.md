@@ -5,10 +5,12 @@ A ``C++``-based ``R`` implementation of a two-step estimation procedure for a (l
 
 The ``TwoStepSDFM`` package provides a fast implementation of the Kalman Filter and Smoother (hereinafter KFS, see Koopman and Durbin, 2000) to estimate factors in a mixed-frequency SDFM framework, explicitly accounting for cross-sectional correlation in the measurement error. The KFS is initialized using results from Sparse Principal Components Analysis (SPCA) by Zou and Hastie (2006) in a preliminary step. This approach generalizes the two-step estimator for approximate dynamic factor models by Giannone, Reichlin, and Small (2008) and Doz, Giannone, and Reichlin (2011). For more details see Franjic and Schweikert (2024).
 
-## Features
+## Main Features
 
 - **Fast Model Simulation**: The ``simFM()`` function provides a flexible framework to simulate approximate DFMs.
+- **Estimation of the Number of Factors**: The ``noOfFactors()`` functions uses the Onatski (2009a,b) procedure to estimate the number of factors efficiently while providing good finite sample performance.
 - **Fast Model Estimation**: The ``twoStepSDFM()`` function provides a fast and convenient implementation of the two-step estimator outlined in Franjic and Schweikert (2024).
+- **Fast Hyper-Parameter Cross-Validation**: The ``crossVal()`` function provides a convinient, fast, and parallel cross-validation wrapper to retrieve the optimal hyper-parameters.
 - **Fast Model Prediction**: The ``nowcast()`` function is a highly convenient prediction function that automatically takes care of many issues that arise with mixed frequency data and ragged edges.
 - **Compatibility**: All functions take advantage of ``C++`` for enhanced speed.
 
@@ -57,41 +59,44 @@ To install the package itself, a short `R` script is provided (see `PackageBuild
 #### Example
 
 ```R
-  set.seed(02102025)
-  no_of_observations <- 200
-  no_of_variables <- 150
-  no_of_factors <- 3
-  trans_error_var_cov <- diag(1, no_of_factors)
-  loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
-  meas_error_mean <- rep(0, no_of_variables)
-  meas_error_var_cov <- diag(1, no_of_variables)
-  trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
-  factor_lag_order <- 2 # Order of the factor VAR process
-  simul_delay <- c(6, 3, 6, 0, 3, rep(0, 45), floor(rexp(100, 1)))
-  quarterfy <- TRUE
-  quarterly_variable_ratio  <- 1/3
-  corr <- TRUE
-  beta_param <- 2 
-  seed <- 01102025 
-  set.seed(seed)
-  burn_in <- 999 
-  starting_date <- "1970-01-01"
-  rescale <- TRUE
-  check_stationarity <- TRUE
-  stationarity_check_threshold <- 1e-10
-  
-  FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
-              no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
-              meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
-              trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
-              factor_lag_order = factor_lag_order, delay = simul_delay, quarterfy = quarterfy, 
-              quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr, 
-              beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
-              rescale = rescale, check_stationarity = check_stationarity, 
-              stationarity_check_threshold = stationarity_check_threshold)
-              
-  print(FM)
-  plot(FM)
+set.seed(02102025)
+no_of_observations <- 200
+no_of_variables <- 150
+no_of_factors <- 3
+trans_error_var_cov <- diag(1, no_of_factors)
+loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+meas_error_mean <- rep(0, no_of_variables)
+meas_error_var_cov <- diag(1, no_of_variables)
+trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+factor_lag_order <- 2 # Order of the factor VAR process
+simul_delay <- c(6, 3, 6, 0, 3, rep(0, 45), floor(rexp(100, 1)))
+quarterfy <- TRUE
+quarterly_variable_ratio  <- 1/3
+corr <- TRUE
+beta_param <- 2 
+seed <- 01102025 
+set.seed(seed)
+burn_in <- 999 
+starting_date <- "1970-01-01"
+rescale <- TRUE
+check_stationarity <- TRUE
+stationarity_check_threshold <- 1e-10
+
+FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
+            no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+            meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+            trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+            factor_lag_order = factor_lag_order, delay = simul_delay, quarterfy = quarterfy, 
+            quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr, 
+            beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
+            rescale = rescale, check_stationarity = check_stationarity, 
+            stationarity_check_threshold = stationarity_check_threshold)
+
+print(FM)
+graphs <- plot(FM)
+graphs$`Factor Time Series Plots`
+graphs$`Loading Matrix Heatmap`
+graphs$`Meas. Error Var.-Cov. Matrix Heatmap`
 ```
 
 ### ``noOfFactors()``: Estimating the number of latent factors according to Onatski (2009a,b)
@@ -106,45 +111,44 @@ To install the package itself, a short `R` script is provided (see `PackageBuild
 #### Example
 
 ```R
-  # Simulate a DGP using simFM
-  no_of_observations <- 200
-  no_of_variables <- 10
-  no_of_factors <- 3
-  trans_error_var_cov <- diag(1, no_of_factors)
-  loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
-  meas_error_mean <- rep(0, no_of_variables)
-  meas_error_var_cov <- diag(1, no_of_variables)
-  trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
-  factor_lag_order <- 2 
-  simul_delay <- c(floor(rexp(10, 1)))
-  quarterfy <- FALSE
-  quarterly_variable_ratio  <- 0
-  corr <- TRUE
-  beta_param <- 2
-  seed <- 01102025
-  set.seed(seed)
-  burn_in <- 999
-  starting_date <- "1970-01-01"
-  rescale <- TRUE
-  check_stationarity <- TRUE
-  stationarity_check_threshold <- 1e-10
+set.seed(02102025)
+no_of_observations <- 200
+no_of_variables <- 50
+no_of_factors <- 3
+trans_error_var_cov <- diag(1, no_of_factors)
+loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+meas_error_mean <- rep(0, no_of_variables)
+meas_error_var_cov <- diag(1, no_of_variables)
+trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+factor_lag_order <- 2 
+simul_delay <- c(floor(rexp(no_of_variables, 1)))
+quarterfy <- FALSE
+quarterly_variable_ratio  <- 0
+corr <- FALSE
+beta_param <- 2
+seed <- 01102025
+set.seed(seed)
+burn_in <- 999
+starting_date <- "1970-01-01"
+rescale <- TRUE
+check_stationarity <- TRUE
+stationarity_check_threshold <- 1e-10
 
 # Draw the FM object
 FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
-               no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
-               meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
-               trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
-               factor_lag_order = factor_lag_order, delay = simul_delay, quarterfy = quarterfy, 
-               quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr, 
-               beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
-               rescale = rescale, check_stationarity = check_stationarity, 
-               stationarity_check_threshold = stationarity_check_threshold)
+            no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+            meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+            trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+            factor_lag_order = factor_lag_order, delay = simul_delay, quarterfy = quarterfy, 
+            quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr, 
+            beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
+            rescale = rescale, check_stationarity = check_stationarity, 
+            stationarity_check_threshold = stationarity_check_threshold)
 
 min_no_factors <- 1
 max_no_factors <- 7
 confidence_threshold <- 0.05
-noOfFactors(FM$data[, which(is_FM$frequency == 12)], min_no_factors, max_no_factors, confidence_threshold)
-
+noOfFactors(FM$data, min_no_factors, max_no_factors, confidence_threshold)
 ```
 
 ### ``twoStepSDFM()``: Estimating the model parameters and higher-frequency factors using a sparse dynamic factor model according to Franjic and Schweikert (2024)
@@ -173,69 +177,72 @@ noOfFactors(FM$data[, which(is_FM$frequency == 12)], min_no_factors, max_no_fact
 #### Example
 
 ```R
-  set.seed(02102025)
-  no_of_observations <- 200
-  no_of_variables <- 10
-  no_of_factors <- 3
-  trans_error_var_cov <- diag(1, no_of_factors)
-  loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
-  meas_error_mean <- rep(0, no_of_variables)
-  meas_error_var_cov <- diag(1, no_of_variables)
-  trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
-  factor_lag_order <- 2 
-  simul_delay <- c(floor(rexp(10, 1)))
-  quarterfy <- FALSE
-  quarterly_variable_ratio  <- 0
-  corr <- TRUE
-  beta_param <- 2
-  seed <- 01102025
-  set.seed(seed)
-  burn_in <- 999
-  starting_date <- "1970-01-01"
-  rescale <- TRUE
-  check_stationarity <- TRUE
-  stationarity_check_threshold <- 1e-10
-  
-  FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
-              no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
-              meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
-              trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
-              factor_lag_order = factor_lag_order, delay = simul_delay, quarterfy = quarterfy, 
-              quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr, 
-              beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
-              rescale = rescale, check_stationarity = check_stationarity, 
-              stationarity_check_threshold = stationarity_check_threshold)
-  
-  frequency <- FM$frequency
-  delay <- simul_delay
-  selected <- c(10, 8, 5)
-  no_of_factors <- 3 
-  max_factor_lag_order  <- 10
-  decorr_errors <- TRUE 
-  lag_estim_criterion  <- "BIC"
-  ridge_penalty <- 1e-06
-  lasso_penalty <- NULL
-  max_iterations <- 1000
-  max_no_steps <- NULL
-  comp_null <- 1e-15
-  check_rank <- FALSE
-  conv_crit <- 1e-04 
-  conv_threshold <- 1e-04
-  log <- FALSE
-  parallel <- FALSE
-  fcast_horizon <- 10
-  
-  fit <- twoStepSDFM(data = FM$data, delay = delay, selected = selected, 
-                     no_of_factors = no_of_factors,  max_factor_lag_order  = max_factor_lag_order,
-                     decorr_errors = decorr_errors,  lag_estim_criterion  = lag_estim_criterion, 
-                     ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, 
-                     max_iterations = max_iterations, max_no_steps = max_no_steps, 
-                     comp_null = comp_null,  check_rank = check_rank,  conv_crit = conv_crit, 
-                     conv_threshold = conv_threshold, log = log, parallel = parallel,
-                     fcast_horizon = fcast_horizon)
-                     
-  print(fit)
-  plot(fit)
+set.seed(02102025)
+no_of_observations <- 200
+no_of_variables <- 10
+no_of_factors <- 3
+trans_error_var_cov <- diag(1, no_of_factors)
+loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+meas_error_mean <- rep(0, no_of_variables)
+meas_error_var_cov <- diag(1, no_of_variables)
+trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+factor_lag_order <- 2 
+simul_delay <- c(floor(rexp(10, 1)))
+quarterfy <- FALSE
+quarterly_variable_ratio  <- 0
+corr <- TRUE
+beta_param <- 2
+seed <- 01102025
+set.seed(seed)
+burn_in <- 999
+starting_date <- "1970-01-01"
+rescale <- TRUE
+check_stationarity <- TRUE
+stationarity_check_threshold <- 1e-10
+
+FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
+            no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+            meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+            trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+            factor_lag_order = factor_lag_order, delay = simul_delay, quarterfy = quarterfy, 
+            quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr, 
+            beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
+            rescale = rescale, check_stationarity = check_stationarity, 
+            stationarity_check_threshold = stationarity_check_threshold)
+
+frequency <- FM$frequency
+delay <- simul_delay
+selected <- c(10, 8, 5)
+no_of_factors <- 3 
+max_factor_lag_order  <- 10
+decorr_errors <- TRUE 
+lag_estim_criterion  <- "BIC"
+ridge_penalty <- 1e-06
+lasso_penalty <- NULL
+max_iterations <- 1000
+max_no_steps <- NULL
+comp_null <- 1e-15
+check_rank <- FALSE
+conv_crit <- 1e-04 
+conv_threshold <- 1e-04
+log <- FALSE
+parallel <- FALSE
+fcast_horizon <- 10
+
+fit <- twoStepSDFM(data = FM$data, delay = delay, selected = selected, 
+                   no_of_factors = no_of_factors,  max_factor_lag_order  = max_factor_lag_order,
+                   decorr_errors = decorr_errors,  lag_estim_criterion  = lag_estim_criterion, 
+                   ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, 
+                   max_iterations = max_iterations, max_no_steps = max_no_steps, 
+                   comp_null = comp_null,  check_rank = check_rank,  conv_crit = conv_crit, 
+                   conv_threshold = conv_threshold, log = log, parallel = parallel,
+                   fcast_horizon = fcast_horizon)
+
+print(fit)
+graphs <- plot(fit)
+graphs$`Factor Time Series Plots`
+graphs$`Loading Matrix Heatmap`
+graphs$`Meas. Error Var.-Cov. Matrix Heatmap`
 ```
 
 ### ``twoStepDenseDFM()``: Estimating the model parameters and higher-frequency factors using a dense dynamic factor model accoridng to Giannone et al. (2008)
@@ -257,58 +264,61 @@ noOfFactors(FM$data[, which(is_FM$frequency == 12)], min_no_factors, max_no_fact
 #### Example
 
 ```R
-  set.seed(02102025)
-  no_of_observations <- 200
-  no_of_variables <- 10
-  no_of_factors <- 3
-  trans_error_var_cov <- diag(1, no_of_factors)
-  loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
-  meas_error_mean <- rep(0, no_of_variables)
-  meas_error_var_cov <- diag(1, no_of_variables)
-  trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
-  factor_lag_order <- 2 
-  simul_delay <- c(floor(rexp(10, 1)))
-  quarterfy <- FALSE
-  quarterly_variable_ratio  <- 0
-  corr <- TRUE
-  beta_param <- 2
-  seed <- 01102025
-  set.seed(seed)
-  burn_in <- 999
-  starting_date <- "1970-01-01"
-  rescale <- TRUE
-  check_stationarity <- TRUE
-  stationarity_check_threshold <- 1e-10
-  
-  FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
-              no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
-              meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
-              trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
-              factor_lag_order = factor_lag_order, delay = simul_delay, quarterfy = quarterfy, 
-              quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr, 
-              beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
-              rescale = rescale, check_stationarity = check_stationarity, 
-              stationarity_check_threshold = stationarity_check_threshold)
-  
-  frequency <- FM$frequency
-  delay <- simul_delay
-  no_of_factors <- 3 
-  max_factor_lag_order  <- 10
-  decorr_errors <- TRUE 
-  lag_estim_criterion  <- "BIC"
-  comp_null <- 1e-15
-  check_rank <- FALSE
-  log <- FALSE
-  parallel <- FALSE
-  fcast_horizon <- 10
+set.seed(02102025)
+no_of_observations <- 200
+no_of_variables <- 10
+no_of_factors <- 3
+trans_error_var_cov <- diag(1, no_of_factors)
+loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+meas_error_mean <- rep(0, no_of_variables)
+meas_error_var_cov <- diag(1, no_of_variables)
+trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+factor_lag_order <- 2 
+simul_delay <- c(floor(rexp(10, 1)))
+quarterfy <- FALSE
+quarterly_variable_ratio  <- 0
+corr <- TRUE
+beta_param <- 2
+seed <- 01102025
+set.seed(seed)
+burn_in <- 999
+starting_date <- "1970-01-01"
+rescale <- TRUE
+check_stationarity <- TRUE
+stationarity_check_threshold <- 1e-10
 
- fit_dense <- twoStepDenseDFM(data = FM$data, delay = delay, no_of_factors = no_of_factors,
-                              max_factor_lag_order  = max_factor_lag_order, 
-                              decorr_errors = decorr_errors,  lag_estim_criterion  = lag_estim_criterion, 
-                              comp_null = comp_null,  check_rank = check_rank, log = log, 
-                              parallel = parallel, fcast_horizon = fcast_horizon)
-  print(fit_dense)
-  plot(fit_dense)
+FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
+            no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+            meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+            trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+            factor_lag_order = factor_lag_order, delay = simul_delay, quarterfy = quarterfy, 
+            quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr, 
+            beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
+            rescale = rescale, check_stationarity = check_stationarity, 
+            stationarity_check_threshold = stationarity_check_threshold)
+
+frequency <- FM$frequency
+delay <- simul_delay
+no_of_factors <- 3 
+max_factor_lag_order  <- 10
+decorr_errors <- TRUE 
+lag_estim_criterion  <- "BIC"
+comp_null <- 1e-15
+check_rank <- FALSE
+log <- FALSE
+parallel <- FALSE
+fcast_horizon <- 10
+
+fit <- twoStepDenseDFM(data = FM$data, delay = delay, no_of_factors = no_of_factors,
+                       max_factor_lag_order  = max_factor_lag_order, 
+                       decorr_errors = decorr_errors,  lag_estim_criterion  = lag_estim_criterion, 
+                       comp_null = comp_null,  check_rank = check_rank, log = log, 
+                       parallel = parallel, fcast_horizon = fcast_horizon)
+print(fit)
+graphs <- plot(fit)
+graphs$`Factor Time Series Plots`
+graphs$`Loading Matrix Heatmap`
+graphs$`Meas. Error Var.-Cov. Matrix Heatmap`
 ```
 
 ### ``nowcast()``: Predict quarterly data using the two-step SDFM procedure of Franjic & Scheikert (2024).
@@ -357,7 +367,7 @@ The function is generally able to compute predictions for multiple target variab
 #### Example
 
 ```R
-  set.seed(02102025)
+set.seed(02102025)
 no_of_observations <- 200
 no_of_variables <- 150
 no_of_factors <- 3
@@ -428,24 +438,40 @@ sparse_results <- nowcast(data = data, variables_of_interest = variables_of_inte
 )
 
 print(sparse_results)
-plot(sparse_results)
+sparse_graphs <- plot(sparse_results)
+sparse_graphs$`Single Pred. Fcast Density Plots Series 1`
+sparse_graphs$`Single Pred. Fcast Density Plots Series 2`
+sparse_graphs$`Single Pred. Fcast Density Plots Series 3`
+sparse_graphs$`Single Pred. Fcast Density Plots Series 4`
+sparse_graphs$`Single Pred. Fcast Density Plots Series 5`
+sparse_graphs$`Factor Time Series Plots`
+sparse_graphs$`Loading Matrix Heatmap`
+sparse_graphs$`Meas. Error Var.-Cov. Matrix Heatmap`
 
 dense_results <- nowcast(data = data, variables_of_interest = variables_of_interest, 
-                          max_fcast_horizon = max_fcast_horizon, delay = delay, selected = selected,
-                          frequency = frequency, no_of_factors = no_of_factors, sparse = FALSE, 
-                          max_factor_lag_order  = max_factor_lag_order,  
-                          decorr_errors = decorr_errors, 
-                          lag_estim_criterion  = lag_estim_criterion,
-                          ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, 
-                          max_iterations = max_iterations, max_no_steps = max_no_steps, 
-                          comp_null = comp_null, check_rank = check_rank,  
-                          conv_crit = conv_crit, conv_threshold = conv_threshold, 
-                          log = log, parallel = parallel, max_ar_lag_order = max_ar_lag_order,
-                          max_predictor_lag_order = max_predictor_lag_order
+                         max_fcast_horizon = max_fcast_horizon, delay = delay, selected = selected,
+                         frequency = frequency, no_of_factors = no_of_factors, sparse = FALSE, 
+                         max_factor_lag_order  = max_factor_lag_order,  
+                         decorr_errors = decorr_errors, 
+                         lag_estim_criterion  = lag_estim_criterion,
+                         ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, 
+                         max_iterations = max_iterations, max_no_steps = max_no_steps, 
+                         comp_null = comp_null, check_rank = check_rank,  
+                         conv_crit = conv_crit, conv_threshold = conv_threshold, 
+                         log = log, parallel = parallel, max_ar_lag_order = max_ar_lag_order,
+                         max_predictor_lag_order = max_predictor_lag_order
 )
 
 print(dense_results)
-plot(dense_results)
+dense_graphs <- plot(dense_results)
+dense_graphs$`Single Pred. Fcast Density Plots Series 1`
+dense_graphs$`Single Pred. Fcast Density Plots Series 2`
+dense_graphs$`Single Pred. Fcast Density Plots Series 3`
+dense_graphs$`Single Pred. Fcast Density Plots Series 4`
+dense_graphs$`Single Pred. Fcast Density Plots Series 5`
+dense_graphs$`Factor Time Series Plots`
+dense_graphs$`Loading Matrix Heatmap`
+dense_graphs$`Meas. Error Var.-Cov. Matrix Heatmap`
 ```
 
 ### ``crossVal()``: Validate the model hyperparameters using a random hyper-parameter-candidate-scheme (Bergstra and Bengio, 2021) via BIC (Despois and Doz, 2023) or time series cross-validation (Hyndman and Athanasopoulos,
@@ -485,86 +511,87 @@ plot(dense_results)
 #### Example
 
 ```{R}
-  # Simulate a DGP using simFM
-  set.seed(02102025)
-  no_of_observations <- 102 + 3
-  no_of_variables <- 50
-  no_of_factors <- 2
-  trans_error_var_cov <- diag(1, no_of_factors)
-  loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
-  meas_error_mean <- rep(0, no_of_variables)
-  meas_error_var_cov <- diag(1, no_of_variables)
-  trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
-  factor_lag_order <- 2
-  simul_delay <- c(3, floor(rexp(no_of_variables - 1, 1)))
-  quarterfy <- TRUE
-  quarterly_variable_ratio  <- 1/no_of_variables
-  corr <- TRUE
-  beta_param <- 2 
-  seed <- 01102025 
-  set.seed(seed)
-  burn_in <- 999
-  starting_date <- "1970-01-01"
-  rescale <- TRUE
-  check_stationarity <- TRUE
-  stationarity_check_threshold <- 1e-10
-  
-  # Draw the FM object
-  is_FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
-                 no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
-                 meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
-                 trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
-                 factor_lag_order = factor_lag_order, delay = simul_delay, quarterfy = quarterfy, 
-                 quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr, 
-                 beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
-                 rescale = rescale, check_stationarity = check_stationarity, 
-                 stationarity_check_threshold = stationarity_check_threshold)
-  
-  data <- is_FM$data
-  variable_of_interest <- 1
-  fcast_horizon <- 0
-  delay <- simul_delay
-  frequency <- is_FM$frequency
-  no_of_factors <- 3
-  seed <- 09102025
-  min_ridge_penalty <- 0.01
-  max_ridge_penalty <- 1
-  lasso_penalty_type <- "selected"
-  min_max_penalty <- c(10, no_of_variables - 1)
-  # lasso_penalty_type <- "steps"
-  # min_max_penalty <- c(10, 50 * (no_of_variables - 1))
-  # lasso_penalty_type <- "penalty"
-  # min_max_penalty <- c(0.0001, 10)
-  cv_repititions <- 3
-  cv_size <- 100
-  max_factor_lag_order = 10
-  decorr_errors = TRUE
-  lag_estim_criterion = "BIC"
-  ridge_penalty = 1e-6
-  lasso_penalty = NULL
-  max_iterations = 100
-  max_no_steps = NULL
-  comp_null = 1e-15
-  check_rank = FALSE
-  conv_crit = 1e-4
-  conv_threshold = 1e-4
-  log = FALSE
-  max_ar_lag_order = 5
-  max_predictor_lag_order = 5
-  
-  cv_parallel <- crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
-                          delay = delay, frequency = frequency, no_of_factors = no_of_factors,
-                          seed = seed, min_ridge_penalty = min_ridge_penalty, max_ridge_penalty = max_ridge_penalty,
-                          cv_repititions = cv_repititions, cv_size = cv_size, lasso_penalty_type = lasso_penalty_type,
-                          min_max_penalty = min_max_penalty, max_factor_lag_order = max_factor_lag_order,
-                          decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
-                          ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
-                          max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                          conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = TRUE, no_of_cores = 2,
-                          max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order)
+set.seed(02102025)
+no_of_observations <- 102 + 3
+no_of_variables <- 50
+no_of_factors <- 2
+trans_error_var_cov <- diag(1, no_of_factors)
+loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+meas_error_mean <- rep(0, no_of_variables)
+meas_error_var_cov <- diag(1, no_of_variables)
+trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+factor_lag_order <- 2
+simul_delay <- c(3, floor(rexp(no_of_variables - 1, 1)))
+quarterfy <- TRUE
+quarterly_variable_ratio  <- 1/no_of_variables
+corr <- TRUE
+beta_param <- 2 
+seed <- 01102025 
+set.seed(seed)
+burn_in <- 999
+starting_date <- "1970-01-01"
+rescale <- TRUE
+check_stationarity <- TRUE
+stationarity_check_threshold <- 1e-10
 
-print(cv_parallel)
-plot(cv_parallel)
+# Draw the FM object
+is_FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
+               no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+               meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+               trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+               factor_lag_order = factor_lag_order, delay = simul_delay, quarterfy = quarterfy, 
+               quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr, 
+               beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
+               rescale = rescale, check_stationarity = check_stationarity, 
+               stationarity_check_threshold = stationarity_check_threshold)
+
+data <- is_FM$data
+variable_of_interest <- 1
+fcast_horizon <- 0
+delay <- simul_delay
+frequency <- is_FM$frequency
+no_of_factors <- 3
+seed <- 09102025
+min_ridge_penalty <- 0.01
+max_ridge_penalty <- 1
+lasso_penalty_type <- "selected"
+min_max_penalty <- c(10, no_of_variables - 1)
+# lasso_penalty_type <- "steps"
+# min_max_penalty <- c(10, 50 * (no_of_variables - 1))
+# lasso_penalty_type <- "penalty"
+# min_max_penalty <- c(0.0001, 10)
+cv_repititions <- 3
+cv_size <- 100
+max_factor_lag_order = 10
+decorr_errors = TRUE
+lag_estim_criterion = "BIC"
+ridge_penalty = 1e-6
+lasso_penalty = NULL
+max_iterations = 100
+max_no_steps = NULL
+comp_null = 1e-15
+check_rank = FALSE
+conv_crit = 1e-4
+conv_threshold = 1e-4
+log = FALSE
+max_ar_lag_order = 5
+max_predictor_lag_order = 5
+
+cv <- crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
+                        delay = delay, frequency = frequency, no_of_factors = no_of_factors,
+                        seed = seed, min_ridge_penalty = min_ridge_penalty, max_ridge_penalty = max_ridge_penalty,
+                        cv_repititions = cv_repititions, cv_size = cv_size, lasso_penalty_type = lasso_penalty_type,
+                        min_max_penalty = min_max_penalty, max_factor_lag_order = max_factor_lag_order,
+                        decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
+                        ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
+                        max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
+                        conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = TRUE, no_of_cores = 2,
+                        max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order)
+
+print(cv)
+graphs <- plot(cv)
+graphs$`CV Results`
+graphs$`BIC Results`
 ```
 
 ## License
@@ -621,4 +648,5 @@ If you have any questions or need assistance, please open an issue on the GitHub
 
 
 _
+
 
