@@ -605,7 +605,7 @@ This project is licensed under the **GNU General Public License v3.0**. See the 
 
 ## Acknowledgements
 
-This work is partially based on the LARS-EN and SPCA algorithms found in Zou et al. (2020).
+This work is partially based on the LARS-EN and SPCA algorithms found in Zou et al. (2020) and the procedure to estimate the number of factors in latent factor models found in Onatski (2009b).
 
 ## Contributing
 
@@ -646,6 +646,7 @@ If you have any questions or need assistance, please open an issue on the GitHub
 - Onatski, A. (2009b). Supplement to “Testing hypotheses about the number of factors in large factor models” [Daten & Programme; Anhang mit Beweisen]. In Econometrica, 77(5). The Econometric Society. https://www.econometricsociety.org/publications/econometrica/issue-supplemental-materials/2009/09
 - Zou, Hui, and Trevor Hastie. 2020. "Elasticnet: Elastic-Net for Sparse Estimation and Sparse PCA."" https://CRAN.R-project.org/package=elasticnet.
 - Zou, Hui, Trevor Hastie, and Robert Tibshirani. 2006. “Sparse Principal Component Analysis.” Journal of Computational and Graphical Statistics 15 (2): 265–86.
+
 
 
 
