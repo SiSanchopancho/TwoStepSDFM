@@ -1,5 +1,5 @@
 # TwoStepSDFM
-A ``C++``-based ``R`` implementation of a two-step estimation procedure for a (linear Gaussian) Sparse Dynamic Factor Model (SDFM) as outlined in Franjic and Schweikert (2024).
+A ``C++``-based ``R`` implementation of the two-step estimation procedure for a (linear Gaussian) Sparse Dynamic Factor Model (SDFM) as outlined in Franjic and Schweikert (2024).
 
 ## Introduction
 
@@ -348,6 +348,7 @@ The function is generally able to compute predictions for multiple target variab
 - ``selected`` Integer vector of the number of selected variables for each factor.
 - ``frequency`` Integer vector of frequencies of the variables in the data set (currently supported: "12" for monthly and "4" for quarterly data)
 - ``no_of_factors`` Integer number of factors.
+- ``sparse`` Logical, indicating whether a sparse model should be used for nowcasting
 - ``max_factor_lag_order`` Integer max P of the VAR(P) process of the factors.
 - ``decorr_errors`` Logical, whether or not the errors should be decorrelated.
 - ``lag_estim_criterion`` Information criterion used for the estimation of the factor VAR order ("BIC", "AIC", "HIC").
@@ -648,5 +649,6 @@ If you have any questions or need assistance, please open an issue on the GitHub
 
 
 _
+
 
 
