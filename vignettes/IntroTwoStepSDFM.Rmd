@@ -161,7 +161,7 @@ cv <- crossVal(data = data, variable_of_interest = variable_of_interest, fcast_h
                decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
                max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-               conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = TRUE, no_of_cores = 2,
+               conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE, no_of_cores = 2,
                max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order)
 ```
 
