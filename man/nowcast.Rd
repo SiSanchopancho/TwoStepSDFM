@@ -12,6 +12,7 @@ nowcast(
   selected,
   frequency,
   no_of_factors,
+  sparse = TRUE,
   max_factor_lag_order = 10,
   decorr_errors = TRUE,
   lag_estim_criterion = "BIC",
@@ -43,6 +44,8 @@ nowcast(
 \item{frequency}{Integer vector of frequencies of the variables in the data set (currently supported: "12" for monthly and "4" for quarterly data)}
 
 \item{no_of_factors}{Integer number of factors.}
+
+\item{sparse}{Logical, indicating whether a sparse model should be used for nowcasting}
 
 \item{max_factor_lag_order}{Integer max P of the VAR(P) process of the factors.}
 

@@ -2,16 +2,32 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 runARDL <- function(target_variable, target_variable_predictor, predictor_variable, max_target_lags, max_predictor_lags, crit) {
-    .Call('_TwoStepSDFM_runARDL', PACKAGE = 'TwoStepSDFM', target_variable, target_variable_predictor, predictor_variable, max_target_lags, max_predictor_lags, crit)
+    .Call(`_TwoStepSDFM_runARDL`, target_variable, target_variable_predictor, predictor_variable, max_target_lags, max_predictor_lags, crit)
+}
+
+#' @description
+NULL
+
+runNoOfFactors <- function(data_matrix_in, test_values, min_no_factors, max_no_factors, confidence_threshold) {
+    .Call(`_TwoStepSDFM_runNoOfFactors`, data_matrix_in, test_values, min_no_factors, max_no_factors, confidence_threshold)
 }
 
 #' @description
 #' This function is for internal use only and may change in future releases
-#' without notice. Users should use `SimFM()` instead for a stable and
+#' without notice. Users should use `twoStepSDFM()` instead for a stable and
 #' supported interface.
 #'
 runSDFMKFS <- function(X_in, delay, selected, R, order, decorr_errors, crit, l2, l1, max_iterations, steps, comp_null, check_rank, conv_crit, conv_threshold, log, KFS_conv_crit, parallel, fcast_horizon) {
-    .Call('_TwoStepSDFM_runSDFMKFS', PACKAGE = 'TwoStepSDFM', X_in, delay, selected, R, order, decorr_errors, crit, l2, l1, max_iterations, steps, comp_null, check_rank, conv_crit, conv_threshold, log, KFS_conv_crit, parallel, fcast_horizon)
+    .Call(`_TwoStepSDFM_runSDFMKFS`, X_in, delay, selected, R, order, decorr_errors, crit, l2, l1, max_iterations, steps, comp_null, check_rank, conv_crit, conv_threshold, log, KFS_conv_crit, parallel, fcast_horizon)
+}
+
+#' @description
+#' This function is for internal use only and may change in future releases
+#' without notice. Users should use `twoStepDFM()` instead for a stable and
+#' supported interface.
+#'
+runDFMKFS <- function(X_in, delay, R, order, decorr_errors, crit, comp_null, check_rank, log, KFS_conv_crit, parallel, fcast_horizon) {
+    .Call(`_TwoStepSDFM_runDFMKFS`, X_in, delay, R, order, decorr_errors, crit, comp_null, check_rank, log, KFS_conv_crit, parallel, fcast_horizon)
 }
 
 #' @description
@@ -20,6 +36,6 @@ runSDFMKFS <- function(X_in, delay, selected, R, order, decorr_errors, crit, l2,
 #' supported interface.
 #'
 runStaticFM <- function(T, N, S, Lambda, mu_e, Sigma_e, A, order, quarterfy, corr, beta_param, m, seed, R, burn_in, rescale, parallel) {
-    .Call('_TwoStepSDFM_runStaticFM', PACKAGE = 'TwoStepSDFM', T, N, S, Lambda, mu_e, Sigma_e, A, order, quarterfy, corr, beta_param, m, seed, R, burn_in, rescale, parallel)
+    .Call(`_TwoStepSDFM_runStaticFM`, T, N, S, Lambda, mu_e, Sigma_e, A, order, quarterfy, corr, beta_param, m, seed, R, burn_in, rescale, parallel)
 }
 

@@ -40,10 +40,8 @@ Rcpp::compileAttributes()
 
 # Install the package
 # devtools::install()
-devtools::check()
-
-
-
+# devtools::check()
+roxygen2::roxygenise()
 
 # Build
 devtools::build()
@@ -60,9 +58,10 @@ library(roxygen2)
 setwd(dirname(getActiveDocumentContext()$path))
 rm(list  = ls())
 
-output <- system2("R", args = c("CMD", "INSTALL", "../TwoStepSDFM_0.1.2.tar.gz"),
+output <- system2("R", args = c("CMD", "INSTALL", "../TwoStepSDFM_0.1.3.tar.gz"),
 stdout = TRUE, stderr = TRUE)
 writeLines(output, "compilation_log.txt")
+tail(output)
 
 # install.packages("../TwoStepSDFM_0.1.1.tar.gz", repos = NULL, type = "source")
 
@@ -110,6 +109,90 @@ is_FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_
                beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
                rescale = rescale, check_stationarity = check_stationarity, 
                stationarity_check_threshold = stationarity_check_threshold)
+
+noOfFactors(is_FM$data[, which(is_FM$frequency == 12)], 1, 7, 0.05)
+
+# create screeplot 
+scree_data <- t(as.matrix(na.omit(is_FM$data[, which(is_FM$frequency == 12)])))
+cutoff <- floor(ncol(scree_data) / 2)
+data_complex <- scree_data[, 1:cutoff] + 1i * scree_data[, (cutoff+1):(2*cutoff)]
+gram <- data_complex %*% Conj(t(data_complex))
+eig <- eigen(gram, symmetric=TRUE, only.values=TRUE)
+eigen_values <- eig$values
+scree_df <- data.frame(Index = seq_along(eigen_values), Eigenvalue = eigen_values)
+scree_plot <- ggplot(scree_df, aes(x = Index, y = Eigenvalue)) +
+  geom_point(size = 2, color = "#88CCEE") +
+  geom_line(linetype = "solid", color = "#88CCEE", size = 1) +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Scree Plot of Eigenvalues",
+    x = "",
+    y = "Eigenvalue"
+  ) +
+  scale_x_continuous(breaks = scree_df$Index) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    panel.grid.minor = element_blank()
+  )
+scree_plot
+
+var_explained_df <- data.frame(Index = seq_along(eigen_values), 
+                               `Variance Explained` = eigen_values / sum(eigen_values),
+                               check.names = FALSE)
+var_explained_plot <- ggplot(var_explained_df, aes(x = Index, y = `Variance Explained`)) +
+  geom_bar(stat = "identity", fill = "#88CCEE") +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Scree Plot of Eigenvalues",
+    x = "",
+    y = "Variance Explained"
+  ) +
+  scale_x_continuous(breaks = var_explained_df$Index) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    panel.grid.minor = element_blank()
+  )
+var_explained_plot
+
+cumm_var_explained_df <- data.frame(Index = seq_along(eigen_values), 
+                                    `Variance Explained` = cumsum(eigen_values / sum(eigen_values)),
+                                    check.names = FALSE)
+cumm_var_explained_plot <- ggplot(cumm_var_explained_df, aes(x = Index, y = `Variance Explained`)) +
+  geom_bar(stat = "identity", fill = "#88CCEE") +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Scree Plot of Eigenvalues",
+    x = "",
+    y = "Cummulative Variance Explained"
+  ) +
+  scale_x_continuous(breaks = cumm_var_explained_df$Index) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    panel.grid.minor = element_blank()
+  )
+cumm_var_explained_plot
+
+no_of_eigenvalues <- dim(scree_data)[1]
+gap_df <- data.frame(Index = 1:(no_of_eigenvalues - 2), 
+                     `Eigenvalue Gap` = ((eigen_values[1:(no_of_eigenvalues - 2)] - eigen_values[2:(no_of_eigenvalues - 1)])
+                                         / (eigen_values[2:(no_of_eigenvalues - 1)] - eigen_values[3:(no_of_eigenvalues)])),
+                     check.names = FALSE
+)
+eigen_value_gap_plot <- ggplot(gap_df, aes(x = Index, y = `Eigenvalue Gap`)) +
+  geom_point(size = 2, color = "#88CCEE") +
+  geom_line(linetype = "solid", color = "#88CCEE", size = 1) +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Scree Plot of Eigenvalues Gaps",
+    x = ""
+  ) +
+  scale_x_continuous(breaks = gap_df$Index) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    panel.grid.minor = element_blank()
+  )
+eigen_value_gap_plot
+
 
 # Cross validation loop
 library(doSNOW)

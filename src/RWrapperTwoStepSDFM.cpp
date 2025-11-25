@@ -48,7 +48,7 @@
 
 //' @description
 //' This function is for internal use only and may change in future releases
-//' without notice. Users should use `SimFM()` instead for a stable and
+//' without notice. Users should use `twoStepSDFM()` instead for a stable and
 //' supported interface.
 //'
 // [[Rcpp::export]]
@@ -129,6 +129,70 @@ Rcpp::List runSDFMKFS(
         }
       }
     }
+  }
+
+  Eigen::setNbThreads(0);
+
+  // Convert the results back to Rcpp types and return
+  return Rcpp::List::create(Rcpp::Named("Lambda_hat") = Rcpp::wrap(results.Lambda_hat),
+    Rcpp::Named("Pt") = Rcpp::wrap(results.Pt),
+    Rcpp::Named("F") = Rcpp::wrap(results.F),
+    Rcpp::Named("Wt") = Rcpp::wrap(results.Wt),
+    Rcpp::Named("C") = Rcpp::wrap(results.C),
+    Rcpp::Named("P") = results.order);
+
+}
+
+//' @description
+//' This function is for internal use only and may change in future releases
+//' without notice. Users should use `twoStepDFM()` instead for a stable and
+//' supported interface.
+//'
+// [[Rcpp::export]]
+Rcpp::List runDFMKFS(
+  Rcpp::NumericMatrix X_in,
+  Rcpp::IntegerVector delay,
+  int R,
+  int order,
+  bool decorr_errors,
+  const char* crit,
+  double comp_null,
+  bool check_rank,
+  bool log,
+  double KFS_conv_crit,
+  const bool parallel,
+  const unsigned fcast_horizon
+)
+{
+
+  // Initialise the result object
+  Filtering::KFS_fit results;
+
+  // Map the numeric matrices and vectors to eigen objects
+  Eigen::Map<Eigen::MatrixXd> X_in_eigen(Rcpp::as<Eigen::Map<Eigen::MatrixXd>>(X_in));
+  Eigen::Map<Eigen::VectorXi> delay_eigen(Rcpp::as<Eigen::Map<Eigen::VectorXi>>(delay));
+
+
+  // Enable/disable parallelisation in Eigen
+
+
+  // Estimate the sparse DFM
+  if (parallel) {
+    Eigen::setNbThreads(0);
+  }
+  else {
+    Eigen::setNbThreads(1);
+  }
+
+  SparseDFM::DFMKFS(results, X_in_eigen, delay_eigen,R, order, decorr_errors, crit, comp_null, check_rank, 
+    log, KFS_conv_crit, fcast_horizon);
+
+  // Re-correlate the loadings fit if necessary
+
+  if (decorr_errors)
+  {
+    Eigen::MatrixXd C_inv = results.C.triangularView<Eigen::Lower>().solve(Eigen::MatrixXd::Identity(X_in_eigen.cols(), X_in_eigen.cols()));
+    results.Lambda_hat = (C_inv * results.Lambda_hat).eval();
   }
 
   Eigen::setNbThreads(0);

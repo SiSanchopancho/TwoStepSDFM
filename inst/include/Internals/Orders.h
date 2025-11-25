@@ -27,6 +27,8 @@
 
 // Including external libraries
 #include <RcppEigen.h>
+#include <RcppCommon.h>
+#include <Rcpp.h>
 #include <stdlib.h>
 #include <math.h>
 
@@ -117,6 +119,14 @@ inline int VARorder<HIC>(const Eigen::MatrixXd& F, const int& O, const double& c
     ICs_res.col(3).minCoeff(&order);
     return order + 1;
 }
+
+Rcpp::List NoOfFactors(
+  Rcpp::NumericMatrix data_matrix_in,
+  Rcpp::NumericMatrix test_values,
+  const int min_no_factors,
+  const int max_no_factors,
+  const double confidence_level
+);
 
 #endif /* defined(ORDERS) */
 

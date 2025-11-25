@@ -1,6 +1,4 @@
-#' @keywords internal
-#' @name importsNowcast
-#' ## usethis namespace: start
+#' @useDynLib TwoStepSDFM, .registration=TRUE
 #' @importFrom Rcpp sourceCpp
 #' @import zoo
 #' @import xts
@@ -8,8 +6,6 @@
 #' @import ggplot2
 #' @import stats
 #' @import utils
-#' @useDynLib TwoStepSDFM
-## usethis namespace: end
 NULL
 
 # SPDX-License-Identifier: GPL-3.0-or-later
@@ -40,6 +36,7 @@ NULL
 #' @param selected Integer vector of the number of selected variables for each factor.
 #' @param frequency Integer vector of frequencies of the variables in the data set (currently supported: "12" for monthly and "4" for quarterly data)
 #' @param no_of_factors Integer number of factors.
+#' @param sparse Logical, indicating whether a sparse model should be used for nowcasting
 #' @param max_factor_lag_order Integer max P of the VAR(P) process of the factors.
 #' @param decorr_errors Logical, whether or not the errors should be decorrelated.
 #' @param lag_estim_criterion Information criterion used for the estimation of the factor VAR order ("BIC", "AIC", "HIC").
@@ -73,6 +70,7 @@ nowcast <- function(data,
                     selected,
                     frequency,
                     no_of_factors,
+                    sparse = TRUE,
                     max_factor_lag_order = 10,
                     decorr_errors = TRUE,
                     lag_estim_criterion = "BIC",
@@ -137,6 +135,12 @@ nowcast <- function(data,
   # Mishandling max_fcast_horizon
   max_fcast_horizon <- checkPositiveSignedInteger(max_fcast_horizon, "max_fcast_horizon")
   
+  # Mishandling of sparse
+  sparse <- checkBoolean(sparse, "sparse")
+  if(!sparse){
+    warning(paste0("sparse is set to FALSE. A dense DFM is used to nowcast. All LARS-EN stopping criteria are ignored."))
+  }
+  
   # Mishandling max_ar_lag_order
   max_ar_lag_order <- checkPositiveSignedInteger(max_ar_lag_order , "max_ar_lag_order ")
   
@@ -160,17 +164,26 @@ nowcast <- function(data,
     effective_fcast_horizon <- max_fcast_horizon - 1
   }
   
-  
-  SDFM_fit <- twoStepSDFM(data = data[, which(frequency == 12)], delay = delay[which(frequency == 12)],
-                          selected = selected, no_of_factors = no_of_factors,  
-                          max_factor_lag_order = max_factor_lag_order, 
-                          decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion, 
-                          ridge_penalty = ridge_penalty,  lasso_penalty = lasso_penalty, 
-                          max_iterations = max_iterations, max_no_steps = max_no_steps, 
-                          comp_null = comp_null, check_rank = check_rank, conv_crit = conv_crit, 
-                          conv_threshold = conv_threshold, log = log, parallel = parallel,
-                          fcast_horizon = fcast_horizon
-  )
+  if(sparse){
+    SDFM_fit <- twoStepSDFM(data = data[, which(frequency == 12)], delay = delay[which(frequency == 12)],
+                            selected = selected, no_of_factors = no_of_factors,  
+                            max_factor_lag_order = max_factor_lag_order, 
+                            decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion, 
+                            ridge_penalty = ridge_penalty,  lasso_penalty = lasso_penalty, 
+                            max_iterations = max_iterations, max_no_steps = max_no_steps, 
+                            comp_null = comp_null, check_rank = check_rank, conv_crit = conv_crit, 
+                            conv_threshold = conv_threshold, log = log, parallel = parallel,
+                            fcast_horizon = fcast_horizon
+    )
+  }else{
+    SDFM_fit <- twoStepDenseDFM(data = data[, which(frequency == 12)], delay = delay[which(frequency == 12)],
+                                no_of_factors = no_of_factors,  
+                                max_factor_lag_order = max_factor_lag_order, 
+                                decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion, 
+                                comp_null = comp_null, check_rank = check_rank, log = log, 
+                                parallel = parallel, fcast_horizon = fcast_horizon
+    )
+  }
   
   # Prepare the data-set for the forecasting wrapper
   factor_ts <- SDFM_fit$smoothed_factors

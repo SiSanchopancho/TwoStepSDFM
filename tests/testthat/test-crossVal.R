@@ -1,4 +1,4 @@
-test_that("crossVal() works", {
+test_that("", {
   
   # Simulate a DGP using simFM
   set.seed(02102025)
@@ -104,13 +104,13 @@ test_that("crossVal() works", {
                            delay = delay, frequency = frequency, no_of_factors = no_of_factors,
                            seed = seed, min_ridge_penalty = min_ridge_penalty, max_ridge_penalty = max_ridge_penalty,
                            cv_repititions = cv_repititions, cv_size = cv_size, lasso_penalty_type = "penalty",
-                           min_max_penalty = c(0.001, 10, 10, 10)))
+                           min_max_penalty = c(0.0001, 10)))
   
   expect_no_error(crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
                            delay = delay, frequency = frequency, no_of_factors = no_of_factors,
                            seed = seed, min_ridge_penalty = min_ridge_penalty, max_ridge_penalty = max_ridge_penalty,
                            cv_repititions = cv_repititions, cv_size = cv_size, lasso_penalty_type = "penalty",
-                           min_max_penalty = c(0.001, 10, 10, 10), parallel = TRUE, 
+                           min_max_penalty = c(0.0001, 10), parallel = TRUE, 
                            no_of_cores = no_of_cores))
   
   # General mishandling

@@ -1,0 +1,424 @@
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 134
+cutoff = 67
+Created data_complex
+dim(gram) = 67x67
+Eigen decomposition done
+eigen_values(1) = 5814.204496 eigen_values(last)7.273675
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 1
+test_statistic = 3.595316
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 2
+test_statistic = 3.595316
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 3
+test_statistic = 3.595316
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 4
+test_statistic = 3.595316
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 5
+test_statistic = 3.595316
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 6
+test_statistic = 3.241187
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 7
+test_statistic = 3.241187
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 8
+test_statistic = 2.716601
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 9
+test_statistic = 2.716601
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 10
+test_statistic = 2.154005
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 11
+test_statistic = 1.529060
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 12
+test_statistic = 1.529060
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 13
+test_statistic = 1.529060
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 14
+test_statistic = 1.529060
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 15
+test_statistic = 1.461041
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 16
+test_statistic = 1.461041
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 17
+test_statistic = 1.461041
+p_value = 0.000000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 134
+cutoff = 67
+Created data_complex
+dim(gram) = 67x67
+Eigen decomposition done
+eigen_values(1) = 5814.204496 eigen_values(last)7.273675
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 1
+test_statistic = 3.000532
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 2
+test_statistic = 3.000532
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 3
+test_statistic = 0.748322
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 4
+test_statistic = 0.748322
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 5
+test_statistic = 3.595316
+p_value = 0.000000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 134
+cutoff = 67
+Created data_complex
+dim(gram) = 67x67
+Eigen decomposition done
+eigen_values(1) = 5814.204496 eigen_values(last)7.273675
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 1
+test_statistic = 3.000532
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 2
+test_statistic = 3.000532
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 3
+test_statistic = 0.748322
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 4
+test_statistic = 0.748322
+p_value = 0.000000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 134
+cutoff = 67
+Created data_complex
+dim(gram) = 67x67
+Eigen decomposition done
+eigen_values(1) = 5814.204496 eigen_values(last)7.273675
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 1
+test_statistic = 3.000532
+p_value = 0.369000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 134
+cutoff = 67
+Created data_complex
+dim(gram) = 67x67
+Eigen decomposition done
+eigen_values(1) = 5814.204496 eigen_values(last)7.273675
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 1
+test_statistic = 3.000532
+p_value = 0.369000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 134
+cutoff = 67
+Created data_complex
+dim(gram) = 67x67
+Eigen decomposition done
+eigen_values(1) = 5814.204496 eigen_values(last)7.273675
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 1
+test_statistic = 3.595316
+p_value = 0.444000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 134
+cutoff = 67
+Created data_complex
+dim(gram) = 67x67
+Eigen decomposition done
+eigen_values(1) = 5814.204496 eigen_values(last)7.273675
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 1
+test_statistic = 3.595316
+p_value = 0.641000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 134
+cutoff = 67
+Created data_complex
+dim(gram) = 67x67
+Eigen decomposition done
+eigen_values(1) = 5814.204496 eigen_values(last)7.273675
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 1
+test_statistic = 3.595316
+p_value = 0.298000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 134
+cutoff = 67
+Created data_complex
+dim(gram) = 67x67
+Eigen decomposition done
+eigen_values(1) = 5814.204496 eigen_values(last)7.273675
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 1
+test_statistic = 3.595316
+p_value = 0.298000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 2
+test_statistic = 3.595316
+p_value = 0.255000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 3
+test_statistic = 3.595316
+p_value = 0.206000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 4
+test_statistic = 3.595316
+p_value = 0.152000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 5
+test_statistic = 3.595316
+p_value = 0.084000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 134
+cutoff = 67
+Created data_complex
+dim(gram) = 67x67
+Eigen decomposition done
+eigen_values(1) = 5814.204496 eigen_values(last)7.273675
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 1
+test_statistic = 3.595316
+p_value = 0.622000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 2
+test_statistic = 3.595316
+p_value = 0.601000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 3
+test_statistic = 3.595316
+p_value = 0.579000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 4
+test_statistic = 3.595316
+p_value = 0.556000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 5
+test_statistic = 3.595316
+p_value = 0.531000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 6
+test_statistic = 3.241187
+p_value = 0.601000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 7
+test_statistic = 3.241187
+p_value = 0.570000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 8
+test_statistic = 2.716601
+p_value = 0.694000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 9
+test_statistic = 2.716601
+p_value = 0.655000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 10
+test_statistic = 2.154005
+p_value = 0.818000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 11
+test_statistic = 1.529060
+p_value = 0.973000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 210
+cutoff = 105
+Created data_complex
+dim(gram) = 105x105
+Eigen decomposition done
+eigen_values(1) = 7214.601022 eigen_values(last)10.504674
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 1
+test_statistic = 2.440421
+p_value = 0.900000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 210
+cutoff = 105
+Created data_complex
+dim(gram) = 105x105
+Eigen decomposition done
+eigen_values(1) = 7214.601022 eigen_values(last)10.504674
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 1
+test_statistic = 2.440421
+p_value = 0.900000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 49
+cutoff = 24
+Created data_complex
+dim(gram) = 24x24
+Eigen decomposition done
+eigen_values(1) = nan eigen_values(last)nan
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 1
+test_statistic = nan
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 2
+test_statistic = nan
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 3
+test_statistic = nan
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 4
+test_statistic = nan
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 5
+test_statistic = nan
+p_value = 0.000000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 49
+cutoff = 24
+Created data_complex
+dim(gram) = 24x24
+Eigen decomposition done
+eigen_values(1) = nan eigen_values(last)nan
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 1
+test_statistic = nan
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 2
+test_statistic = nan
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 3
+test_statistic = nan
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 4
+test_statistic = nan
+p_value = 0.000000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 5
+test_statistic = nan
+p_value = 0.000000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 50
+cutoff = 25
+Created data_complex
+dim(gram) = 25x25
+Eigen decomposition done
+eigen_values(1) = 21094.492359 eigen_values(last)1.839240
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 1
+test_statistic = 4.960599
+p_value = 0.313000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 49
+cutoff = 24
+Created data_complex
+dim(gram) = 24x24
+Eigen decomposition done
+eigen_values(1) = 19903.624617 eigen_values(last)1.866649
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 1
+test_statistic = 19.735449
+p_value = 0.003000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 2
+test_statistic = 2.687899
+p_value = 0.452000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 49
+cutoff = 24
+Created data_complex
+dim(gram) = 24x24
+Eigen decomposition done
+eigen_values(1) = 19903.624617 eigen_values(last)1.866649
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 1
+test_statistic = 19.735449
+p_value = 0.003000
+Saved Gram matrix to gram_matrix.txt
+no_of_factors = 2
+test_statistic = 2.687899
+p_value = 0.452000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 49
+cutoff = 148
+Created data_complex
+dim(gram) = 49x49
+Eigen decomposition done
+eigen_values(1) = 19659.969943 eigen_values(last)0.000000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 49
+cutoff = 148
+Created data_complex
+dim(gram) = 49x49
+Eigen decomposition done
+eigen_values(1) = 19659.969943 eigen_values(last)0.000000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 49
+cutoff = 148
+Created data_complex
+dim(gram) = 49x49
+Eigen decomposition done
+eigen_values(1) = 19659.969943 eigen_values(last)0.000000
+test_values_eigen(0, 0) = 0.019973 test_values_eigen(last, last)39.487615
+Start runNoOfFactors
+data.rows() = 49
+cutoff = 148
+Created data_complex
+dim(gram) = 49x49
+Eigen decomposition done
+eigen_values(1) = 19659.969943 eigen_values(last)0.000000

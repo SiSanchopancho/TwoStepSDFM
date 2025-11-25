@@ -1,6 +1,4 @@
-#' @keywords internal
-#' @name importsSimFM
-#' ## usethis namespace: start
+#' @useDynLib TwoStepSDFM, .registration=TRUE
 #' @importFrom Rcpp sourceCpp
 #' @import zoo
 #' @import xts
@@ -8,8 +6,6 @@
 #' @import ggplot2
 #' @import stats
 #' @import utils
-#' @useDynLib TwoStepSDFM
-## usethis namespace: end
 NULL
 
 # SPDX-License-Identifier: GPL-3.0-or-later

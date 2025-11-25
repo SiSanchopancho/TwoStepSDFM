@@ -1,6 +1,4 @@
-#' @keywords internal
-#' @name importsCrossVal
-#' ## usethis namespace: start
+#' @useDynLib TwoStepSDFM, .registration=TRUE
 #' @importFrom Rcpp sourceCpp
 #' @import zoo
 #' @import xts
@@ -12,8 +10,6 @@
 #' @import doSNOW
 #' @import foreach
 #' @import parallel
-#' @useDynLib TwoStepSDFM
-## usethis namespace: end
 NULL
 
 # SPDX-License-Identifier: GPL-3.0-or-later
@@ -178,6 +174,9 @@ crossVal <- function(data,
   }
   
   # Mishandling of min_max_penalty
+  if(length(min_max_penalty) != 2){
+    stop("min_max_penalty must be of length 2.")
+  }
   if(lasso_penalty_type %in% "steps"){
     min_max_penalty[1] <- checkPositiveSignedInteger(min_max_penalty[1], "The first element of min_max_pealty")
     min_max_penalty[2] <- checkPositiveSignedInteger(min_max_penalty[2], "The second element of min_max_pealty")
@@ -450,10 +449,7 @@ nowcastSpecificationHelper <- function(cv_repititions, no_of_factors, no_of_vari
   return(list(cv = cv_h, bic = bic_h))
 }
 
-#' @name print.SDFMcrossVal
-#' @title Generic plotting function for SDFMnowcast S3 objects
-#' @param x `SDFMcrossVal` object.
-#' @param ... Additional parameters for the plotting functions.
+#' @method print SDFMcrossVal
 #' @export
 print.SDFMcrossVal <- function(x, ...) {
   
@@ -495,10 +491,7 @@ print.SDFMcrossVal <- function(x, ...) {
   cat("=========================================================================\n")
 }
 
-#' @name plot.SDFMcrossVal
-#' @title Generic plotting function for SDFMnowcast S3 objects
-#' @param x `SDFMcrossVal` object.
-#' @param ... Additional parameters for the plotting functions.
+#' @method plot SDFMcrossVal
 #' @export
 plot.SDFMcrossVal <- function(x, ...) {
   out_list <- list()
