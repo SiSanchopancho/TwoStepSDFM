@@ -165,7 +165,7 @@ nowcast <- function(data,
   }
   
   if(sparse){
-    SDFM_fit <- twoStepSDFM(data = data[, which(frequency == 12)], delay = delay[which(frequency == 12)],
+    SDFM_fit <- twoStepSDFM(data = data[, which(frequency == 12), drop = FALSE], delay = delay[which(frequency == 12)],
                             selected = selected, no_of_factors = no_of_factors,  
                             max_factor_lag_order = max_factor_lag_order, 
                             decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion, 
@@ -176,7 +176,7 @@ nowcast <- function(data,
                             fcast_horizon = fcast_horizon
     )
   }else{
-    SDFM_fit <- twoStepDenseDFM(data = data[, which(frequency == 12)], delay = delay[which(frequency == 12)],
+    SDFM_fit <- twoStepDenseDFM(data = data[, which(frequency == 12), drop = FALSE], delay = delay[which(frequency == 12)],
                                 no_of_factors = no_of_factors,  
                                 max_factor_lag_order = max_factor_lag_order, 
                                 decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion, 
@@ -222,7 +222,7 @@ nowcast <- function(data,
   if(length(quarterly_predictor_ind) == 0){
     quarterly_predictors <- NULL
   }else{
-    quarterly_predictors <- modified_data[which(frequency == 4)[-variables_of_interest], ] 
+    quarterly_predictors <- modified_data[which(frequency == 4)[-variables_of_interest], , drop = FALSE] 
   }
   factors <- modified_data[(dim(modified_data)[1] - no_of_factors + 1):(dim(modified_data)[1]), , drop = FALSE]
   

@@ -386,7 +386,7 @@ nowcastSpecificationHelper <- function(cv_repititions, no_of_factors, no_of_vari
   for(t in rev(seq(from = delay[variable_of_interest], by = 3, length.out = cv_repititions))){
 
     oos_observation <- data[no_of_observations - t, variable_of_interest]
-    is_data <- makeRaggedEdges(data[1:(no_of_observations - t), ], delay)
+    is_data <- makeRaggedEdges(data[1:(no_of_observations - t), , drop = FALSE], delay)
     current_no_of_obs <- dim(is_data)[1]
     if(lasso_penalty_type %in% "selected"){
       current_nowcast <- nowcast(data = is_data, variables_of_interest = variable_of_interest, 

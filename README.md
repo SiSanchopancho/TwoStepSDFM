@@ -26,7 +26,7 @@ The ``TwoStepSDFM`` package provides a fast implementation of the Kalman Filter 
 
 ``Rcpp`` and ``RcppEigen`` can be downloaded from CRAN or directly installed from within `R` by calling ``install.packages("...")``.
 
-To install the package itself, a short `R` script is provided (see `PackageBuilder.R`). The package currently only compiles with the ``g++``/``gcc`` compiler. All tests have been performed and created using the ``C++14`` standard.
+To install the package itself, a short `R` script is provided (see `PackageBuilder.R`). The package currently only compiles with the ``g++``/``gcc`` compiler. This package is ported from an existing C++14 project and relies on C++14 language features for correct and efficient operation. Debugging and development are performed solely in C++14, and a downgrade to C++11 is not feasible.
 
 ## Usage
 
@@ -605,7 +605,7 @@ This project is licensed under the **GNU General Public License v3.0**. See the 
 
 ## Acknowledgements
 
-This work is partially based on the LARS-EN and SPCA algorithms found in @Zou2020elasticnet.
+This work is partially based on the LARS-EN and SPCA algorithms found in Zou et al. (2020).
 
 ## Contributing
 
@@ -647,8 +647,6 @@ If you have any questions or need assistance, please open an issue on the GitHub
 - Zou, Hui, and Trevor Hastie. 2020. "Elasticnet: Elastic-Net for Sparse Estimation and Sparse PCA."" https://CRAN.R-project.org/package=elasticnet.
 - Zou, Hui, Trevor Hastie, and Robert Tibshirani. 2006. “Sparse Principal Component Analysis.” Journal of Computational and Graphical Statistics 15 (2): 265–86.
 
-
-_
 
 
 

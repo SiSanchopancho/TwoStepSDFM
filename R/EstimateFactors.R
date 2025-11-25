@@ -56,9 +56,9 @@ noOfFactors <- function(data, min_no_factors = 1, max_no_factors = 15, confidenc
   na_ind <- -unique(which(is.na(data_r), arr.ind = TRUE)[, 2])
   if(length(na_ind) != 0){
     print(paste0("Cut ", length(na_ind)," observations due to NAs."))
-    no_na_data <- as.matrix(data_r[, na_ind])
+    no_na_data <- as.matrix(data_r[, na_ind, drop = FALSE])
   }else{
-    no_na_data <- as.matrix(data_r[, ])
+    no_na_data <- as.matrix(data_r[, , drop = FALSE])
   }
   
   
