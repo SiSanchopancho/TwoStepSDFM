@@ -1,4 +1,4 @@
-# TwoStepSDFM
+_# TwoStepSDFM
 A ``C++``-based ``R`` implementation of a two-step estimation procedure for a (linear Gaussian) Sparse Dynamic Factor Model (SDFM) as outlined in Franjic and Schweikert (2024).
 
 ## Introduction
@@ -94,7 +94,60 @@ To install the package itself, a short `R` script is provided (see `PackageBuild
   plot(FM)
 ```
 
-### ``twoStepSDFM()``: Estimating the model parameters and higher-frequency factors
+### ``noOfFactors()``: Estimating the number of latent factors according to Onatski (2010)
+
+#### Parameters
+
+- ``data`` Numeric (no_of_variables x no_of_observations) matrix of data or zoo/xts object.
+- ``min_no_factors`` Integer minimum number of factors to be tested.
+- ``max_no_factors`` Integer maximum number of factors to be tested (should be at most min_no_factors + 17).
+- ``confidence_threshold`` Numeric threshold value to stop the testing procedure.
+
+#### Example
+
+```R
+  # Simulate a DGP using simFM
+  no_of_observations <- 200
+  no_of_variables <- 10
+  no_of_factors <- 3
+  trans_error_var_cov <- diag(1, no_of_factors)
+  loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+  meas_error_mean <- rep(0, no_of_variables)
+  meas_error_var_cov <- diag(1, no_of_variables)
+  trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+  factor_lag_order <- 2 
+  simul_delay <- c(floor(rexp(10, 1)))
+  quarterfy <- FALSE
+  quarterly_variable_ratio  <- 0
+  corr <- TRUE
+  beta_param <- 2
+  seed <- 01102025
+  set.seed(seed)
+  burn_in <- 999
+  starting_date <- "1970-01-01"
+  rescale <- TRUE
+  check_stationarity <- TRUE
+  stationarity_check_threshold <- 1e-10
+
+# Draw the FM object
+FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
+               no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+               meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+               trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+               factor_lag_order = factor_lag_order, delay = simul_delay, quarterfy = quarterfy, 
+               quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr, 
+               beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
+               rescale = rescale, check_stationarity = check_stationarity, 
+               stationarity_check_threshold = stationarity_check_threshold)
+
+min_no_factors <- 1
+max_no_factors <- 7
+confidence_threshold <- 0.05
+noOfFactors(FM$data[, which(is_FM$frequency == 12)], min_no_factors, max_no_factors, confidence_threshold)
+
+```
+
+### ``twoStepSDFM()``: Estimating the model parameters and higher-frequency factors using a sparse dynamic factor model according to Franjic and Schweikert (2024)
 
 #### Parameters
 
@@ -185,11 +238,84 @@ To install the package itself, a short `R` script is provided (see `PackageBuild
   plot(fit)
 ```
 
+### ``twoStepDenseDFM()``: Estimating the model parameters and higher-frequency factors using a dense dynamic factor model accoridng to Giannone et al. (2008)
+
+#### Parameters
+
+- ``data`` Numeric (no_of_variables x no_of_observations) matrix of data or zoo/xts object.
+- ``delay`` Integer vector of variable delays.
+- ``no_of_factors`` Integer number of factors.
+- ``max_factor_lag_order`` Integer max P of the VAR(P) process of the factors.
+- ``decorr_errors`` Logical, whether or not the errors should be decorrelated.
+- ``lag_estim_criterion`` Information criterion used for the estimation of the factor VAR order ("BIC", "AIC", "HIC").
+- ``comp_null`` Computational zero.
+- ``check_rank`` Logical, whether or not the rank of the variance-covariance matrix should be checked.
+- ``log`` Logical, whether or not output should be printed along the algorithm.
+- ``parallel`` Logical, whether or not to use Eigen's internal parallel matrix operations.
+- ``fcast_horizon`` Integer forecasting horizon for factor forecasts
+
+#### Example
+
+```R
+  set.seed(02102025)
+  no_of_observations <- 200
+  no_of_variables <- 10
+  no_of_factors <- 3
+  trans_error_var_cov <- diag(1, no_of_factors)
+  loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+  meas_error_mean <- rep(0, no_of_variables)
+  meas_error_var_cov <- diag(1, no_of_variables)
+  trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+  factor_lag_order <- 2 
+  simul_delay <- c(floor(rexp(10, 1)))
+  quarterfy <- FALSE
+  quarterly_variable_ratio  <- 0
+  corr <- TRUE
+  beta_param <- 2
+  seed <- 01102025
+  set.seed(seed)
+  burn_in <- 999
+  starting_date <- "1970-01-01"
+  rescale <- TRUE
+  check_stationarity <- TRUE
+  stationarity_check_threshold <- 1e-10
+  
+  FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
+              no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+              meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+              trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+              factor_lag_order = factor_lag_order, delay = simul_delay, quarterfy = quarterfy, 
+              quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr, 
+              beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
+              rescale = rescale, check_stationarity = check_stationarity, 
+              stationarity_check_threshold = stationarity_check_threshold)
+  
+  frequency <- FM$frequency
+  delay <- simul_delay
+  no_of_factors <- 3 
+  max_factor_lag_order  <- 10
+  decorr_errors <- TRUE 
+  lag_estim_criterion  <- "BIC"
+  comp_null <- 1e-15
+  check_rank <- FALSE
+  log <- FALSE
+  parallel <- FALSE
+  fcast_horizon <- 10
+
+ fit_dense <- twoStepDenseDFM(data = FM$data, delay = delay, no_of_factors = no_of_factors,
+                              max_factor_lag_order  = max_factor_lag_order, 
+                              decorr_errors = decorr_errors,  lag_estim_criterion  = lag_estim_criterion, 
+                              comp_null = comp_null,  check_rank = check_rank, log = log, 
+                              parallel = parallel, fcast_horizon = fcast_horizon)
+  print(fit_dense)
+  plot(fit_dense)
+```
+
 ### ``nowcast()``: Predict quarterly data using the two-step SDFM procedure of Franjic & Scheikert (2024).
 
 #### Usage
 
-Most of the parameters of ``nowcast()`` are directly parsed to ``twoStepSDFM()`` and work thus accordingly. The majour differences, however, lie in the parameter ``data``, ``variables_of_interest``, ``max_fcast_horizon``, ``frequency``, ``max_ar_lag_order``, and ``max_predictor_lag_order``.
+Most of the parameters of ``nowcast()`` are directly parsed to ``twoStepSDFM()`` of ``twoStepDenseDFM``, depending on the parameter ``sparse``, and work thus accordingly. The majour differences, however, lie in the parameter ``data``, ``variables_of_interest``, ``max_fcast_horizon``, ``frequency``, ``max_ar_lag_order``, and ``max_predictor_lag_order``.
 
 ``data`` expects a zoo/xts object of mixed frequency data. At least one variable in ``data`` must be of quarterly frequency. All quarterly variables should be stored such that their actual realisations are stored in the last months of each respective quarter. The inter-quarter month should be filled with either the realisation or some other non-NA numerical value. ``NA``s are fine at the end of the panel as long as they align with the delays provided in ``delay``. The function will check for ``NA``s that lie outside of the ragged edges.
 
@@ -199,7 +325,7 @@ Most of the parameters of ``nowcast()`` are directly parsed to ``twoStepSDFM()``
 
 #### Forecasting Method
 
-The ``nowcast()`` function employs a forecast averaging forecasting method. In the first step, the factors are computed using the ``twoStepSDFM()`` function. Next, the computed factors are aggregated according to Mariano and Murasawa (2003) into a quarterly representation. They are then treated as quarterly predictors along the potential additional provided observed quarterly predictors. 
+The ``nowcast()`` function employs a forecast averaging forecasting method. In the first step, the factors are computed using the ``twoStepSDFM()`` or ``twoStepDenseDFM`` function depending on the parameter ``sparse``. Next, the computed factors are aggregated according to Mariano and Murasawa (2003) into a quarterly representation. They are then treated as quarterly predictors along the potential additional provided observed quarterly predictors. 
 
 The function is generally able to compute predictions for multiple target variables at once. For each target variable and horizon, a prediction from an ARDL model is computed for each quarterly predictor and each of the aggregated factors. These predictions are then averaged (with equal weights) to a single prediction for each horizon.
 
@@ -232,78 +358,94 @@ The function is generally able to compute predictions for multiple target variab
 
 ```R
   set.seed(02102025)
-  no_of_observations <- 200
-  no_of_variables <- 150
-  no_of_factors <- 3
-  trans_error_var_cov <- diag(1, no_of_factors)
-  loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
-  meas_error_mean <- rep(0, no_of_variables)
-  meas_error_var_cov <- diag(1, no_of_variables)
-  trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
-  factor_lag_order <- 2 # Order of the factor VAR process
-  simul_delay <- c(6, 3, 6, 0, 3, rep(0, 45), floor(rexp(100, 1)))
-  quarterfy <- TRUE
-  quarterly_variable_ratio  <- 1/3
-  corr <- TRUE 
-  beta_param <- 2 
-  seed <- 01102025 
-  set.seed(seed)
-  burn_in <- 999 
-  starting_date <- "1970-01-01"
-  rescale <- TRUE
-  check_stationarity <- TRUE
-  stationarity_check_threshold <- 1e-10
-  
-  FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
-              no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
-              meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
-              trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
-              factor_lag_order = factor_lag_order, delay = simul_delay, quarterfy = quarterfy, 
-              quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr, 
-              beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
-              rescale = rescale, check_stationarity = check_stationarity, 
-              stationarity_check_threshold = stationarity_check_threshold)
-  
-  data <- FM$data
-  variables_of_interest <- 1:5
-  max_fcast_horizon <- 4
-  delay <- simul_delay
-  selected <- c(round(no_of_variables * 0.5), round(no_of_variables * 0.25))
-  frequency <- c(rep(4, 50), rep(12, 100))
-  no_of_factors <- 2 
-  max_factor_lag_order  <- 10
-  decorr_errors <- TRUE 
-  lag_estim_criterion  <- "BIC"
-  ridge_penalty <- 1e-06
-  lasso_penalty <- NULL
-  max_iterations <- 1000
-  max_no_steps <- NULL
-  comp_null <- 1e-15
-  check_rank <- FALSE
-  conv_crit <- 1e-04 
-  conv_threshold <- 1e-04
-  log <- FALSE
-  parallel <- FALSE
-  max_ar_lag_order <- 5
-  max_predictor_lag_order  <- 5
-  
-  results <- nowcast(data = data, variables_of_interest = variables_of_interest, 
-                     max_fcast_horizon = max_fcast_horizon, delay = delay, selected = selected,
-                     frequency = frequency, no_of_factors = no_of_factors, 
-                     max_factor_lag_order  = max_factor_lag_order,  
-                     decorr_errors = decorr_errors, 
-                     lag_estim_criterion  = lag_estim_criterion,
-                     ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, 
-                     max_iterations = max_iterations, max_no_steps = max_no_steps, 
-                     comp_null = comp_null, check_rank = check_rank,  
-                     conv_crit = conv_crit, conv_threshold = conv_threshold, 
-                     log = log, parallel = parallel, max_ar_lag_order = max_ar_lag_order,
-                     max_predictor_lag_order = max_predictor_lag_order
-  )
-  
-  print(results)
-  plot(results)
-  
+no_of_observations <- 200
+no_of_variables <- 150
+no_of_factors <- 3
+trans_error_var_cov <- diag(1, no_of_factors)
+loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+meas_error_mean <- rep(0, no_of_variables)
+meas_error_var_cov <- diag(1, no_of_variables)
+trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+factor_lag_order <- 2 # Order of the factor VAR process
+simul_delay <- c(6, 3, 6, 0, 3, rep(0, 45), floor(rexp(100, 1)))
+quarterfy <- TRUE
+quarterly_variable_ratio  <- 1/3
+corr <- TRUE 
+beta_param <- 2 
+seed <- 01102025 
+set.seed(seed)
+burn_in <- 999 
+starting_date <- "1970-01-01"
+rescale <- TRUE
+check_stationarity <- TRUE
+stationarity_check_threshold <- 1e-10
+
+FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
+            no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+            meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+            trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+            factor_lag_order = factor_lag_order, delay = simul_delay, quarterfy = quarterfy, 
+            quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr, 
+            beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
+            rescale = rescale, check_stationarity = check_stationarity, 
+            stationarity_check_threshold = stationarity_check_threshold)
+
+data <- FM$data
+variables_of_interest <- 1:5
+max_fcast_horizon <- 4
+delay <- simul_delay
+selected <- c(round(no_of_variables * 0.5), round(no_of_variables * 0.25))
+frequency <- c(rep(4, 50), rep(12, 100))
+no_of_factors <- 2 
+max_factor_lag_order  <- 10
+decorr_errors <- TRUE 
+lag_estim_criterion  <- "BIC"
+ridge_penalty <- 1e-06
+lasso_penalty <- NULL
+max_iterations <- 1000
+max_no_steps <- NULL
+comp_null <- 1e-15
+check_rank <- FALSE
+conv_crit <- 1e-04 
+conv_threshold <- 1e-04
+log <- FALSE
+parallel <- FALSE
+max_ar_lag_order <- 5
+max_predictor_lag_order  <- 5
+
+sparse_results <- nowcast(data = data, variables_of_interest = variables_of_interest, 
+                          max_fcast_horizon = max_fcast_horizon, delay = delay, selected = selected,
+                          frequency = frequency, no_of_factors = no_of_factors, sparse = TRUE, 
+                          max_factor_lag_order  = max_factor_lag_order,  
+                          decorr_errors = decorr_errors, 
+                          lag_estim_criterion  = lag_estim_criterion,
+                          ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, 
+                          max_iterations = max_iterations, max_no_steps = max_no_steps, 
+                          comp_null = comp_null, check_rank = check_rank,  
+                          conv_crit = conv_crit, conv_threshold = conv_threshold, 
+                          log = log, parallel = parallel, max_ar_lag_order = max_ar_lag_order,
+                          max_predictor_lag_order = max_predictor_lag_order
+)
+
+print(sparse_results)
+plot(sparse_results)
+
+dense_results <- nowcast(data = data, variables_of_interest = variables_of_interest, 
+                          max_fcast_horizon = max_fcast_horizon, delay = delay, selected = selected,
+                          frequency = frequency, no_of_factors = no_of_factors, sparse = FALSE, 
+                          max_factor_lag_order  = max_factor_lag_order,  
+                          decorr_errors = decorr_errors, 
+                          lag_estim_criterion  = lag_estim_criterion,
+                          ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, 
+                          max_iterations = max_iterations, max_no_steps = max_no_steps, 
+                          comp_null = comp_null, check_rank = check_rank,  
+                          conv_crit = conv_crit, conv_threshold = conv_threshold, 
+                          log = log, parallel = parallel, max_ar_lag_order = max_ar_lag_order,
+                          max_predictor_lag_order = max_predictor_lag_order
+)
+
+print(dense_results)
+plot(dense_results)
 ```
 
 ### ``crossVal()``: Validate the model hyperparameters using a random hyper-parameter-candidate-scheme (Bergstra and Bengio, 2021) via BIC (Despois and Doz, 2023) or time series cross-validation (Hyndman and Athanasopoulos,
@@ -410,17 +552,6 @@ The function is generally able to compute predictions for multiple target variab
   max_ar_lag_order = 5
   max_predictor_lag_order = 5
   
-  cv <- crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
-                 delay = delay, frequency = frequency, no_of_factors = no_of_factors,
-                 seed = seed, min_ridge_penalty = min_ridge_penalty, max_ridge_penalty = max_ridge_penalty,
-                 cv_repititions = cv_repititions, cv_size = cv_size, lasso_penalty_type = lasso_penalty_type,
-                 min_max_penalty = min_max_penalty, max_factor_lag_order = max_factor_lag_order,
-                 decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
-                 ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
-                 max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                 conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE, no_of_corse = 1,
-                 max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order)
-  
   cv_parallel <- crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
                           delay = delay, frequency = frequency, no_of_factors = no_of_factors,
                           seed = seed, min_ridge_penalty = min_ridge_penalty, max_ridge_penalty = max_ridge_penalty,
@@ -429,8 +560,11 @@ The function is generally able to compute predictions for multiple target variab
                           decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                           ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
                           max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-                          conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = TRUE, no_of_corse = 2,
+                          conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = TRUE, no_of_cores = 2,
                           max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order)
+
+print(cv_parallel)
+plot(cv_parallel)
 ```
 
 ## License
@@ -480,6 +614,9 @@ If you have any questions or need assistance, please open an issue on the GitHub
 - Hyndman, R. J. and Athanasopoulos, G. 2018. "Forecasting: principles and practice". OTexts Melbourne, 3 edition.
 - Koopman, Siem Jan, and James Durbin. 2000. “Fast Filtering and Smoothing for Multivariate State Space Models.” Journal of Time Series Analysis 21 (3): 281–96.
 - Mariano, Roberto S., and Yasutomo Murasawa. 2003. “A New Coincident Index of Business Cycles Based on Monthly and Quarterly Series.” Journal of Applied Econometrics 18 (4): 427–43.
+- Onatski, A. (2010). Determining the number of factors from empirical distribution of eigenvalues. The Review of Economics and Statistics, 92(4), 1004-1016.
 - Zou, Hui, and Trevor Hastie. 2020. "Elasticnet: Elastic-Net for Sparse Estimation and Sparse PCA."" https://CRAN.R-project.org/package=elasticnet.
 - Zou, Hui, Trevor Hastie, and Robert Tibshirani. 2006. “Sparse Principal Component Analysis.” Journal of Computational and Graphical Statistics 15 (2): 265–86.
 
+
+_
