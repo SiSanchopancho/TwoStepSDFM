@@ -177,8 +177,8 @@ graphs$`BIC Results`
 
 variables_of_interest <- 1:2
 max_fcast_horizon <- 4
-selected <- c(cv$CV$`Min. CV`[, "Factor 1 # non-zero Loadings"],
-              cv$CV$`Min. CV`[, "Factor 2 # non-zero Loadings"])
+selected <- c(cv$CV$`Min. CV`[, 3:(3 + no_of_factors)])
+ridge_penalty <- cv$CV$`Min. CV`[2]
 parallel <- FALSE
 max_ar_lag_order <- 5
 max_predictor_lag_order  <- 5
