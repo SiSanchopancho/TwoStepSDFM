@@ -89,7 +89,7 @@ noOfFactors <- function(data, min_no_factors = 1, max_no_factors = 15, confidenc
     stop(paste0("confidence_threshold must be in (0,1)."))
   }
   
-  # The values for the test-statistics stem from Prof. Onatski and have been retrieved via the following link: https://www.econ.cam.ac.uk/people/faculty/ao319/papers (Update 24.11.2025, the link does no longer work)
+  # The values for the test-statistics stem: https://www.econometricsociety.org/publications/econometrica/2009/09/01/testing-hypotheses-about-number-factors-large-factor-models (Last accessed: 25.11.2025, 10:03)
   file_path <- system.file("extdata", "Onatski_test_stats_csv.txt", package = "TwoStepSDFM")
   test_values <- as.matrix(read.table(file_path, sep = ",", header = FALSE))
   results <- runNoOfFactors(no_na_data, test_values, min_no_factors, max_no_factors, confidence_threshold)

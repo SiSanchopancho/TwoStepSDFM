@@ -185,8 +185,12 @@ twoStepDenseDFM <- function(data,
   rownames(result$smoothed_factors) <- paste0("Factor ", 1:no_of_factors)
   result$loading_matrix_estimate <- result$loading_matrix_estimate[, 1:no_of_factors, drop = FALSE]
   result$data <- data
-  result$smoothed_state_variance <- cbind(result$smoothed_state_variance,
-                                          result$filtered_state_variance[, (no_of_observations):(no_of_observations + fcast_horizon), drop = FALSE])
+  if(fcast_horizon > 0){
+    no_of_cols <- no_of_observations * no_of_factors
+    block_size <- fcast_horizon * no_of_factors
+    result$smoothed_state_variance <- cbind(result$smoothed_state_variance,
+                                            result$filtered_state_variance[, (no_of_cols - block_size + 1):no_of_cols, drop = FALSE])
+  }
   
   # Re-shuffle the results objects to be in a more logical ordering
   result <- result[c("data", "loading_matrix_estimate", "smoothed_factors", "smoothed_state_variance",

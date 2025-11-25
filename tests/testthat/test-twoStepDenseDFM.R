@@ -46,7 +46,6 @@ test_that("", {
   
   frequency <- FM_no_date$frequency
   delay <- simul_delay
-  selected <- c(10, 8, 5)
   no_of_factors <- 3 
   max_factor_lag_order  <- 10
   decorr_errors <- TRUE 

@@ -149,8 +149,7 @@ twoStepSDFM <- function(data,
   decorr_errors <- checkBoolean(decorr_errors, "decorr_errors")
   
   # Mishandling of lag_estim_criterion
-  if(is.null(lag_estim_criterion))
-  {
+  if(is.null(lag_estim_criterion)){
     stop(paste0("lag_estim_criterion must be either \"BIC\", \"AIC\", or \"HIC\"."))
   }
   if(!(lag_estim_criterion %in% c("AIC", "BIC", "HIC"))){
@@ -238,7 +237,7 @@ twoStepSDFM <- function(data,
     conv_crit = conv_crit,
     conv_threshold = conv_threshold,
     log = log,
-    KFS_conv_crit = 1e-15, # This disables intrinsic checking of thewhether or not the filter converged, as the user will be able to make this decision in non-simulation scenarios
+    KFS_conv_crit = 1e-15, # This disables intrinsic checking of the whether or not the filter converged, as the user will be able to make this decision in non-simulation scenarios
     parallel = parallel,
     fcast_horizon = fcast_horizon
   )
@@ -262,8 +261,12 @@ twoStepSDFM <- function(data,
   rownames(result$smoothed_factors) <- paste0("Factor ", 1:no_of_factors)
   result$loading_matrix_estimate <- result$loading_matrix_estimate[, 1:no_of_factors, drop = FALSE]
   result$data <- data
-  result$smoothed_state_variance <- cbind(result$smoothed_state_variance,
-                                          result$filtered_state_variance[, (no_of_observations):(no_of_observations + fcast_horizon), drop = FALSE])
+  if(fcast_horizon > 0){
+    no_of_cols <- no_of_observations * no_of_factors
+    block_size <- fcast_horizon * no_of_factors
+    result$smoothed_state_variance <- cbind(result$smoothed_state_variance,
+                                            result$filtered_state_variance[, (no_of_cols - block_size + 1):no_of_cols, drop = FALSE])
+  }
   
   # Re-shuffle the results objects to be in a more logical ordering
   result <- result[c("data", "loading_matrix_estimate", "smoothed_factors", "smoothed_state_variance",
