@@ -8,3 +8,6 @@
 .Rdata
 .Rhistory
 compilation_log.txt
+temp_debug_log.txt
+test_values_eigen.txt
+gram_matrix.txt

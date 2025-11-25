@@ -75,22 +75,22 @@ ls("package:TwoStepSDFM")
 
 set.seed(02102025)
 no_of_observations <- 200
-no_of_variables <- 10
+no_of_variables <- 150
 no_of_factors <- 3
 trans_error_var_cov <- diag(1, no_of_factors)
 loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
 meas_error_mean <- rep(0, no_of_variables)
 meas_error_var_cov <- diag(1, no_of_variables)
 trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
-factor_lag_order <- 2 
-simul_delay <- c(floor(rexp(10, 1)))
-quarterfy <- FALSE
-quarterly_variable_ratio  <- 0
-corr <- TRUE
-beta_param <- 2
-seed <- 01102025
+factor_lag_order <- 2 # Order of the factor VAR process
+simul_delay <- c(6, 3, 6, 0, 3, rep(0, 45), floor(rexp(100, 1)))
+quarterfy <- TRUE
+quarterly_variable_ratio  <- 1/3
+corr <- TRUE 
+beta_param <- 2 
+seed <- 01102025 
 set.seed(seed)
-burn_in <- 999
+burn_in <- 999 
 starting_date <- "1970-01-01"
 rescale <- TRUE
 check_stationarity <- TRUE
@@ -106,26 +106,67 @@ FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_var
             rescale = rescale, check_stationarity = check_stationarity, 
             stationarity_check_threshold = stationarity_check_threshold)
 
-frequency <- FM$frequency
+data <- FM$data
+variables_of_interest <- 1:5
+max_fcast_horizon <- 4
 delay <- simul_delay
-no_of_factors <- 3 
+selected <- c(round(no_of_variables * 0.5), round(no_of_variables * 0.25))
+frequency <- c(rep(4, 50), rep(12, 100))
+no_of_factors <- 2 
 max_factor_lag_order  <- 10
 decorr_errors <- TRUE 
 lag_estim_criterion  <- "BIC"
+ridge_penalty <- 1e-06
+lasso_penalty <- NULL
+max_iterations <- 1000
+max_no_steps <- NULL
 comp_null <- 1e-15
 check_rank <- FALSE
+conv_crit <- 1e-04 
+conv_threshold <- 1e-04
 log <- FALSE
 parallel <- FALSE
-fcast_horizon <- 10
+max_ar_lag_order <- 5
+max_predictor_lag_order  <- 5
 
-fit <- twoStepDenseDFM(data = FM$data, delay = delay, no_of_factors = no_of_factors,
-                       max_factor_lag_order  = max_factor_lag_order, 
-                       decorr_errors = decorr_errors,  lag_estim_criterion  = lag_estim_criterion, 
-                       comp_null = comp_null,  check_rank = check_rank, log = log, 
-                       parallel = parallel, fcast_horizon = fcast_horizon)
+sparse_results <- nowcast(data = data, variables_of_interest = variables_of_interest, 
+                          max_fcast_horizon = max_fcast_horizon, delay = delay, selected = selected,
+                          frequency = frequency, no_of_factors = no_of_factors, sparse = TRUE, 
+                          max_factor_lag_order  = max_factor_lag_order,  
+                          decorr_errors = decorr_errors, 
+                          lag_estim_criterion  = lag_estim_criterion,
+                          ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, 
+                          max_iterations = max_iterations, max_no_steps = max_no_steps, 
+                          comp_null = comp_null, check_rank = check_rank,  
+                          conv_crit = conv_crit, conv_threshold = conv_threshold, 
+                          log = log, parallel = parallel, max_ar_lag_order = max_ar_lag_order,
+                          max_predictor_lag_order = max_predictor_lag_order
+)
 
-print(fit)
-graphs <- plot(fit)
-graphs$`Factor Time Series Plots`
-graphs$`Loading Matrix Heatmap`
-graphs$`Meas. Error Var.-Cov. Matrix Heatmap`
+print(sparse_results)
+sparse_graphs <- plot(sparse_results)
+sparse_graphs$`Single Pred. Fcast Density Plots Series 1`
+sparse_graphs$`Single Pred. Fcast Density Plots Series 2`
+sparse_graphs$`Single Pred. Fcast Density Plots Series 3`
+sparse_graphs$`Single Pred. Fcast Density Plots Series 4`
+sparse_graphs$`Single Pred. Fcast Density Plots Series 5`
+sparse_graphs$`Factor Time Series Plots`
+sparse_graphs$`Loading Matrix Heatmap`
+sparse_graphs$`Meas. Error Var.-Cov. Matrix Heatmap`
+
+dense_results <- nowcast(data = data, variables_of_interest = variables_of_interest, 
+                         max_fcast_horizon = max_fcast_horizon, delay = delay, selected = selected,
+                         frequency = frequency, no_of_factors = no_of_factors, sparse = FALSE, 
+                         max_factor_lag_order  = max_factor_lag_order,  
+                         decorr_errors = decorr_errors, 
+                         lag_estim_criterion  = lag_estim_criterion,
+                         ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, 
+                         max_iterations = max_iterations, max_no_steps = max_no_steps, 
+                         comp_null = comp_null, check_rank = check_rank,  
+                         conv_crit = conv_crit, conv_threshold = conv_threshold, 
+                         log = log, parallel = parallel, max_ar_lag_order = max_ar_lag_order,
+                         max_predictor_lag_order = max_predictor_lag_order
+)
+
+print(dense_results)
+plot(dense_results)

@@ -1,6 +1,6 @@
 Package: TwoStepSDFM
 Title: Estimate a Sparse Mixed Frequency Gaussian Factor Model Using a Two-Step Procedure
-Version: 0.1.3
+Version: 0.1.4
 Authors@R: person(
     given = "Domenic",
     family = "Franjic",

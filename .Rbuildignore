@@ -4,4 +4,7 @@
 ^\\.github$
 ^\\.Rcheck$
 ^PackageBuilder\\.R$
-^UPDATE_NOTES\\.md$
+^\\.RData$
+^temp_debug_log\\.txt$
+^test_values_eigen\\.txt$
+^gram_matrix\\.txt$
