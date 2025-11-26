@@ -16,8 +16,8 @@ The ``TwoStepSDFM`` package provides a fast implementation of the Kalman Filter 
 
 ## Prerequisites
 
-- **Rcpp**: A package for integrating `C++` code into `R` [@Eddelbuettel2011Rcpp]. [Rcpp CRAN repository](https://cran.r-project.org/web/packages/Rcpp/index.html)
-- **RcppEigen**: A package for integrating the `Eigen` linear algebra library into `R` [@Bates2013EcppEigen]. [RcppEigen CRAN repository](https://cran.r-project.org/web/packages/RcppEigen/index.html)
+- **Rcpp**: A package for integrating `C++` code into `R` [@Eddelbuettel2011Rcpp]. [Rcpp CRAN repository](https://CRAN.R-project.org/package=Rcpp)
+- **RcppEigen**: A package for integrating the `Eigen` linear algebra library into `R` [@Bates2013EcppEigen]. [RcppEigen CRAN repository](https://CRAN.R-project.org/package=RcppEigen)
 - **GCC compiler** (version 5.0 or later) [GCC Website](https://gcc.gnu.org/).
 
 ## Installation
@@ -631,21 +631,21 @@ If you have any questions or need assistance, please open an issue on the GitHub
 
 ### References
 
-- Bates, Douglas, and Dirk Eddelbuettel. 2013. “Fast and Elegant Numerical Linear Algebra Using the RcppEigen Package.” Journal of Statistical Software 52 (5): 1–24.
+- Bates, Douglas, and Dirk Eddelbuettel. 2013. "Fast and Elegant Numerical Linear Algebra Using the RcppEigen Package." Journal of Statistical Software 52 (5): 1–24.
 - Bergstra, J. and Bengio, Y. (2012). "Random search for hyper-parameter optimization." Journal of Machine Learning Research, 13(2).
 - Despois, T. and Doz, C. (2023). "Identifying and interpreting the factors in factor models via sparsity: Different approaches." Journal of Applied Econometrics, 38(4):533–555.
-- Doz, Catherine, Domenico Giannone, and Lucrezia Reichlin. 2011. “A two-step estimator for large approximate dynamic factor models based on Kalman filtering.” Journal of Econometrics 164 (1): 188–205.
-- Eddelbuettel, Dirk, and Romain François. 2011. “Rcpp: Seamless R and C++ Integration.” Journal of Statistical Software 40 (8): 1–18.
-- Franjic, Domenic, and Karsten Schweikert. 2024. “Nowcasting Macroeconomic Variables with a Sparse Mixed Frequency Dynamic Factor Model.” Available at SSRN.
-- Giannone, Domenico, Lucrezia Reichlin, and David Small. 2008. “Nowcasting: The Real-Time Informational Content of Macroeconomic Data.” Journal of Monetary Economics 55 (4): 665–76.
-- Guennebaud, Gaël, Benoît Jacob, et al. 2010. “Eigen V3.” http://eigen.tuxfamily.org.
+- Doz, Catherine, Domenico Giannone, and Lucrezia Reichlin. 2011. "A two-step estimator for large approximate dynamic factor models based on Kalman filtering." Journal of Econometrics 164 (1): 188–205.
+- Eddelbuettel, Dirk, and Romain François. 2011. "Rcpp: Seamless R and C++ Integration." Journal of Statistical Software 40 (8): 1–18.
+- Franjic, Domenic, and Karsten Schweikert. 2024. "Nowcasting Macroeconomic Variables with a Sparse Mixed Frequency Dynamic Factor Model." Available at SSRN.
+- Giannone, Domenico, Lucrezia Reichlin, and David Small. 2008. "Nowcasting: The Real-Time Informational Content of Macroeconomic Data." Journal of Monetary Economics 55 (4): 665–76.
+- Guennebaud, Gaël, Benoît Jacob, et al. 2010. "Eigen V3." http://eigen.tuxfamily.org.
 - Hyndman, R. J. and Athanasopoulos, G. 2018. "Forecasting: principles and practice". OTexts Melbourne, 3 edition.
-- Koopman, Siem Jan, and James Durbin. 2000. “Fast Filtering and Smoothing for Multivariate State Space Models.” Journal of Time Series Analysis 21 (3): 281–96.
-- Mariano, Roberto S., and Yasutomo Murasawa. 2003. “A New Coincident Index of Business Cycles Based on Monthly and Quarterly Series.” Journal of Applied Econometrics 18 (4): 427–43.
+- Koopman, Siem Jan, and James Durbin. 2000. "Fast Filtering and Smoothing for Multivariate State Space Models." Journal of Time Series Analysis 21 (3): 281–96.
+- Mariano, Roberto S., and Yasutomo Murasawa. 2003. "A New Coincident Index of Business Cycles Based on Monthly and Quarterly Series." Journal of Applied Econometrics 18 (4): 427–43.
 - Onatski, A. (2009a). Testing hypotheses about the number of factors in large factor models. Econometrica, 77(5), 1447-1479.
-- Onatski, A. (2009b). Supplement to “Testing hypotheses about the number of factors in large factor models” [Daten & Programme; Anhang mit Beweisen]. In Econometrica, 77(5). The Econometric Society. https://www.econometricsociety.org/publications/econometrica/issue-supplemental-materials/2009/09
-- Zou, Hui, and Trevor Hastie. 2020. "Elasticnet: Elastic-Net for Sparse Estimation and Sparse PCA."" https://CRAN.R-project.org/package=elasticnet.
-- Zou, Hui, Trevor Hastie, and Robert Tibshirani. 2006. “Sparse Principal Component Analysis.” Journal of Computational and Graphical Statistics 15 (2): 265–86.
+- Onatski, A. (2009b). Supplement to "Testing hypotheses about the number of factors in large factor models". In Econometrica, 77(5). The Econometric Society. https://www.econometricsociety.org/publications/econometrica/issue-supplemental-materials/2009/09
+- Zou, Hui, and Trevor Hastie. 2020. "Elasticnet: Elastic-Net for Sparse Estimation and Sparse PCA." https://CRAN.R-project.org/package=elasticnet.
+- Zou, Hui, Trevor Hastie, and Robert Tibshirani. 2006. "Sparse Principal Component Analysis." Journal of Computational and Graphical Statistics 15 (2): 265–86.
 
 
 

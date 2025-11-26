@@ -34,9 +34,9 @@
 // Including internal libraries
 #include "CholUpDown.h"
 
-/* LARS Algorithmus */
+/* LARS-EN Algorithm */
 /* Sources:
-- Zou, H., Hastie, T., & Zou, M. H. (2016). Package ‘elasticnet’. (https://cran.r-project.org/web/packages/elasticnet/index.html)
+- Zou, H., Hastie, T., & Zou, M. H. (2016). Package "elasticnet". (https://cran.r-project.org/web/packages/elasticnet/index.html)
 - Efron, B., Hastie, T., Johnstone, I., & Tibshirani, R. (2004). Least angle regression. (DOI: 10.1214/009053604000000067)
 - Zou, H., & Hastie, T. (2005). Regularization and variable selection via the elastic net. Journal of the Royal Statistical Society Series B: Statistical Methodology, 67(2), 301-320. (DOI: https://doi.org/10.1111/j.1467-9868.2005.00527.x)
 */
