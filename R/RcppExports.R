@@ -5,6 +5,14 @@ runARDL <- function(target_variable, target_variable_predictor, predictor_variab
     .Call(`_TwoStepSDFM_runARDL`, target_variable, target_variable_predictor, predictor_variable, max_target_lags, max_predictor_lags, crit)
 }
 
+#' @description
+#' This function is for internal use only and may change in future releases
+#' without notice. 
+#'
+runDL <- function(target_variable, predictor_variable, max_predictor_lags, crit) {
+    .Call(`_TwoStepSDFM_runDL`, target_variable, predictor_variable, max_predictor_lags, crit)
+}
+
 runNoOfFactors <- function(data_matrix_in, test_values, min_no_factors, max_no_factors, confidence_threshold) {
     .Call(`_TwoStepSDFM_runNoOfFactors`, data_matrix_in, test_values, min_no_factors, max_no_factors, confidence_threshold)
 }

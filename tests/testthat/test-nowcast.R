@@ -125,6 +125,21 @@ test_that("", {
   
   expect_equal(results_determinism_check, results)
   
+  # Check pure DL model specification
+  expect_silent(nowcast(data = data, variables_of_interest = variables_of_interest, 
+                        max_fcast_horizon = max_fcast_horizon, delay = delay, selected = selected,
+                        frequency = frequency, no_of_factors = no_of_factors, 
+                        max_factor_lag_order  = max_factor_lag_order,  
+                        decorr_errors = decorr_errors, 
+                        lag_estim_criterion  = lag_estim_criterion,
+                        ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, 
+                        max_iterations = max_iterations, max_no_steps = max_no_steps, 
+                        comp_null = comp_null, check_rank = check_rank,  
+                        conv_crit = conv_crit, conv_threshold = conv_threshold, 
+                        log = log, parallel = parallel, max_ar_lag_order = 0,
+                        max_predictor_lag_order = max_predictor_lag_order
+  ))
+  
   # Misuse (Note: Most parameter misuse is already checked in test-twoStepSDFM.R)
   expect_error(nowcast(data = data, variables_of_interest = -1, 
                        max_fcast_horizon = max_fcast_horizon, delay = delay, selected = selected,
@@ -138,7 +153,7 @@ test_that("", {
                        conv_crit = conv_crit, conv_threshold = conv_threshold, 
                        log = log, parallel = parallel, max_ar_lag_order = max_ar_lag_order,
                        max_predictor_lag_order = max_predictor_lag_order
-                       ))
+  ))
   
   expect_error(nowcast(data = data, variables_of_interest = variables_of_interest, 
                        max_fcast_horizon = -1, delay = delay, selected = selected,

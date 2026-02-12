@@ -63,15 +63,50 @@ twoStepSDFM(
 \item{fcast_horizon}{Integer forecasting horizon for factor forecasts}
 }
 \value{
-The \code{twoStepSDFM} function returns an object \code{fit} which, contains the following elements:
+An object of class \code{SDFMFit} with components:
 \describe{
-\item{\code{loading_matrix_estimate}}{A matrix of estimated loadings for each factor on each observed variable.}
-\item{\code{smoothed_factors}}{The smoothed factor estimates.}
-\item{\code{smoothed_state_variance}}{The estimated variance-covariance matrix of the residuals/errors.}
-\item{\code{factor_var_lag_order}}{The order of the VAR(max_factor_lag_order) model used in the factor model process.}
-\item{\code{error_var_cov_cholesky_factor}}{A matrix representing any transformations applied to the factors for error decorrelation, if \code{decorr_errors} is TRUE.}
+\item{data}{Original data matrix.}
+\item{loading_matrix_estimate}{Matrix of estimated factor loadings.}
+\item{smoothed_factors}{Matrix or \code{zoo} object containing the smoothed latent factors.}
+\item{smoothed_state_variance}{Matrix with the state covariance matrices corresponding to the smoothed state vector (stacked in column-major order).}
+\item{factor_var_lag_order}{Integer, selected lag order of the factor VAR model.}
+\item{error_var_cov_cholesky_factor}{Lower-triangular Cholesky factor of the estimated measurement error variance–covariance matrix.}
 }
 }
 \description{
-Estimate an SDFM via SPCA and Kalman Filter and Smoother
+Estimate a sparse mixed-frequency Gaussian dynamic factor model using
+sparse principal components analysis and a state-space representation
+with Kalman filter and smoother. For more details see Franjic and Schweikert (2024) \url{doi:10.2139/ssrn.4733872}.
+}
+\examples{
+\dontrun{
+set.seed(02102025)
+no_of_observations <- 100
+no_of_variables <- 20
+no_of_factors <- 3
+trans_error_var_cov <- diag(1, no_of_factors)
+loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+meas_error_mean <- rep(0, no_of_variables)
+meas_error_var_cov <- diag(1, no_of_variables)
+trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+factor_lag_order <- 2
+FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
+            no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+            meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+            trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+            factor_lag_order = factor_lag_order)
+
+# Estimate a 2-factor model
+fit <- twoStepSDFM(
+  data = FM$data,
+  delay = FM$delay,
+  selected = rep(floor(0.2 * no_of_variables), no_of_factors),
+  no_of_factors = no_of_factors
+)
+
+# Inspect the results
+print(fit)
+plots <- plot(fit)
+}
+
 }

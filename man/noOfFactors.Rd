@@ -21,7 +21,13 @@ noOfFactors(
 \item{confidence_threshold}{Numeric threshold value to stop the testing procedure.}
 }
 \value{
-Returns a list with the number of factors and some additional information.
+A list with components:
+\describe{
+\item{\code{no_of_factors}}{Estimated number of factors (integer).}
+\item{\code{p_value}}{P-value of the last test in the Onatski (2010) procedure.}
+\item{\code{confidence_threshold}}{The significance level used in the test.}
+\item{\code{statistic}}{Test statistic value of the last test.}
+}
 }
 \description{
 Estimate the number of factors using the Onatski (2010) procedure.

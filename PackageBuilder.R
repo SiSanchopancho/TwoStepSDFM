@@ -21,32 +21,24 @@ library(rstudioapi)
 library(roxygen2)
 library(Rcpp)
 library(devtools)
-
-## Set directory auf dieses Skript
 setwd(dirname(getActiveDocumentContext()$path))
 rm(list = ls())
 
-## Clean up alte Compilate
+# Clean up
 unlink("src/*.o")
 unlink("src/*.so")
 unlink("src/*.dll")
 devtools::clean_dll()
 devtools::clean_vignettes()
 
-## Rcpp-Attribute neu erzeugen
+# Compile-test setup (optional)
 Rcpp::compileAttributes()
-
-## Rd + NAMESPACE aus roxygen erzeugen
-roxygen2::roxygenise()
-
-## Vignetten bauen
+options(pkg.build_extra_flags = FALSE)
+devtools::document()
 devtools::build_vignettes()
-
-## Paket testen (wie CRAN)
 devtools::check(args = "--as-cran")
 
-## Build
+# Build and install package
 devtools::build()
+install.packages("../TwoStepSDFM_0.1.5.tar.gz", repos = NULL, type = "source")
 
-# Install
-install.packages("../TwoStepSDFM_0.1.4.tar.gz", repos = NULL, type = "source")

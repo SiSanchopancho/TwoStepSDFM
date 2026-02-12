@@ -93,7 +93,7 @@ forecastWrapper <- function(target_variables,
   
   fcasts <- matrix(NaN, no_of_target_vars, max_fcast_horizon - min(min_fcast_horizons) + 1)
   for(current_target in 1:no_of_target_vars){
-    
+
     # Start ARDL estimation loop over the predictor #
     
     current_fcasts <- matrix(NaN, no_of_vars + no_of_factors, max_fcast_horizon - min_fcast_horizons[current_target] + 1)
@@ -126,28 +126,46 @@ forecastWrapper <- function(target_variables,
                          (horizon_adjustment + 1 - h):(no_of_qrtly_obs - all_qtrly_data_delay[current_target] - h)],
           ncol = 1)
         
-        ardl_fit <- runARDL(horizon_specific_target,
-                            horizon_specific_ar_lag,
+        if(max_ar_lag_order != 0){
+          ardl_fit <- runARDL(horizon_specific_target,
+                              horizon_specific_ar_lag,
+                              horizon_specific_predictor,
+                              max(max_ar_lag_order - max(h, 0), 1), 
+                              max(max_predictor_lag_order - max(h, 0), 1),
+                              lag_estim_criterion)
+          
+          # Forecast
+          forecast_predictors <- matrix(1, sum(ardl_fit$optimL_lag_order) + 3, 1) # Add three for the intercept and the "contemporaenous" observations
+          
+          forecast_predictors[2:(ardl_fit$optimL_lag_order[1] + 2), ] <- 
+            head(all_qrtly_data[current_target, 
+                                (no_of_qrtly_obs - all_qtrly_data_delay[current_target]):1],
+                 ardl_fit$optimL_lag_order[1] + 1)
+          
+          forecast_predictors[(ardl_fit$optimL_lag_order[1] + 3):(ardl_fit$optimL_lag_order[1] + ardl_fit$optimL_lag_order[2] + 3), ] <- 
+            head(all_qrtly_data[current_predictor, 
+                                (no_of_qrtly_obs - all_qtrly_data_delay[current_predictor]):1],
+                 ardl_fit$optimL_lag_order[2] + 1)
+          
+          current_fcasts[current_predictor, which(rel_fcast_horizons == h)] <-
+            matrix(ardl_fit$coefficients, nrow = 1) %*% forecast_predictors
+        }else{
+          ardl_fit <- runDL(horizon_specific_target,
                             horizon_specific_predictor,
-                            max(max_ar_lag_order - max(h, 0), 1), 
                             max(max_predictor_lag_order - max(h, 0), 1),
                             lag_estim_criterion)
-        
-        # Forecast
-        forecast_predictors <- matrix(1, sum(ardl_fit$optimL_lag_order) + 3, 1) # Add three for the intercept and the "contemporaenous" observations
-        
-        forecast_predictors[2:(ardl_fit$optimL_lag_order[1] + 2), ] <- 
-          head(all_qrtly_data[current_target, 
-                              (no_of_qrtly_obs - all_qtrly_data_delay[current_target]):1],
-               ardl_fit$optimL_lag_order[1] + 1)
-        
-        forecast_predictors[(ardl_fit$optimL_lag_order[1] + 3):(ardl_fit$optimL_lag_order[1] + ardl_fit$optimL_lag_order[2] + 3), ] <- 
-          head(all_qrtly_data[current_predictor, 
-                              (no_of_qrtly_obs - all_qtrly_data_delay[current_predictor]):1],
-               ardl_fit$optimL_lag_order[2] + 1)
-        
-        current_fcasts[current_predictor, which(rel_fcast_horizons == h)] <-
-          matrix(ardl_fit$coefficients, nrow = 1) %*% forecast_predictors
+          
+          # Forecast
+          forecast_predictors <- matrix(1, ardl_fit$optimL_lag_order + 2, 1) # Add two for the intercept and the "contemporaenous" observations
+          
+          forecast_predictors[2:(ardl_fit$optimL_lag_order[1] + 2), ] <- 
+            head(all_qrtly_data[current_predictor, 
+                                (no_of_qrtly_obs - all_qtrly_data_delay[current_predictor]):1],
+                 ardl_fit$optimL_lag_order + 1)
+            
+          current_fcasts[current_predictor, which(rel_fcast_horizons == h)] <-
+            matrix(ardl_fit$coefficients, nrow = 1) %*% forecast_predictors
+        }
         
       }
       
@@ -167,7 +185,7 @@ forecastWrapper <- function(target_variables,
       colMeans(current_fcasts, na.rm = TRUE)
     
     # Start ARDL estimation loop over the predictor #
-    
+
   }
   
   # End ARDL estimation loop over the target variables #

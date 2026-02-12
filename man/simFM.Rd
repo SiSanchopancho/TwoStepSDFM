@@ -75,15 +75,15 @@ simFM(
 Returns an \code{simFM} object containing the DFM parameters expressed in the factor VAR companion form.
 The \code{simFM} function returns a \code{simFM} object which, contains the following elements:
 \describe{
-\item{\code{`data`}}{If \code{starting_date} is provided, a \code{zoo} matrix time series. Else, \code{no_of_variables} x \code{no_of_observations} simulated data matrix.}
-\item{\code{`factors`}}{If \code{starting_date} is provided, a \code{zoo} matrix time series. Else, \code{no_of_factors} x \code{no_of_observations} simulated factor matrix.}
-\item{\code{`factor_var_coeff_matrix`}}{\code{no_of_factors} x (\code{no_of_factors} * \code{factor_lag_order}) factor VAR coefficient matrix.}
-\item{\code{`loading_matrix`}}{Factor loading matrix.}
-\item{\code{`measurement_error`}}{If \code{starting_date} is provided, a \code{zoo} matrix time series. Else,\code{no_of_variables} x \code{no_of_observations} simulated measurement error matrix.}
-\item{\code{`measurement_error_var_cov`}}{Measurement error variance covariance matrix.}
-\item{\code{`transition_error_var_cov`}}{Factor VAR process error (transition error) variance covariance matrix.}
-\item{\code{`frequency`}}{Vector of variable frequencies}
-\item{\code{`delay`}}{Vector of variable delays}
+\item{\code{data}}{If \code{starting_date} is provided, a \code{zoo} matrix time series. Else, \code{no_of_variables} x \code{no_of_observations} simulated data matrix.}
+\item{\code{factors}}{If \code{starting_date} is provided, a \code{zoo} matrix time series. Else, \code{no_of_factors} x \code{no_of_observations} simulated factor matrix.}
+\item{\code{factor_var_coeff_matrix}}{\code{no_of_factors} x (\code{no_of_factors} * \code{factor_lag_order}) factor VAR coefficient matrix.}
+\item{\code{loading_matrix}}{Factor loading matrix.}
+\item{\code{measurement_error}}{If \code{starting_date} is provided, a \code{zoo} matrix time series. Else,\code{no_of_variables} x \code{no_of_observations} simulated measurement error matrix.}
+\item{\code{measurement_error_var_cov}}{Measurement error variance covariance matrix.}
+\item{\code{transition_error_var_cov}}{Factor VAR process error (transition error) variance covariance matrix.}
+\item{\code{frequency}}{Vector of variable frequencies}
+\item{\code{delay}}{Vector of variable delays}
 }
 }
 \description{

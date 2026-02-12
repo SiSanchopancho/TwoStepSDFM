@@ -44,7 +44,7 @@ checkPositiveSignedInteger <- function(parameter, name, bit_size = 64) {
     parameter <- floor(parameter)
   }
   if(parameter < 0 || parameter > 2^(bit_size - 1) - 1) {
-    stop(paste0(name, " must be a non-negative signed 64bit integer."))
+    stop(paste0(name, " must be a non-negative signed 64bit integer.")) 
   }
   
   return(parameter)

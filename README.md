@@ -10,14 +10,14 @@ The ``TwoStepSDFM`` package provides a fast implementation of the Kalman Filter 
 - **Fast Model Simulation**: The ``simFM()`` function provides a flexible framework to simulate approximate DFMs.
 - **Estimation of the Number of Factors**: The ``noOfFactors()`` functions uses the Onatski (2009a,b) procedure to estimate the number of factors efficiently while providing good finite sample performance.
 - **Fast Model Estimation**: The ``twoStepSDFM()`` function provides a fast and convenient implementation of the two-step estimator outlined in Franjic and Schweikert (2024).
-- **Fast Hyper-Parameter Cross-Validation**: The ``crossVal()`` function provides a convinient, fast, and parallel cross-validation wrapper to retrieve the optimal hyper-parameters.
+- **Fast Hyper-Parameter Cross-Validation**: The ``crossVal()`` function provides a convenient, fast, and parallel cross-validation wrapper to retrieve the optimal hyper-parameters.
 - **Fast Model Prediction**: The ``nowcast()`` function is a highly convenient prediction function that automatically takes care of many issues that arise with mixed frequency data and ragged edges.
 - **Compatibility**: All functions take advantage of ``C++`` for enhanced speed.
 
 ## Prerequisites
 
-- **Rcpp**: A package for integrating `C++` code into `R` [@Eddelbuettel2011Rcpp]. [Rcpp CRAN repository](https://CRAN.R-project.org/package=Rcpp)
-- **RcppEigen**: A package for integrating the `Eigen` linear algebra library into `R` [@Bates2013EcppEigen]. [RcppEigen CRAN repository](https://CRAN.R-project.org/package=RcppEigen)
+- **Rcpp**: A package for integrating `C++` code into `R` (Eddelbuettel and François, 2011). [Rcpp CRAN repository](https://CRAN.R-project.org/package=Rcpp)
+- **RcppEigen**: A package for integrating the `Eigen` linear algebra library into `R` (Bates and Eddelbuettel, 2013). [RcppEigen CRAN repository](https://CRAN.R-project.org/package=RcppEigen)
 - **GCC compiler** (version 5.0 or later) [GCC Website](https://gcc.gnu.org/).
 
 ## Installation
@@ -26,7 +26,7 @@ The ``TwoStepSDFM`` package provides a fast implementation of the Kalman Filter 
 
 ``Rcpp`` and ``RcppEigen`` can be downloaded from CRAN or directly installed from within `R` by calling ``install.packages("...")``.
 
-To install the package itself, a short `R` script is provided (see `PackageBuilder.R`). The package currently only compiles with the ``g++``/``gcc`` compiler. This package is ported from an existing C++14 project and relies on C++14 language features for correct and efficient operation. Debugging and development are performed solely in C++14, and a downgrade to C++11 is not feasible.
+To install the package itself, a short `R` script is provided (see `PackageBuilder.R`). The package currently only compiles with the ``g++``/``gcc`` compiler.
 
 ## Usage
 
@@ -58,7 +58,7 @@ To install the package itself, a short `R` script is provided (see `PackageBuild
 
 #### Example
 
-```R
+```r
 set.seed(02102025)
 no_of_observations <- 200
 no_of_variables <- 150
@@ -110,7 +110,7 @@ graphs$`Meas. Error Var.-Cov. Matrix Heatmap`
 
 #### Example
 
-```R
+```r
 set.seed(02102025)
 no_of_observations <- 200
 no_of_variables <- 50
@@ -176,7 +176,7 @@ noOfFactors(FM$data, min_no_factors, max_no_factors, confidence_threshold)
 
 #### Example
 
-```R
+```r
 set.seed(02102025)
 no_of_observations <- 200
 no_of_variables <- 10
@@ -245,7 +245,7 @@ graphs$`Loading Matrix Heatmap`
 graphs$`Meas. Error Var.-Cov. Matrix Heatmap`
 ```
 
-### ``twoStepDenseDFM()``: Estimating the model parameters and higher-frequency factors using a dense dynamic factor model accoridng to Giannone et al. (2008)
+### ``twoStepDenseDFM()``: Estimating the model parameters and higher-frequency factors using a dense dynamic factor model according to Giannone et al. (2008)
 
 #### Parameters
 
@@ -263,7 +263,7 @@ graphs$`Meas. Error Var.-Cov. Matrix Heatmap`
 
 #### Example
 
-```R
+```r
 set.seed(02102025)
 no_of_observations <- 200
 no_of_variables <- 10
@@ -325,11 +325,11 @@ graphs$`Meas. Error Var.-Cov. Matrix Heatmap`
 
 #### Usage
 
-Most of the parameters of ``nowcast()`` are directly parsed to ``twoStepSDFM()`` of ``twoStepDenseDFM``, depending on the parameter ``sparse``, and work thus accordingly. The majour differences, however, lie in the parameter ``data``, ``variables_of_interest``, ``max_fcast_horizon``, ``frequency``, ``max_ar_lag_order``, and ``max_predictor_lag_order``.
+Most of the parameters of ``nowcast()`` are directly parsed to ``twoStepSDFM()`` of ``twoStepDenseDFM``, depending on the parameter ``sparse``, and work thus accordingly. The major differences, however, lie in the parameter ``data``, ``variables_of_interest``, ``max_fcast_horizon``, ``frequency``, ``max_ar_lag_order``, and ``max_predictor_lag_order``.
 
 ``data`` expects a zoo/xts object of mixed frequency data. At least one variable in ``data`` must be of quarterly frequency. All quarterly variables should be stored such that their actual realisations are stored in the last months of each respective quarter. The inter-quarter month should be filled with either the realisation or some other non-NA numerical value. ``NA``s are fine at the end of the panel as long as they align with the delays provided in ``delay``. The function will check for ``NA``s that lie outside of the ragged edges.
 
-``variables_of_interest`` is the vector indicating thos quarterly variables ought to be predicted. Note that currently only quarterly target variables are supported. In general, multiple quarterly series can be predicted at once.
+``variables_of_interest`` is the vector indicating those quarterly variables ought to be predicted. Note that currently only quarterly target variables are supported. In general, multiple quarterly series can be predicted at once.
 
 ``max_fcast_horizon`` indicates the maximum number of forecasts outside of the final observation of the panel should be computed. Note, the minimum forecasting horizon will be inferred internally for each target variable. Here, the minimum forecasting horizon will be set such that all ragged edges due to publication delay will be predicted. For example: Say the target variable is delayed by six months. ``max_fcast_horizon`` is set to two. The function will then automatically compute a one-step back backcast, a nowcast, a one-step ahead forecast, and a two step-ahead forecast. If the second variable of interest is not published with delay, only the one- and two-step ahead forecast will be computed.
 
@@ -367,7 +367,7 @@ The function is generally able to compute predictions for multiple target variab
 
 #### Example
 
-```R
+```r
 set.seed(02102025)
 no_of_observations <- 200
 no_of_variables <- 150
@@ -511,7 +511,7 @@ dense_graphs$`Meas. Error Var.-Cov. Matrix Heatmap`
 
 #### Example
 
-```{R}
+```r
 set.seed(02102025)
 no_of_observations <- 102 + 3
 no_of_variables <- 50
@@ -597,11 +597,11 @@ graphs$`BIC Results`
 
 ## License
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+License: GPL v3
 
-© 2024-2025 Domenic Franjic
+(C) 2024-2025 Domenic Franjic
 
-This project is licensed under the **GNU General Public License v3.0**. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the **GNU General Public License v3.0**. See the LICENSE file for details.
 
 ## Acknowledgements
 

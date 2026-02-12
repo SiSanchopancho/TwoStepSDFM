@@ -32,7 +32,8 @@ crossVal(
   parallel = FALSE,
   no_of_cores = 1,
   max_ar_lag_order = 5,
-  max_predictor_lag_order = 5
+  max_predictor_lag_order = 5,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -91,6 +92,18 @@ crossVal(
 \item{max_ar_lag_order}{Integer maximum number of lags of the target variable ought to be included in the nowcasting step}
 
 \item{max_predictor_lag_order}{Integer maximum number of lags of the predictors ought to be included in the nowcasting step}
+
+\item{verbose}{Logical, whether to print some progress tracking output to the console.}
+}
+\value{
+An \code{SDFMcrossVal} object containing the cross-validation and BIC results for all hyper-parameter combinations.
+The \code{crossVal} function returns an \code{SDFMcrossVal} object with the following elements:
+\describe{
+\item{\code{CV}}{A list with components \code{CV Results} (matrix of cross-validation errors and corresponding hyper-parameter values) and
+\code{Min. CV} (row of \code{CV Results} with the minimum cross-validation error).}
+\item{\code{BIC}}{A list with components \code{BIC Results} (matrix of BIC values and corresponding hyper-parameter values) and
+\code{Min. BIC} (row of \code{BIC Results} with the minimum BIC).}
+}
 }
 \description{
 Cross-validate the hyper-parameter of the mixed-frequency SDFM

@@ -53,15 +53,15 @@ NULL
 #' @return Returns an `simFM` object containing the DFM parameters expressed in the factor VAR companion form.
 #' The `simFM` function returns a `simFM` object which, contains the following elements:
 #' \describe{
-#' \item{\code{`data`}}{If `starting_date` is provided, a `zoo` matrix time series. Else, `no_of_variables` x `no_of_observations` simulated data matrix.}
-#' \item{\code{`factors`}}{If `starting_date` is provided, a `zoo` matrix time series. Else, `no_of_factors` x `no_of_observations` simulated factor matrix.}
-#' \item{\code{`factor_var_coeff_matrix`}}{`no_of_factors` x (`no_of_factors` * `factor_lag_order`) factor VAR coefficient matrix.}
-#' \item{\code{`loading_matrix`}}{Factor loading matrix.}
-#' \item{\code{`measurement_error`}}{If `starting_date` is provided, a `zoo` matrix time series. Else,`no_of_variables` x `no_of_observations` simulated measurement error matrix.}
-#' \item{\code{`measurement_error_var_cov`}}{Measurement error variance covariance matrix.}
-#' \item{\code{`transition_error_var_cov`}}{Factor VAR process error (transition error) variance covariance matrix.}
-#' \item{\code{`frequency`}}{Vector of variable frequencies}
-#' \item{\code{`delay`}}{Vector of variable delays}
+#' \item{\code{data}}{If `starting_date` is provided, a `zoo` matrix time series. Else, `no_of_variables` x `no_of_observations` simulated data matrix.}
+#' \item{\code{factors}}{If `starting_date` is provided, a `zoo` matrix time series. Else, `no_of_factors` x `no_of_observations` simulated factor matrix.}
+#' \item{\code{factor_var_coeff_matrix}}{`no_of_factors` x (`no_of_factors` * `factor_lag_order`) factor VAR coefficient matrix.}
+#' \item{\code{loading_matrix}}{Factor loading matrix.}
+#' \item{\code{measurement_error}}{If `starting_date` is provided, a `zoo` matrix time series. Else,`no_of_variables` x `no_of_observations` simulated measurement error matrix.}
+#' \item{\code{measurement_error_var_cov}}{Measurement error variance covariance matrix.}
+#' \item{\code{transition_error_var_cov}}{Factor VAR process error (transition error) variance covariance matrix.}
+#' \item{\code{frequency}}{Vector of variable frequencies}
+#' \item{\code{delay}}{Vector of variable delays}
 #' }
 #' @export
 simFM <- function(no_of_observations, no_of_variables, no_of_factors, loading_matrix, 
@@ -309,10 +309,8 @@ simFM <- function(no_of_observations, no_of_variables, no_of_factors, loading_ma
   
 }
 
-#' @name print.simFM
-#' @title Generic printing function for simFM S3 objects
-#' @param x `simFM` object.
-#' @param ... Additional parameters for the plotting functions.
+#' @method print simFM
+#' @return No return value, called for side effects.
 #' @export
 print.simFM <- function(x, ...) {
   simulated_time_series <- is.zoo(x$data)
@@ -355,10 +353,9 @@ print.simFM <- function(x, ...) {
   invisible(x)
 }
 
-#' @name plot.simFM
-#' @title Generic plotting function for simFM S3 objects
-#' @param x `simFM` object.
-#' @param ... Additional parameters for the plotting functions.
+#' @method plot simFM
+#' @return A named list of ggplot objects, including at least `Factor Time Series Plots`, `Loading Matrix Heatmap`, and
+#' `Meas. Error Var.-Cov. Matrix Heatmap`.
 #' @export
 plot.simFM <- function(x, ...) {
   out_list <- list()

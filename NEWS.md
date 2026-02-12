@@ -1,3 +1,4 @@
-# Upate notes for version 0.1.4
+# Upate notes for version 0.1.5
 
-* Making the repo CRAN ready
+* Updated the DESCRPTION file
+* Added a pure distributed lag forecasting routine for the nowcasting function

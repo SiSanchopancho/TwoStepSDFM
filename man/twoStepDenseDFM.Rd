@@ -2,7 +2,7 @@
 % Please edit documentation in R/TwoStepDenseDFM.R
 \name{twoStepDenseDFM}
 \alias{twoStepDenseDFM}
-\title{Estimate an DFM via PCA and Kalman Filter and Smoother according to Doz, C., Giannone, D., & Reichlin, L. (2011). A two-step estimator for large approximate dynamic factor models based on Kalman filtering. Journal of Econometrics, 164(1), 188-205.}
+\title{Estimate a DFM via PCA and Kalman Filter and Smoother.}
 \usage{
 twoStepDenseDFM(
   data,
@@ -42,15 +42,49 @@ twoStepDenseDFM(
 \item{fcast_horizon}{Integer forecasting horizon for factor forecasts}
 }
 \value{
-The \code{twoStepDenseDFM} function returns an object \code{fit} which, contains the following elements:
+An object of class \code{DFMFit} with components:
 \describe{
-\item{\code{loading_matrix_estimate}}{A matrix of estimated loadings for each factor on each observed variable.}
-\item{\code{smoothed_factors}}{The smoothed factor estimates.}
-\item{\code{smoothed_state_variance}}{The estimated variance-covariance matrix of the residuals/errors.}
-\item{\code{factor_var_lag_order}}{The order of the VAR(max_factor_lag_order) model used in the factor model process.}
-\item{\code{error_var_cov_cholesky_factor}}{A matrix representing any transformations applied to the factors for error decorrelation, if \code{decorr_errors} is TRUE.}
+\item{data}{Original data matrix.}
+\item{loading_matrix_estimate}{Matrix of estimated factor loadings.}
+\item{smoothed_factors}{Matrix or \code{zoo} object containing the smoothed latent factors.}
+\item{smoothed_state_variance}{Matrix with the state covariance matrices corresponding to the smoothed state vector (stacked in column-major order).}
+\item{factor_var_lag_order}{Integer, selected lag order of the factor VAR model.}
+\item{error_var_cov_cholesky_factor}{Lower-triangular Cholesky factor of the estimated measurement error variance–covariance matrix.}
 }
 }
 \description{
-Estimate an DFM via PCA and Kalman Filter and Smoother according to Doz, C., Giannone, D., & Reichlin, L. (2011). A two-step estimator for large approximate dynamic factor models based on Kalman filtering. Journal of Econometrics, 164(1), 188-205.
+Estimate a dense (approximate) dynamic factor model via principal components
+analysis and a state-space representation with Kalman filter and smoother,
+following Giannone, Reichlin and Small (2008) \url{doi:10.1016/j.jmoneco.2008.05.010}
+and Doz, Giannone and Reichlin (2011) \url{doi:10.1016/j.jeconom.2011.02.012}.
+}
+\examples{
+\dontrun{
+set.seed(02102025)
+no_of_observations <- 100
+no_of_variables <- 20
+no_of_factors <- 3
+trans_error_var_cov <- diag(1, no_of_factors)
+loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+meas_error_mean <- rep(0, no_of_variables)
+meas_error_var_cov <- diag(1, no_of_variables)
+trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+factor_lag_order <- 2
+FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
+            no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+            meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+            trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+            factor_lag_order = factor_lag_order)
+
+# Estimate a dense 2-factor model
+fit <- twoStepDenseDFM(
+  data = FM$data,
+  delay = FM$delay,
+  no_of_factors = no_of_factors
+)
+
+print(fit)
+plots <- plot(fit)
+}
+
 }

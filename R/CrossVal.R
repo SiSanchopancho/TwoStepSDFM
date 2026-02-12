@@ -61,6 +61,15 @@ NULL
 #' @param no_of_cores Integer number of course to use when run in parallel
 #' @param max_ar_lag_order Integer maximum number of lags of the target variable ought to be included in the nowcasting step
 #' @param max_predictor_lag_order Integer maximum number of lags of the predictors ought to be included in the nowcasting step
+#' @param verbose Logical, whether to print some progress tracking output to the console.
+#' @return An `SDFMcrossVal` object containing the cross-validation and BIC results for all hyper-parameter combinations.
+#' The `crossVal` function returns an `SDFMcrossVal` object with the following elements:
+#' \describe{
+#'   \item{\code{CV}}{A list with components \code{CV Results} (matrix of cross-validation errors and corresponding hyper-parameter values) and
+#'     \code{Min. CV} (row of \code{CV Results} with the minimum cross-validation error).}
+#'   \item{\code{BIC}}{A list with components \code{BIC Results} (matrix of BIC values and corresponding hyper-parameter values) and
+#'     \code{Min. BIC} (row of \code{BIC Results} with the minimum BIC).}
+#' }
 #' @export
 crossVal <- function(data,
                      variable_of_interest,
@@ -89,7 +98,8 @@ crossVal <- function(data,
                      parallel = FALSE,
                      no_of_cores = 1,
                      max_ar_lag_order = 5,
-                     max_predictor_lag_order = 5) {
+                     max_predictor_lag_order = 5,
+                     verbose = TRUE) {
   
   
   # Mishandling
@@ -250,9 +260,11 @@ crossVal <- function(data,
   if(!parallel){
     
     # Set-up progress bar
-    cat("Currently validating the model hyper-parameter in series.\n")
-    pb <- txtProgressBar(max = cv_size, style = 3)
-    setTxtProgressBar(pb, 0)
+    if (verbose){
+      message("Currently validating the model hyper-parameter in series.")
+      pb <- txtProgressBar(max = cv_size, style = 3)
+      setTxtProgressBar(pb, 0)
+    }
     
     min_cv <- .Machine$double.xmax
     min_bic <- .Machine$double.xmax
@@ -276,16 +288,27 @@ crossVal <- function(data,
       
       cv_results[h, 1] <- current_results$cv
       
-      setTxtProgressBar(pb, h)
+      if(verbose){
+        setTxtProgressBar(pb, h)
+      }
     }
-    close(pb)
+    if(verbose){
+      close(pb)
+    }
     
   }else if(parallel){
     
     # Set-up progress bar
-    cat("Currently validating the model hyper-parameter in parallel.\n")
-    pb <- txtProgressBar(max = cv_size, style = 3)
-    progressFunc  <- function(n) setTxtProgressBar(pb, n)
+    if (verbose) {
+      message("Currently validating the model hyper-parameter in parallel.")
+      pb <- txtProgressBar(max = cv_size, style = 3)
+      progressFunc <- function(n) setTxtProgressBar(pb, n)
+      opts <- list(progress = progressFunc)
+    } else {
+      pb <- NULL
+      progressFunc <- NULL
+      opts <- list()
+    }
     
     # Set-up parallelisation
     cl <- makeCluster(no_of_cores)
@@ -295,7 +318,7 @@ crossVal <- function(data,
     h_indices <- 1:cv_size
     results <- foreach(h = h_indices, 
                        .packages = c("zoo", "xts", "TwoStepSDFM", "lubridate"), 
-                       .options.snow = list(progress = progressFunc),
+                       .options.snow = opts,
                        .combine = 'rbind',
                        .multicombine = TRUE,
                        .export = global_vars_to_export) %dopar% {
@@ -320,7 +343,9 @@ crossVal <- function(data,
                          out$bic <- current_results$bic
                          out
                        }
-    close(pb)
+    if(verbose && !is.null(pb)){
+      close(pb)
+    }
     stopCluster(cl)
     
     cv_results[, 1] <- results$cv
@@ -450,6 +475,7 @@ nowcastSpecificationHelper <- function(cv_repititions, no_of_factors, no_of_vari
 }
 
 #' @method print SDFMcrossVal
+#' @return No return value, called for side effects.
 #' @export
 print.SDFMcrossVal <- function(x, ...) {
   
@@ -492,6 +518,7 @@ print.SDFMcrossVal <- function(x, ...) {
 }
 
 #' @method plot SDFMcrossVal
+#' @return A named list of two ggplot objects: \code{CV Results} and \code{BIC Results}.
 #' @export
 plot.SDFMcrossVal <- function(x, ...) {
   out_list <- list()

@@ -30,7 +30,13 @@ NULL
 #' @param min_no_factors Integer minimum number of factors to be tested.
 #' @param max_no_factors Integer maximum number of factors to be tested (should be at most min_no_factors + 17).
 #' @param confidence_threshold Numeric threshold value to stop the testing procedure.
-#' @return Returns a list with the number of factors and some additional information.
+#' @return A list with components:
+#' \describe{
+#'   \item{\code{no_of_factors}}{Estimated number of factors (integer).}
+#'   \item{\code{p_value}}{P-value of the last test in the Onatski (2010) procedure.}
+#'   \item{\code{confidence_threshold}}{The significance level used in the test.}
+#'   \item{\code{statistic}}{Test statistic value of the last test.}
+#' }
 #' @export
 noOfFactors <- function(data, min_no_factors = 1, max_no_factors = 15, confidence_threshold = 0.05){
   
@@ -55,7 +61,7 @@ noOfFactors <- function(data, min_no_factors = 1, max_no_factors = 15, confidenc
   }
   na_ind <- -unique(which(is.na(data_r), arr.ind = TRUE)[, 2])
   if(length(na_ind) != 0){
-    print(paste0("Cut ", length(na_ind)," observations due to NAs."))
+    message(paste0("Cut ", length(na_ind)," observations due to NAs."))
     no_na_data <- as.matrix(data_r[, na_ind, drop = FALSE])
   }else{
     no_na_data <- as.matrix(data_r[, , drop = FALSE])
@@ -99,7 +105,7 @@ noOfFactors <- function(data, min_no_factors = 1, max_no_factors = 15, confidenc
                    ". It might be necessary to increase max_no_factors and repeat the procedure"))
   }
   
-  print(paste0("The estimated no. of factors is ", results$no_of_factors, " with a p-value of ", results$p_value, " and a critical value of alpha = ", results$confidence_threshold))
+  message(paste0("The estimated no. of factors is ", results$no_of_factors, " with a p-value of ", results$p_value, " and a critical value of alpha = ", results$confidence_threshold))
   
   return(results)
 }

@@ -28,7 +28,13 @@ NULL
 #  along with TwoStepSDFM. If not, see <https://www.gnu.org/licenses/>.
 
 #' @name twoStepDenseDFM
-#' @title Estimate an DFM via PCA and Kalman Filter and Smoother according to Doz, C., Giannone, D., & Reichlin, L. (2011). A two-step estimator for large approximate dynamic factor models based on Kalman filtering. Journal of Econometrics, 164(1), 188-205.
+#' @title Estimate a DFM via PCA and Kalman Filter and Smoother.
+#' @description
+#' Estimate a dense (approximate) dynamic factor model via principal components 
+#' analysis and a state-space representation with Kalman filter and smoother, 
+#' following Giannone, Reichlin and Small (2008) <doi:10.1016/j.jmoneco.2008.05.010> 
+#' and Doz, Giannone and Reichlin (2011) <doi:10.1016/j.jeconom.2011.02.012>.
+#' 
 #' @param data Numeric (no_of_variables x no_of_observations) matrix of data or zoo/xts object.
 #' @param delay Integer vector of variable delays.
 #' @param no_of_factors Integer number of factors.
@@ -40,15 +46,47 @@ NULL
 #' @param log Logical, whether or not output should be printed along the algorithm.
 #' @param parallel Logical, whether or not to use Eigen's internal parallel matrix operations.
 #' @param fcast_horizon Integer forecasting horizon for factor forecasts
-#' @return 
-#' The `twoStepDenseDFM` function returns an object `fit` which, contains the following elements:
+#'
+#' @return
+#' An object of class `DFMFit` with components:
 #' \describe{
-#' \item{\code{loading_matrix_estimate}}{A matrix of estimated loadings for each factor on each observed variable.}
-#' \item{\code{smoothed_factors}}{The smoothed factor estimates.}
-#' \item{\code{smoothed_state_variance}}{The estimated variance-covariance matrix of the residuals/errors.}
-#' \item{\code{factor_var_lag_order}}{The order of the VAR(max_factor_lag_order) model used in the factor model process.}
-#' \item{\code{error_var_cov_cholesky_factor}}{A matrix representing any transformations applied to the factors for error decorrelation, if \code{decorr_errors} is TRUE.}
+#'   \item{data}{Original data matrix.}
+#'   \item{loading_matrix_estimate}{Matrix of estimated factor loadings.}
+#'   \item{smoothed_factors}{Matrix or `zoo` object containing the smoothed latent factors.}
+#'   \item{smoothed_state_variance}{Matrix with the state covariance matrices corresponding to the smoothed state vector (stacked in column-major order).}
+#'   \item{factor_var_lag_order}{Integer, selected lag order of the factor VAR model.}
+#'   \item{error_var_cov_cholesky_factor}{Lower-triangular Cholesky factor of the estimated measurement error variance–covariance matrix.}
 #' }
+#'
+#' @examples
+#' \dontrun{
+#' set.seed(02102025)
+#' no_of_observations <- 100
+#' no_of_variables <- 20
+#' no_of_factors <- 3
+#' trans_error_var_cov <- diag(1, no_of_factors)
+#' loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+#' meas_error_mean <- rep(0, no_of_variables)
+#' meas_error_var_cov <- diag(1, no_of_variables)
+#' trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+#' factor_lag_order <- 2
+#' FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
+#'             no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+#'             meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+#'             trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+#'             factor_lag_order = factor_lag_order)
+#'
+#' # Estimate a dense 2-factor model
+#' fit <- twoStepDenseDFM(
+#'   data = FM$data,
+#'   delay = FM$delay,
+#'   no_of_factors = no_of_factors
+#' )
+#'
+#' print(fit)
+#' plots <- plot(fit)
+#' }
+#'
 #' @export
 twoStepDenseDFM <- function(data,
                        delay,
@@ -215,7 +253,45 @@ twoStepDenseDFM <- function(data,
   return(result)
 }
 
-#' @method print DFMFit
+#' @name print.DFMFit
+#' @title Generic printing function for DFMFit S3 objects
+#' @description
+#' Print a compact summary of an `DFMFit` object.
+#'
+#' @param x `DFMFit` object.
+#' @param ... Additional parameters for the plotting functions.
+#'
+#' @return
+#' No return value; Prints a summary to the console.
+#'
+#' @examples
+#' \dontrun{
+#' set.seed(02102025)
+#' no_of_observations <- 100
+#' no_of_variables <- 20
+#' no_of_factors <- 3
+#' trans_error_var_cov <- diag(1, no_of_factors)
+#' loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+#' meas_error_mean <- rep(0, no_of_variables)
+#' meas_error_var_cov <- diag(1, no_of_variables)
+#' trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+#' factor_lag_order <- 2
+#' FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
+#'             no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+#'             meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+#'             trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+#'             factor_lag_order = factor_lag_order)
+#'
+#' # Estimate a dense 2-factor model
+#' fit <- twoStepDenseDFM(
+#'   data = FM$data,
+#'   delay = FM$delay,
+#'   no_of_factors = no_of_factors
+#' )
+#'
+#' print(fit)
+#' }
+#'
 #' @export
 print.DFMFit <- function(x, ...) {
   simulated_time_series <- is.zoo(x$smoothed_factors)
@@ -247,7 +323,55 @@ print.DFMFit <- function(x, ...) {
   invisible(x)
 }
 
-#' @method plot DFMFit
+#' @name plot.DFMFit
+#' @title Generic plotting function for DFMFit S3 objects
+#' @description
+#' Create diagnostic plots for a `DFMFit` object, including factor time series plots,
+#' the loading matrix heatmap and the measurement error variance–covariance matrix heatmap.
+#'
+#' @param x `DFMFit` object.
+#' @param ... Additional parameters for the plotting functions.
+#'
+#' @return
+#' A named list of plot objects:
+#' \describe{
+#'   \item{`Factor Time Series Plots`}{`patchwork`/`ggplot` object showing the estimated factors over time with 95% confidence bands of the Kalman Filter and Smoother.}
+#'   \item{`Loading Matrix Heatmap`}{`ggplot` object showing a heatmap of the estimated factor loadings.}
+#'   \item{`Meas. Error Var.-Cov. Matrix Heatmap`}{`ggplot` object showing a heatmap of the measurement error variance–covariance matrix.}
+#' }
+#'
+#' @examples
+#' \dontrun{
+#' set.seed(02102025)
+#' no_of_observations <- 100
+#' no_of_variables <- 20
+#' no_of_factors <- 3
+#' trans_error_var_cov <- diag(1, no_of_factors)
+#' loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+#' meas_error_mean <- rep(0, no_of_variables)
+#' meas_error_var_cov <- diag(1, no_of_variables)
+#' trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+#' factor_lag_order <- 2
+#' FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
+#'             no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+#'             meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+#'             trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+#'             factor_lag_order = factor_lag_order)
+#'
+#' # Estimate a dense 2-factor model
+#' fit <- twoStepDenseDFM(
+#'   data = FM$data,
+#'   delay = FM$delay,
+#'   no_of_factors = no_of_factors
+#' )
+#' 
+#' # Inspect the results
+#' plots <- plot(fit)
+#' plots$`Factor Time Series Plots`
+#' plots$`Loading Matrix Heatmap`
+#' plots$`Meas. Error Var.-Cov. Matrix Heatmap`
+#' }
+#'
 #' @export
 plot.DFMFit <- function(x, ...) {
   out_list <- list()

@@ -29,6 +29,14 @@ NULL
 
 #' @name nowcast
 #' @title Nowcast/forecast mixed-frequency data using an SDFM
+#' @description
+#' Nowcast a quarterly target variable via a sparse/dense DFM using mixed frequency 
+#' data with ragged edges. Forecasts are produced using the additional quarterly
+#' predictors and a quarterly representation of the monthly factors according to
+#' Mariano and Murasawa (2003) <doi:10.1002/jae.695>. Final predictions are computed
+#' via equally weighted forecast averaging of ARDL models for each of the quarterly predictors
+#' and quarterfied factors.
+#' 
 #' @param data Zoo/xts object.
 #' @param variables_of_interest Integer vector indicating the index of all target variables
 #' @param max_fcast_horizon Maximum forecasting horizon
@@ -146,6 +154,9 @@ nowcast <- function(data,
   
   # Mishandling max_predictor_lag_order
   max_predictor_lag_order <- checkPositiveSignedInteger(max_predictor_lag_order , "max_predictor_lag_order ")
+  if(max_predictor_lag_order == 0){
+    stop(paste0("max_predictor_lag_order must be zero."))
+  }
   
   if(month(time(data))[dim(data)[1]] %in% c(3, 6, 9, 12)){
     fcast_horizon <- 0

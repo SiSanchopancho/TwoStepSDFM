@@ -28,6 +28,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// runDL
+Rcpp::List runDL(Rcpp::NumericVector target_variable, Rcpp::NumericVector predictor_variable, const unsigned max_predictor_lags, const std::string crit);
+RcppExport SEXP _TwoStepSDFM_runDL(SEXP target_variableSEXP, SEXP predictor_variableSEXP, SEXP max_predictor_lagsSEXP, SEXP critSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type target_variable(target_variableSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type predictor_variable(predictor_variableSEXP);
+    Rcpp::traits::input_parameter< const unsigned >::type max_predictor_lags(max_predictor_lagsSEXP);
+    Rcpp::traits::input_parameter< const std::string >::type crit(critSEXP);
+    rcpp_result_gen = Rcpp::wrap(runDL(target_variable, predictor_variable, max_predictor_lags, crit));
+    return rcpp_result_gen;
+END_RCPP
+}
 // runNoOfFactors
 Rcpp::List runNoOfFactors(Rcpp::NumericMatrix data_matrix_in, Rcpp::NumericMatrix test_values, const int min_no_factors, const int max_no_factors, const double confidence_threshold);
 RcppExport SEXP _TwoStepSDFM_runNoOfFactors(SEXP data_matrix_inSEXP, SEXP test_valuesSEXP, SEXP min_no_factorsSEXP, SEXP max_no_factorsSEXP, SEXP confidence_thresholdSEXP) {
@@ -124,6 +138,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_TwoStepSDFM_runARDL", (DL_FUNC) &_TwoStepSDFM_runARDL, 6},
+    {"_TwoStepSDFM_runDL", (DL_FUNC) &_TwoStepSDFM_runDL, 4},
     {"_TwoStepSDFM_runNoOfFactors", (DL_FUNC) &_TwoStepSDFM_runNoOfFactors, 5},
     {"_TwoStepSDFM_runSDFMKFS", (DL_FUNC) &_TwoStepSDFM_runSDFMKFS, 19},
     {"_TwoStepSDFM_runDFMKFS", (DL_FUNC) &_TwoStepSDFM_runDFMKFS, 12},

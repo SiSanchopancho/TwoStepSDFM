@@ -89,5 +89,10 @@ The \code{nowcast} function returns an object which, contains the following elem
 }
 }
 \description{
-Nowcast/forecast mixed-frequency data using an SDFM
+Nowcast a quarterly target variable via a sparse/dense DFM using mixed frequency
+data with ragged edges. Forecasts are produced using the additional quarterly
+predictors and a quarterly representation of the monthly factors according to
+Mariano and Murasawa (2003) \url{doi:10.1002/jae.695}. Final predictions are computed
+via equally weighted forecast averaging of ARDL models for each of the quarterly predictors
+and quarterfied factors.
 }

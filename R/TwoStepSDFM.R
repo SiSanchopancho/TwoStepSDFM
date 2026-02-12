@@ -29,6 +29,11 @@ NULL
 
 #' @name twoStepSDFM
 #' @title Estimate an SDFM via SPCA and Kalman Filter and Smoother
+#' @description
+#' Estimate a sparse mixed-frequency Gaussian dynamic factor model using
+#' sparse principal components analysis and a state-space representation
+#' with Kalman filter and smoother. For more details see Franjic and Schweikert (2024) <doi:10.2139/ssrn.4733872>.
+#' 
 #' @param data Numeric (no_of_variables x no_of_observations) matrix of data or zoo/xts object.
 #' @param delay Integer vector of variable delays.
 #' @param selected Integer vector of the number of selected variables for each factor.
@@ -47,15 +52,49 @@ NULL
 #' @param log Logical, whether or not output should be printed along the algorithm.
 #' @param parallel Logical, whether or not to use Eigen's internal parallel matrix operations.
 #' @param fcast_horizon Integer forecasting horizon for factor forecasts
-#' @return 
-#' The `twoStepSDFM` function returns an object `fit` which, contains the following elements:
+#' 
+#' @return
+#' An object of class `SDFMFit` with components:
 #' \describe{
-#' \item{\code{loading_matrix_estimate}}{A matrix of estimated loadings for each factor on each observed variable.}
-#' \item{\code{smoothed_factors}}{The smoothed factor estimates.}
-#' \item{\code{smoothed_state_variance}}{The estimated variance-covariance matrix of the residuals/errors.}
-#' \item{\code{factor_var_lag_order}}{The order of the VAR(max_factor_lag_order) model used in the factor model process.}
-#' \item{\code{error_var_cov_cholesky_factor}}{A matrix representing any transformations applied to the factors for error decorrelation, if \code{decorr_errors} is TRUE.}
+#'   \item{data}{Original data matrix.}
+#'   \item{loading_matrix_estimate}{Matrix of estimated factor loadings.}
+#'   \item{smoothed_factors}{Matrix or `zoo` object containing the smoothed latent factors.}
+#'   \item{smoothed_state_variance}{Matrix with the state covariance matrices corresponding to the smoothed state vector (stacked in column-major order).}
+#'   \item{factor_var_lag_order}{Integer, selected lag order of the factor VAR model.}
+#'   \item{error_var_cov_cholesky_factor}{Lower-triangular Cholesky factor of the estimated measurement error variance–covariance matrix.}
 #' }
+#'
+#' @examples
+#' \dontrun{
+#' set.seed(02102025)
+#' no_of_observations <- 100
+#' no_of_variables <- 20
+#' no_of_factors <- 3
+#' trans_error_var_cov <- diag(1, no_of_factors)
+#' loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+#' meas_error_mean <- rep(0, no_of_variables)
+#' meas_error_var_cov <- diag(1, no_of_variables)
+#' trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+#' factor_lag_order <- 2
+#' FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
+#'             no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+#'             meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+#'             trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+#'             factor_lag_order = factor_lag_order)
+#' 
+#' # Estimate a 2-factor model
+#' fit <- twoStepSDFM(
+#'   data = FM$data,
+#'   delay = FM$delay,
+#'   selected = rep(floor(0.2 * no_of_variables), no_of_factors),
+#'   no_of_factors = no_of_factors
+#' )
+#' 
+#' # Inspect the results
+#' print(fit)
+#' plots <- plot(fit)
+#' }
+#'
 #' @export
 twoStepSDFM <- function(data,
                         delay,
@@ -293,8 +332,45 @@ twoStepSDFM <- function(data,
 
 #' @name print.SDFMFit
 #' @title Generic printing function for SDFMFit S3 objects
+#' @description
+#' Print a compact summary of an `SDFMFit` object.
+#'
 #' @param x `SDFMFit` object.
 #' @param ... Additional parameters for the plotting functions.
+#'
+#' @return
+#' No return value; Prints a summary to the console.
+#'
+#' @examples
+#' \dontrun{
+#' set.seed(02102025)
+#' no_of_observations <- 100
+#' no_of_variables <- 20
+#' no_of_factors <- 3
+#' trans_error_var_cov <- diag(1, no_of_factors)
+#' loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+#' meas_error_mean <- rep(0, no_of_variables)
+#' meas_error_var_cov <- diag(1, no_of_variables)
+#' trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+#' factor_lag_order <- 2
+#' FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
+#'             no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+#'             meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+#'             trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+#'             factor_lag_order = factor_lag_order)
+#'
+#' # Estimate a 2-factor model
+#' fit <- twoStepSDFM(
+#'   data = FM$data,
+#'   delay = FM$delay,
+#'   selected = rep(floor(0.2 * no_of_variables), no_of_factors),
+#'   no_of_factors = no_of_factors
+#' )
+#' 
+#' # Inspect the results
+#' print(fit)
+#' }
+#'
 #' @export
 print.SDFMFit <- function(x, ...) {
   simulated_time_series <- is.zoo(x$smoothed_factors)
@@ -329,8 +405,54 @@ print.SDFMFit <- function(x, ...) {
 
 #' @name plot.SDFMFit
 #' @title Generic plotting function for SDFMFit S3 objects
+#' @description
+#' Create diagnostic plots for an `SDFMFit` object, including factor time series,
+#' the loading matrix heatmap and the measurement error variance–covariance matrix heatmap.
+#'
 #' @param x `SDFMFit` object.
 #' @param ... Additional parameters for the plotting functions.
+#'
+#' @return
+#' A named list of plot objects:
+#' \describe{
+#'   \item{`Factor Time Series Plots`}{`patchwork`/`ggplot` object showing the estimated factors over time with 95% confidence bands of the Kalman Filter and Smoother.}
+#'   \item{`Loading Matrix Heatmap`}{`ggplot` object showing a heatmap of the estimated factor loadings. Zeros are highlighted in black.}
+#'   \item{`Meas. Error Var.-Cov. Matrix Heatmap`}{`ggplot` object showing a heatmap of the measurement error variance–covariance matrix.}
+#' }
+#'
+#' @examples
+#' \dontrun{
+#' set.seed(02102025)
+#' no_of_observations <- 100
+#' no_of_variables <- 20
+#' no_of_factors <- 3
+#' trans_error_var_cov <- diag(1, no_of_factors)
+#' loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
+#' meas_error_mean <- rep(0, no_of_variables)
+#' meas_error_var_cov <- diag(1, no_of_variables)
+#' trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+#' factor_lag_order <- 2
+#' FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
+#'             no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
+#'             meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+#'             trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
+#'             factor_lag_order = factor_lag_order)
+#' 
+#' # Estimate a 2-factor model
+#' fit <- twoStepSDFM(
+#'   data = FM$data,
+#'   delay = FM$delay,
+#'   selected = rep(floor(0.2 * no_of_variables), no_of_factors),
+#'   no_of_factors = no_of_factors
+#' )
+#' 
+#' # Inspect the results
+#' plots <- plot(fit)
+#' plots$`Factor Time Series Plots`
+#' plots$`Loading Matrix Heatmap`
+#' plots$`Meas. Error Var.-Cov. Matrix Heatmap`
+#' }
+#'
 #' @export
 plot.SDFMFit <- function(x, ...) {
   out_list <- list()
@@ -344,6 +466,7 @@ plot.SDFMFit <- function(x, ...) {
     no_of_factors <- dim(x$smoothed_factors)[1]
     time_vector <- 1:dim(x$smoothed_factors)[2]
     factors <- t(x$smoothed_factors)
+    factors <- as.zoo(ts(factors, start = c(1, 1), frequency = 12))
   }
   
   # Create plots for the factors
@@ -354,9 +477,9 @@ plot.SDFMFit <- function(x, ...) {
     correction_factor <- 1.96 * sqrt(pmax(x$smoothed_state_variance[factor, seq(1, length(as.Date(time(factors))) * no_of_factors, by = no_of_factors)], 1e-15))
     current_factor <- data.frame(
       Date = as.Date(time(factors)),
-      Value = x$smoothed_factors[seq_along_dates, factor],
-      `Upper 95%-CI` = x$smoothed_factors[seq_along_dates, factor] + correction_factor,
-      `Lower 95%-CI` = x$smoothed_factors[seq_along_dates, factor] - correction_factor,
+      Value = factors[seq_along_dates, factor],
+      `Upper 95%-CI` = factors[seq_along_dates, factor] + correction_factor,
+      `Lower 95%-CI` = factors[seq_along_dates, factor] - correction_factor,
       check.names = FALSE
     )
     
