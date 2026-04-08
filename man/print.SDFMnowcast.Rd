@@ -11,6 +11,12 @@
 
 \item{...}{Additional parameters for the plotting functions.}
 }
+\value{
+No return value; Prints a summary to the console.
+}
 \description{
 Generic print function for SDFMnowcast S3 objects
+}
+\author{
+Domenic Franjic
 }

@@ -17,34 +17,6 @@ No return value; Prints a summary to the console.
 \description{
 Print a compact summary of an \code{SDFMFit} object.
 }
-\examples{
-\dontrun{
-set.seed(02102025)
-no_of_observations <- 100
-no_of_variables <- 20
-no_of_factors <- 3
-trans_error_var_cov <- diag(1, no_of_factors)
-loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
-meas_error_mean <- rep(0, no_of_variables)
-meas_error_var_cov <- diag(1, no_of_variables)
-trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
-factor_lag_order <- 2
-FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
-            no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
-            meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
-            trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
-            factor_lag_order = factor_lag_order)
-
-# Estimate a 2-factor model
-fit <- twoStepSDFM(
-  data = FM$data,
-  delay = FM$delay,
-  selected = rep(floor(0.2 * no_of_variables), no_of_factors),
-  no_of_factors = no_of_factors
-)
-
-# Inspect the results
-print(fit)
-}
-
+\author{
+Domenic Franjic
 }

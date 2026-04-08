@@ -31,7 +31,8 @@ Rcpp::List runARDL(
 	Rcpp::NumericVector predictor_variable,
 	const unsigned max_target_lags,
 	const unsigned max_predictor_lags,
-	const std::string crit
+	const std::string crit,
+	const double jitter
 )
 {
 
@@ -47,6 +48,7 @@ Rcpp::List runARDL(
 		+ 1; // Add one for the intercept
 	const unsigned max_lag = std::max<unsigned>(max_target_lags, max_predictor_lags);
 	const unsigned effective_no_of_obs = no_of_target_observations - max_lag;
+	int llt_success_code = 0;
 
 	// Build full lag predictor matrix
 	Eigen::MatrixXd predictor_matrix = Eigen::MatrixXd::Constant(effective_no_of_obs, no_of_variables, 1.0);
@@ -75,15 +77,23 @@ Rcpp::List runARDL(
 			current_predictor_matrix = Eigen::MatrixXd::Zero(effective_no_of_obs, target_lag + 1 + predictor_lag + 1 + 1);
 			current_predictor_matrix.leftCols(target_lag + 2) = predictor_matrix.leftCols(target_lag + 2);
 			current_predictor_matrix.rightCols(predictor_lag + 1) = predictor_matrix.block(0, max_target_lags + 2, effective_no_of_obs, predictor_lag + 1);
-
-			llt.compute(current_predictor_matrix.transpose() * current_predictor_matrix);
+			Eigen::VectorXd jitter_matrix = Eigen::VectorXd::Constant(target_lag + 1 + predictor_lag + 1 + 1, jitter);
+			Eigen::MatrixXd predictor_gram = current_predictor_matrix.transpose() * current_predictor_matrix;
+			predictor_gram.diagonal() += jitter_matrix;
+			llt.compute(predictor_gram);
 
 			if (llt.info() != Eigen::Success) {
-				Rcpp::Rcerr << "\nWARNING: LLT Decomposition FAILED in runARDL.\n";
-				current_beta = Eigen::VectorXd::Zero(current_predictor_matrix.cols());
-				residuals_sum_of_squares = DBL_MAX;
-				continue;
+				llt_success_code = -1;
+				Eigen::LDLT<Eigen::MatrixXd> ldlt(predictor_gram);
+				if (ldlt.info() != Eigen::Success) {
+					llt_success_code = -2;
+					current_beta = Eigen::VectorXd::Zero(current_predictor_matrix.cols());
+					residuals_sum_of_squares = DBL_MAX;
+					continue;
+				}
 			}
+
+
 
 			current_beta = llt.solve(current_predictor_matrix.transpose() * target_variable_eigen.tail(effective_no_of_obs));
 
@@ -116,7 +126,8 @@ Rcpp::List runARDL(
 
 	// Convert the results back to Rcpp types and return
 	return Rcpp::List::create(Rcpp::Named("coefficients") = Rcpp::wrap(beta_optimal),
-		Rcpp::Named("optimL_lag_order") = Rcpp::wrap(optimal_lags)
+		Rcpp::Named("optimL_lag_order") = Rcpp::wrap(optimal_lags),
+		Rcpp::Named("llt_success_code") = Rcpp::wrap(llt_success_code)
 	);
 
 }
@@ -130,7 +141,8 @@ Rcpp::List runDL(
 	Rcpp::NumericVector target_variable,
 	Rcpp::NumericVector predictor_variable,
 	const unsigned max_predictor_lags,
-	const std::string crit
+	const std::string crit,
+	const double jitter
 )
 {
 
@@ -142,6 +154,7 @@ Rcpp::List runDL(
 	const unsigned no_of_target_observations = target_variable.size();
 	const unsigned no_of_variables = max_predictor_lags + 1 + 1; // Add one for the intercept and one for the contemporaneous effect
 	const unsigned effective_no_of_obs = no_of_target_observations - max_predictor_lags;
+	int llt_success_code = 0;
 
 	// Build full lag predictor matrix
 	Eigen::MatrixXd predictor_matrix = Eigen::MatrixXd::Constant(effective_no_of_obs, no_of_variables, 1.0);
@@ -161,14 +174,20 @@ Rcpp::List runDL(
 	Eigen::MatrixXd current_predictor_matrix = Eigen::MatrixXd::Zero(0, 0);
 	for (unsigned predictor_lag = 0; predictor_lag <= max_predictor_lags; ++predictor_lag) {
 		current_predictor_matrix = predictor_matrix.leftCols(predictor_lag + 2);
-
-		llt.compute(current_predictor_matrix.transpose() * current_predictor_matrix);
+		Eigen::VectorXd jitter_matrix = Eigen::VectorXd::Constant(predictor_lag + 2, jitter);
+		Eigen::MatrixXd predictor_gram = current_predictor_matrix.transpose() * current_predictor_matrix;
+		predictor_gram.diagonal() += jitter_matrix;
+		llt.compute(predictor_gram);
 
 		if (llt.info() != Eigen::Success) {
-			Rcpp::Rcerr << "\nWARNING: LLT Decomposition FAILED in runARDL.\n";
-			current_beta = Eigen::VectorXd::Zero(current_predictor_matrix.cols());
-			residuals_sum_of_squares = DBL_MAX;
-			continue;
+			llt_success_code = -1;
+			Eigen::LDLT<Eigen::MatrixXd> ldlt(predictor_gram);
+			if (ldlt.info() != Eigen::Success) {
+				llt_success_code = -2;
+				current_beta = Eigen::VectorXd::Zero(current_predictor_matrix.cols());
+				residuals_sum_of_squares = DBL_MAX;
+				continue;
+			}
 		}
 
 		current_beta = llt.solve(current_predictor_matrix.transpose() * target_variable_eigen.tail(effective_no_of_obs));
@@ -199,7 +218,8 @@ Rcpp::List runDL(
 
 	// Convert the results back to Rcpp types and return
 	return Rcpp::List::create(Rcpp::Named("coefficients") = Rcpp::wrap(beta_optimal),
-		Rcpp::Named("optimL_lag_order") = Rcpp::wrap(optimal_lag)
+		Rcpp::Named("optimL_lag_order") = Rcpp::wrap(optimal_lag),
+		Rcpp::Named("llt_success_code") = Rcpp::wrap(llt_success_code)
 	);
 
 }

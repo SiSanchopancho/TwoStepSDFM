@@ -2,7 +2,7 @@
 % Please edit documentation in R/Nowcast.R
 \name{nowcast}
 \alias{nowcast}
-\title{Nowcast/forecast mixed-frequency data using an SDFM}
+\title{Predict Mixed-Frequency Data via Dynamic Factor Models}
 \usage{
 nowcast(
   data,
@@ -14,85 +14,185 @@ nowcast(
   no_of_factors,
   sparse = TRUE,
   max_factor_lag_order = 10,
-  decorr_errors = TRUE,
   lag_estim_criterion = "BIC",
+  decorr_errors = TRUE,
   ridge_penalty = 1e-06,
   lasso_penalty = NULL,
   max_iterations = 1000,
   max_no_steps = NULL,
+  weights = NULL,
   comp_null = 1e-15,
-  check_rank = FALSE,
-  conv_crit = 1e-04,
-  conv_threshold = 1e-04,
-  log = FALSE,
+  spca_conv_crit = 1e-04,
   parallel = FALSE,
   max_ar_lag_order = 5,
-  max_predictor_lag_order = 5
+  max_predictor_lag_order = 5,
+  jitter = 1e-08,
+  svd_method = "precise"
 )
 }
 \arguments{
-\item{data}{Zoo/xts object.}
+\item{data}{Numeric (no_of_vars \eqn{\times}{x} no_of_obs) matrix of data or
+zoo/xts object sampled at mixed frequencies (quarterly and monthly).}
 
-\item{variables_of_interest}{Integer vector indicating the index of all target variables}
+\item{variables_of_interest}{Integer vector indicating the index of all
+target variables.}
 
-\item{max_fcast_horizon}{Maximum forecasting horizon}
+\item{max_fcast_horizon}{Maximum forecasting horizon of all targets.}
 
-\item{delay}{Integer vector of predictor delays.}
+\item{delay}{Integer vector of variable delays, measured as the number of
+months since the latest available observation.}
 
-\item{selected}{Integer vector of the number of selected variables for each factor.}
+\item{selected}{Integer vector of the number of selected variables for each
+factor.}
 
-\item{frequency}{Integer vector of frequencies of the variables in the data set (currently supported: "12" for monthly and "4" for quarterly data)}
+\item{frequency}{Integer vector of frequencies of the variables in the data
+set (currently supported: \code{12} for monthly and \code{4} for quarterly data).}
 
 \item{no_of_factors}{Integer number of factors.}
 
-\item{sparse}{Logical, indicating whether a sparse model should be used for nowcasting}
+\item{sparse}{Logical, if \code{TRUE} (default) a sparse DFM is used to estimate
+the model parameters and latent factors (see \code{\link{twoStepSDFM}}).
+Else, a dense DFM is used (see \code{\link{twoStepDenseDFM}}).}
 
-\item{max_factor_lag_order}{Integer max P of the VAR(P) process of the factors.}
+\item{max_factor_lag_order}{Integer maximum order of the VAR process in the
+transition equation.}
 
-\item{decorr_errors}{Logical, whether or not the errors should be decorrelated.}
+\item{lag_estim_criterion}{Information criterion used for the estimation of
+the factor VAR order (\code{"BIC"} (default), \code{"AIC"}, \code{"HIC"}).}
 
-\item{lag_estim_criterion}{Information criterion used for the estimation of the factor VAR order ("BIC", "AIC", "HIC").}
+\item{decorr_errors}{Logical, whether or not the errors should be
+decorrelated.}
 
-\item{ridge_penalty}{Ridge penalty.}
+\item{ridge_penalty}{Numeric ridge penalty.}
 
-\item{lasso_penalty}{Numeric vector, lasso penalties for each factor (set to NaN if not intended as stopping criterion).}
+\item{lasso_penalty}{Numeric vector, lasso penalties for each factor (set to
+NULL to disable as stopping criterion).}
 
-\item{max_iterations}{Integer maximum number of iterations.}
+\item{max_iterations}{Integer maximum number of iterations of the SPCA
+algorithm.}
 
-\item{max_no_steps}{Integer number of max_no_steps (used for LARS-EN as an alternative).}
+\item{max_no_steps}{Integer number of LARS steps (set to NULL to disable as
+stopping criterion).}
 
-\item{comp_null}{Computational zero.}
+\item{weights}{Numeric vector, weights for each variable weighing the
+\eqn{\ell_1}{`l_1`} size constraint.}
 
-\item{check_rank}{Logical, whether or not the rank of the variance-covariance matrix should be checked.}
+\item{comp_null}{Numeric computational zero.}
 
-\item{conv_crit}{Conversion criterion for the SPCA algorithm.}
+\item{spca_conv_crit}{Numeric conversion criterion for the SPCA algorithm.}
 
-\item{conv_threshold}{Conversion criterion for the coordinate descent algorithm.}
+\item{parallel}{Logical, whether or not to use Eigen's internal parallel
+matrix operations.}
 
-\item{log}{Logical, whether or not output should be printed along the algorithm.}
+\item{max_ar_lag_order}{Integer maximum number of lags of the target variable
+included in the final ARDL prediction routine.}
 
-\item{parallel}{Logical, whether or not to use Eigen's internal parallel matrix operations.}
+\item{max_predictor_lag_order}{Integer maximum number of lags of the
+predictors included in the final ARDL prediction routine.}
 
-\item{max_ar_lag_order}{Integer maximum number of lags of the target variable ought to be included in the nowcasting step}
+\item{jitter}{Numerical jitter for stability of internal solver algorithms.
+The jitter is added to the diagonal entries of the variance covariance matrix
+of the measurement errors.}
 
-\item{max_predictor_lag_order}{Integer maximum number of lags of the predictors ought to be included in the nowcasting step}
+\item{svd_method}{Either \code{"fast"} or \code{"precise"}. Option \code{"fast"} uses
+Eigen's BDCSVD divide and conquer method for the computation of the singular
+values. Option \code{"precise"} (default) implements the slower, but numerically
+more stable JacobiSVD method.}
 }
 \value{
-The \code{nowcast} function returns an object which, contains the following elements:
+The \code{nowcast} function returns named list containing the following objects:
 \describe{
-\item{\code{loading_matrix_estimate}}{A matrix of estimated loadings for each factor on each observed variable.}
-\item{\code{smoothed_factors}}{The smoothed factor estimates.}
-\item{\code{smoothed_state_variance}}{The estimated variance-covariance matrix of the residuals/errors.}
-\item{\code{factor_var_lag_order}}{The order of the VAR(max_factor_lag_order) model used in the factor model process.}
-\item{\code{companion_form_smoothed_factors}}{The smoothed factor estimates in companion form.}
-\item{\code{error_var_cov_cholesky_factor}}{A matrix representing any transformations applied to the factors for error decorrelation, if \code{decorr_errors} is TRUE.}
+\item{Forecasts}{Numeric matrix of the target variables and their
+respective backcasts, nowcasts, and/or forecasts.}
+\item{SDFM Fit}{An \code{SDFMFit} object holding the estimates of the model
+parameters and the latent factors (see \code{\link{twoStepSDFM}} or
+\code{\link{twoStepDenseDFM}}).}
 }
 }
 \description{
-Nowcast a quarterly target variable via a sparse/dense DFM using mixed frequency
-data with ragged edges. Forecasts are produced using the additional quarterly
-predictors and a quarterly representation of the monthly factors according to
-Mariano and Murasawa (2003) \url{doi:10.1002/jae.695}. Final predictions are computed
-via equally weighted forecast averaging of ARDL models for each of the quarterly predictors
+Backcast, nowcast, and forecast quarterly target variables via a sparse/dense
+DFM using additional monthly data with ragged edges. Forecasts are produced
+using all quarterly targets and a quarterly representation of latent monthly
+factors \insertCite{Mariano2003new_coincident}{TwoStepSDFM}. Final
+predictions are computed via equally weighted forecast averaging of ARDL
+models \insertCite{marcellino2010factor}{TwoStepSDFM} for each of the targets
 and quarterfied factors.
+}
+\details{
+This function serves as a prediction wrapper for the
+\code{\link{twoStepDenseDFM}} and \code{\link{twoStepSDFM}} functions. \code{data}
+should be a mixed-frequency data set. Currently, only monthly and quarterly
+data are supported. With respect to the quarterly data, the function expects
+the realization of the quarterly observations to occur in the last month of
+the quarter. Indicate quarterly and monthly variables via \code{frequency} by
+setting the corresponding element of \code{frequency} to \code{4} for quarterly and to
+\code{12} for monthly data.
+
+This function is only able to compute predictions for quarterly variables.
+To impute the ragged edges of the monthly observations, and potentially
+compute additional predictions for the monthly variables, call \code{predict} on
+the \code{SDFMFit} object returned by \code{\link{twoStepDenseDFM}} /
+\code{\link{twoStepSDFM}} (see \code{\link{predict.SDFMFit}}).
+
+\code{max_fcast_horizon} sets the maximum number of forecasts predicted starting
+from the final observation of the data set. For each target, the number of
+backcasts and whether or not a nowcast should be computed is determined
+internally. This is done in such a way that every missing quarterly
+observation of the targets is predicted.
+
+\code{max_ar_lag_order} governs the maximum number of lags of the current target
+used to predict said target in each ARDL model. \code{max_predictor_lag_order}
+governs the maximum number of lags of each additional quarterly predictor,
+including other potential targets and the aggregated factors, used to predict
+any given target in each ARDL model. The actual number of lags is internally
+estimated using the BIC. Setting \code{max_ar_lag_order = 0} disables the use of
+target lags in its own prediction function.
+
+\code{sparse} toggles between a sparse DFM and a dense DFM. If \code{sparse = FALSE},
+all SPCA stopping criteria and other parameters passed to the sparse
+estimation routine are ignored (for details on these parameters see
+\code{\link{twoStepDenseDFM}}). Parameters governing the Kalman Filter and
+Smoother are passed directly to \code{\link{twoStepDenseDFM}} /
+\code{\link{twoStepSDFM}}. For details see the corresponding help pages.
+}
+\examples{
+data(mixed_freq_factor_model)
+no_of_vars <- dim(mixed_freq_factor_model$data)[2]
+no_of_factors <- dim(mixed_freq_factor_model$factors)[2]
+sparse_nowcast <- nowcast(data = mixed_freq_factor_model$data, variables_of_interest = c(1, 2),
+                          max_fcast_horizon = 4, delay = mixed_freq_factor_model$delay,
+                          selected = rep(floor(0.5 * no_of_vars), no_of_factors), 
+                          frequency = mixed_freq_factor_model$frequency, no_of_factors = no_of_factors, 
+                       sparse = TRUE)
+print(sparse_nowcast)
+dense_nowcast <- nowcast(data = mixed_freq_factor_model$data, variables_of_interest = c(1, 2),
+                         max_fcast_horizon = 4, delay = mixed_freq_factor_model$delay,
+                         selected = NULL, frequency = mixed_freq_factor_model$frequency, 
+                         no_of_factors = no_of_factors, sparse = FALSE)
+sparse_plots <- plot(sparse_nowcast)
+sparse_plots$`Single Pred. Fcast Density Plots Series 1`
+
+}
+\references{
+\insertRef{Mariano2003new_coincident}{TwoStepSDFM}
+
+\insertRef{marcellino2010factor}{TwoStepSDFM}
+
+\insertRef{franjic2024nowcasting}{TwoStepSDFM}
+}
+\seealso{
+\code{\link{sparsePCA}}: Routine for fitting estimating a sparse factor
+loading matrix.
+
+\code{\link{kalmanFilterSmoother}}: Routine for filtering and smoothing
+latent factors.
+
+\code{\link{twoStepSDFM}}: Two-step estimation routine for a sparse dynamic
+factor model.
+
+\code{\link{twoStepDenseDFM}}: Two-step estimation routine for a dense
+dynamic factor model.
+}
+\author{
+Domenic Franjic
 }

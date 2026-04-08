@@ -28,8 +28,14 @@
 #include <cfloat>
 #include <random>
 #include <stdlib.h>
+
+#if !defined(_MSC_VER)
+#define EIGEN_NO_DEBUG
 #include <RcppEigen.h>
 #include <Rcpp.h>
+#else
+#include <Eigen>
+#endif
 
 // Including internal libraries
 #include "DataHandle.h"

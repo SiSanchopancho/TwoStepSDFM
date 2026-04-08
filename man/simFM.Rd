@@ -2,11 +2,11 @@
 % Please edit documentation in R/SimFM.r
 \name{simFM}
 \alias{simFM}
-\title{Draw data from a dynamic factor model.}
+\title{Simulate Dynamic Factor Models.}
 \usage{
 simFM(
-  no_of_observations,
-  no_of_variables,
+  no_of_obs,
+  no_of_vars,
   no_of_factors,
   loading_matrix,
   meas_error_mean,
@@ -29,63 +29,192 @@ simFM(
 )
 }
 \arguments{
-\item{no_of_observations}{Integer number of observations.}
+\item{no_of_obs}{Integer number of observations.}
 
-\item{no_of_variables}{Integer number of Variables.}
+\item{no_of_vars}{Integer number of Variables.}
 
 \item{no_of_factors}{Integer number of factors.}
 
-\item{loading_matrix}{Numeric (no_of_variables x no_of_factors) loading matrix.}
+\item{loading_matrix}{Numeric (\code{no_of_vars} \eqn{\times}{x} \code{no_of_factors})
+loading matrix.}
 
-\item{meas_error_mean}{Numeric vector/matrix of the means of the measurement errors.}
+\item{meas_error_mean}{Numeric vector of the means of the measurement errors.}
 
-\item{meas_error_var_cov}{Numeric (no_of_factors x no_of_factors) variance-covariance matrix of the measurement errors.}
+\item{meas_error_var_cov}{Numeric (\code{no_of_vars} \eqn{\times}{x}
+\code{no_of_vars}) variance-covariance matrix of the measurement errors.}
 
-\item{trans_error_var_cov}{Numeric (no_of_variables x no_of_variables) variance-covariance matrix of the transition errors.}
+\item{trans_error_var_cov}{Numeric (\code{no_of_factors} \eqn{\times}{x}
+\code{no_of_factors}) variance-covariance matrix of the transition errors.}
 
-\item{trans_var_coeff}{Either a list of length max_factor_lag_order with each entry a numeric (no_of_factors x no_of_factors) VAR coefficient matrix or a matrix of dimensions (no_of_factors x(no_of_factors * max_factor_lag_order)) holding the VAR coefficients of the factor VAR process in each (no_of_factors x no_of_factors) block.}
+\item{trans_var_coeff}{Either a list of length \code{max_factor_lag_order} with
+each entry a numeric (\code{no_of_factors} \eqn{\times}{x} \code{no_of_factors}) VAR
+coefficient matrix or a matrix of dimensions (\code{no_of_factors} \eqn{\times}{x}
+(\code{no_of_factors * max_factor_lag_order})) holding the VAR coefficients of the
+factor VAR process in each (\code{no_of_factors} \eqn{\times}{x} \code{no_of_factors})
+block.}
 
-\item{factor_lag_order}{Integer order of the VAR process in the state equation.}
+\item{factor_lag_order}{Integer order of the VAR process in the transition
+equation.}
 
-\item{delay}{Integer vector of delays imposed onto the end of the data in months (ragged edges)}
+\item{delay}{Integer vector of delays imposed onto the end of the data
+(ragged edges).}
 
-\item{quarterfy}{Logical, whether or not some of the data should be aggregated to quarterly representations.}
+\item{quarterfy}{Logical, whether or not some of the data should be
+aggregated to quarterly representations.}
 
 \item{quarterly_variable_ratio}{Ratio of variables ought to be quarterfied.}
 
-\item{corr}{Logical, whether or not the measurement error should be randomly correlated inside the function using a random correlation matrix with off-diagonal elements governed by a beta-distribution.}
+\item{corr}{Logical, whether or not the measurement error should be randomly
+correlated inside the function using a random correlation matrix with
+off-diagonal elements governed by a beta-distribution.}
 
-\item{beta_param}{Parameter of the beta-distribution governing the off-diagonal elements of the variance-covariance matrix of the measurement error.}
+\item{beta_param}{Parameter of the beta-distribution governing the
+off-diagonal elements of the variance-covariance matrix of the measurement
+error.}
 
-\item{seed}{32-bit unsigned integer seed for all random processes inside the function.}
+\item{seed}{32-bit unsigned integer seed for all random processes inside the
+function.}
 
-\item{burn_in}{Integer burn-in period of the simulated data ought to be discarded at the beginning of the data.}
+\item{burn_in}{Integer burn-in period of the simulated data ought to be
+discarded at the beginning of the sample.}
 
-\item{rescale}{Logical, whether or not the variance of the measurement error should be rescaled by the common component to equalise the signal-to-noise ratio.}
+\item{rescale}{Logical, whether or not the variance of the measurement error
+should be rescaled by the common component to equalise the
+signal-to-noise ratio.}
 
-\item{starting_date}{A date type object indicating the start of the dataset. If NULL (default), the function returns matrices with observations along the second dimension (i.e., time in columns). If specified, the function treats the data as a time series, aligning it accordingly.}
+\item{starting_date}{A date type object indicating the start of the dataset.
+If NULL (default), the function returns matrices with observations along the
+second dimension (i.e., time in columns). If specified, the function treats
+the data as a time series and returns a \code{zoo} object.}
 
-\item{check_stationarity}{Logical, whether or not the stationarity properties of the factor VAR process should be checked.}
+\item{check_stationarity}{Logical, whether or not the stationarity properties
+of the factor VAR process should be checked.}
 
-\item{stationarity_check_threshold}{Threshold of the stationarity check for when to deem an eigenvalue negative beyond the numerical error.}
+\item{stationarity_check_threshold}{Threshold of the stationarity check for
+when to deem an eigenvalue numerically negative.}
 
-\item{parallel}{Logical, make use of Eigen internal parallel matrix operations}
+\item{parallel}{Logical, make use of Eigen internal parallel matrix
+operations.}
 }
 \value{
-Returns an \code{simFM} object containing the DFM parameters expressed in the factor VAR companion form.
-The \code{simFM} function returns a \code{simFM} object which, contains the following elements:
+Returns a \code{SimulData} containing the following elements:
 \describe{
-\item{\code{data}}{If \code{starting_date} is provided, a \code{zoo} matrix time series. Else, \code{no_of_variables} x \code{no_of_observations} simulated data matrix.}
-\item{\code{factors}}{If \code{starting_date} is provided, a \code{zoo} matrix time series. Else, \code{no_of_factors} x \code{no_of_observations} simulated factor matrix.}
-\item{\code{factor_var_coeff_matrix}}{\code{no_of_factors} x (\code{no_of_factors} * \code{factor_lag_order}) factor VAR coefficient matrix.}
-\item{\code{loading_matrix}}{Factor loading matrix.}
-\item{\code{measurement_error}}{If \code{starting_date} is provided, a \code{zoo} matrix time series. Else,\code{no_of_variables} x \code{no_of_observations} simulated measurement error matrix.}
-\item{\code{measurement_error_var_cov}}{Measurement error variance covariance matrix.}
-\item{\code{transition_error_var_cov}}{Factor VAR process error (transition error) variance covariance matrix.}
-\item{\code{frequency}}{Vector of variable frequencies}
-\item{\code{delay}}{Vector of variable delays}
+\item{data}{If \code{starting_date} is provided, a \code{zoo} object, else,
+a (\code{no_of_vars} \eqn{\times}{x} \code{no_of_obs}) numeric matrix holding the
+simulated data.}
+\item{factors}{If \code{starting_date} is provided, a \code{zoo} object, else a
+(\code{no_of_factors} \eqn{\times}{x} \code{no_of_obs}) numeric matrix holding  the
+simulated latent factors.}
+\item{trans_var_coeff}{Numeric (\code{no_of_factors} \eqn{\times}{x}
+(\code{no_of_factors} * \code{factor_lag_order})) factor VAR coefficient matrix.}
+\item{loading_matrix}{Numeric factor loading matrix.}
+\item{meas_error}{If \code{starting_date} is provided, a \code{zoo} object, else
+a (\code{no_of_vars} \eqn{\times}{x} \code{no_of_obs}) numeric matrix holding the
+fundamental measurement errors.}
+\item{meas_error_var_cov}{Numeric measurement error
+variance-covariance matrix.}
+\item{trans_error_var_cov}{Numeric transition error
+variance-covariance matrix.}
+\item{frequency}{Integer vector of variable frequencies.}
+\item{delay}{Integer vector of variable delays, measured as the number of
+months since the latest available observation.}
 }
 }
 \description{
-Draw data from a dynamic factor model.
+Simulate data from a linear Gaussian state-space model (latent factor model),
+with measurement equation
+\deqn{
+  \bm{x}_t = \bm{\Lambda} \bm{f}_{t} + \bm{\xi}_t,\quad \bm{\xi}_t \sim \mathcal{N}(\bm{\mu}, \bm{\Sigma}_{\xi}),
+}
+and transition equation
+\deqn{
+  \bm{f}_t = \sum_{p=1}^P\bm{\Phi}_p \bm{f}_{t-p} + \bm{\epsilon}_t,\quad \bm{\epsilon}_t \sim \mathcal{N}(\bm{0}, \bm{\Sigma}_{f}).
+}
+for t = 1, \dots, T, as is used in, among others,
+\insertRef{franjic2024nowcasting}{TwoStepSDFM}.
+}
+\details{
+The \code{delay} vector indicates the number of observations at the end of the
+sample that will be set to \code{NA} for each variable. Here, \code{delay} refers to
+the number of months for monthly data and the number of quarters for
+quarterly data. For example, consider \code{delay <- c(1, 1)} and assume the
+variable with index \code{1} will be quarterfied. In that case, the variable with
+index \code{1} will be delayed by 1 quarter, i.e., it will be missing 3
+observations at the end of the panel. The variable with index \code{2} will be
+delayed by 1 month, i.e., it will be missing 1 observation at the end of the
+panel. This convention differs from the \code{delay} object of the \code{SimulData}
+class this function returns. There, \code{delay} represents the number of months
+since the most recent publication. For monthly variables, these values
+coincide, but for quarterly variables they are inherently different.
+
+If \code{quarterfy = TRUE}, \code{floor(quarterly_variable_ratio * no_of_vars)}
+variables will be aggregated to a quarterly representation using the
+geometric mean according to
+\insertRef{Mariano2003new_coincident}{TwoStepSDFM}.
+
+If \code{corr = TRUE}, the matrix \code{meas_error_var_cov} is internally replaced by a
+random variance-covariance matrix:
+\eqn{\tilde{\bm{\Sigma}}:=\bm{S}\bm{R}\bm{S}}{new_meas_var_cov = diag_variance_sqrt * corr_matrix * diag_variance_sqrt},
+where \eqn{\bm{S}}{diag_variance_sqrt} is a diagonal matrix with entries
+equal to \code{sqrt(diag(meas_error_var_cov))} and \eqn{\bm{R}}{corr_matrix} is a
+random correlation matrix. \eqn{\bm{R}}{corr_matrix} is drawn according to
+\insertRef{lewandowski2009generating}{TwoStepSDFM} (see also
+\url{https://stats.stackexchange.com/questions/2746/how-to-efficiently-generate-random-positive-semidefinite-correlation-matrices}).
+The parameter \code{beta_param} governs the degree of cross-correlation of the
+off-diagonal elements. For more information see the literature cited above.
+
+The random draws of the fundamental error terms are drawn within the \verb{C++}
+backend. Therefore, \code{seed} must be provided and \code{set.seed()} will not
+guarantee reproduceability.
+}
+\examples{
+seed <- 02102025
+set.seed(seed)
+no_of_obs <- 100
+no_of_vars <- 50
+no_of_factors <- 3
+trans_error_var_cov <- diag(1, no_of_factors)
+loading_matrix <- matrix(round(rnorm(no_of_vars * no_of_factors)), no_of_vars, no_of_factors)
+meas_error_mean <- rep(0, no_of_vars)
+meas_error_var_cov <- diag(1, no_of_vars)
+trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
+factor_lag_order <- 2
+delay <- c(floor(rexp(no_of_vars, 1)))
+quarterfy <- FALSE
+quarterly_variable_ratio  <- 0
+corr <- TRUE
+beta_param <- 2
+burn_in <- 999
+starting_date <- "1970-01-01"
+rescale <- TRUE
+check_stationarity <- TRUE
+stationarity_check_threshold <- 1e-10
+factor_model <- simFM(no_of_obs = no_of_obs, no_of_vars = no_of_vars,
+                      no_of_factors = no_of_factors, loading_matrix = loading_matrix,
+                      meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+                      trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff,
+                      factor_lag_order = factor_lag_order, delay = delay, quarterfy = quarterfy,
+                      quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr,
+                      beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
+                      rescale = rescale, check_stationarity = check_stationarity,
+                      stationarity_check_threshold = stationarity_check_threshold)
+print(factor_model)
+spca_plots <- plot(factor_model)
+spca_plots$`Factor Time Series Plots`
+spca_plots$`Loading Matrix Heatmap`
+spca_plots$`Meas. Error Var.-Cov. Matrix Heatmap`
+spca_plots$`Meas. Error Var.-Cov. Eigenvalue Plot`
+spca_plots$`Data Var.-Cov. Matrix Heatmap`
+spca_plots$`Data Var.-Cov. Eigenvalue Plot`
+
+}
+\references{
+\insertRef{Mariano2003new_coincident}{TwoStepSDFM}
+
+\insertRef{lewandowski2009generating}{TwoStepSDFM}
+
+\insertRef{franjic2024nowcasting}{TwoStepSDFM}
+}
+\author{
+Domenic Franjic
 }

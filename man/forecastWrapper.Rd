@@ -13,7 +13,8 @@ forecastWrapper(
   lag_estim_criterion,
   max_fcast_horizon,
   max_ar_lag_order,
-  max_predictor_lag_order
+  max_predictor_lag_order,
+  jitter
 )
 }
 \description{

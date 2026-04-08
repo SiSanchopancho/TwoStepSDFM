@@ -1,5 +1,6 @@
 #' @useDynLib TwoStepSDFM, .registration=TRUE
 #' @importFrom Rcpp sourceCpp
+#' @importFrom Rdpack reprompt
 #' @import zoo
 #' @import xts
 #' @import lubridate
@@ -10,7 +11,7 @@ NULL
 
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-#  Copyright (C) 2024 Domenic Franjic
+#  Copyright (C) 2024-2026 Domenic Franjic
 #
 #  This file is part of TwoStepSDFM.
 #
@@ -28,48 +29,149 @@ NULL
 #  along with TwoStepSDFM. If not, see <https://www.gnu.org/licenses/>.
 
 #' @name nowcast
-#' @title Nowcast/forecast mixed-frequency data using an SDFM
+#' @title Predict Mixed-Frequency Data via Dynamic Factor Models
 #' @description
-#' Nowcast a quarterly target variable via a sparse/dense DFM using mixed frequency 
-#' data with ragged edges. Forecasts are produced using the additional quarterly
-#' predictors and a quarterly representation of the monthly factors according to
-#' Mariano and Murasawa (2003) <doi:10.1002/jae.695>. Final predictions are computed
-#' via equally weighted forecast averaging of ARDL models for each of the quarterly predictors
+#' Backcast, nowcast, and forecast quarterly target variables via a sparse/dense 
+#' DFM using additional monthly data with ragged edges. Forecasts are produced 
+#' using all quarterly targets and a quarterly representation of latent monthly 
+#' factors \insertCite{Mariano2003new_coincident}{TwoStepSDFM}. Final 
+#' predictions are computed via equally weighted forecast averaging of ARDL 
+#' models \insertCite{marcellino2010factor}{TwoStepSDFM} for each of the targets 
 #' and quarterfied factors.
 #' 
-#' @param data Zoo/xts object.
-#' @param variables_of_interest Integer vector indicating the index of all target variables
-#' @param max_fcast_horizon Maximum forecasting horizon
-#' @param delay Integer vector of predictor delays.
-#' @param selected Integer vector of the number of selected variables for each factor.
-#' @param frequency Integer vector of frequencies of the variables in the data set (currently supported: "12" for monthly and "4" for quarterly data)
+#' @param data Numeric (no_of_vars \eqn{\times}{x} no_of_obs) matrix of data or 
+#' zoo/xts object sampled at mixed frequencies (quarterly and monthly).
+#' @param variables_of_interest Integer vector indicating the index of all 
+#' target variables.
+#' @param max_fcast_horizon Maximum forecasting horizon of all targets.
+#' @param delay Integer vector of variable delays, measured as the number of 
+#' months since the latest available observation.
+#' @param selected Integer vector of the number of selected variables for each 
+#' factor.
+#' @param frequency Integer vector of frequencies of the variables in the data 
+#' set (currently supported: `12` for monthly and `4` for quarterly data).
 #' @param no_of_factors Integer number of factors.
-#' @param sparse Logical, indicating whether a sparse model should be used for nowcasting
-#' @param max_factor_lag_order Integer max P of the VAR(P) process of the factors.
-#' @param decorr_errors Logical, whether or not the errors should be decorrelated.
-#' @param lag_estim_criterion Information criterion used for the estimation of the factor VAR order ("BIC", "AIC", "HIC").
-#' @param ridge_penalty Ridge penalty.
-#' @param lasso_penalty Numeric vector, lasso penalties for each factor (set to NaN if not intended as stopping criterion).
-#' @param max_iterations Integer maximum number of iterations.
-#' @param max_no_steps Integer number of max_no_steps (used for LARS-EN as an alternative).
-#' @param comp_null Computational zero.
-#' @param check_rank Logical, whether or not the rank of the variance-covariance matrix should be checked.
-#' @param conv_crit Conversion criterion for the SPCA algorithm.
-#' @param conv_threshold Conversion criterion for the coordinate descent algorithm.
-#' @param log Logical, whether or not output should be printed along the algorithm.
-#' @param parallel Logical, whether or not to use Eigen's internal parallel matrix operations.
-#' @param max_ar_lag_order Integer maximum number of lags of the target variable ought to be included in the nowcasting step
-#' @param max_predictor_lag_order Integer maximum number of lags of the predictors ought to be included in the nowcasting step
+#' @param sparse Logical, if `TRUE` (default) a sparse DFM is used to estimate 
+#' the model parameters and latent factors (see \code{\link{twoStepSDFM}}). 
+#' Else, a dense DFM is used (see \code{\link{twoStepDenseDFM}}).
+#' @param max_factor_lag_order Integer maximum order of the VAR process in the 
+#' transition equation.
+#' @param lag_estim_criterion Information criterion used for the estimation of 
+#' the factor VAR order (`"BIC"` (default), `"AIC"`, `"HIC"`).
+#' @param decorr_errors Logical, whether or not the errors should be 
+#' decorrelated.
+#' @param ridge_penalty Numeric ridge penalty.
+#' @param lasso_penalty Numeric vector, lasso penalties for each factor (set to 
+#' NULL to disable as stopping criterion).
+#' @param max_iterations Integer maximum number of iterations of the SPCA 
+#' algorithm.
+#' @param max_no_steps Integer number of LARS steps (set to NULL to disable as 
+#' stopping criterion).
+#' @param weights Numeric vector, weights for each variable weighing the 
+#' \eqn{\ell_1}{`l_1`} size constraint.
+#' @param comp_null Numeric computational zero.
+#' @param spca_conv_crit Numeric conversion criterion for the SPCA algorithm.
+#' @param parallel Logical, whether or not to use Eigen's internal parallel 
+#' matrix operations.
+#' @param max_ar_lag_order Integer maximum number of lags of the target variable
+#' included in the final ARDL prediction routine.
+#' @param max_predictor_lag_order Integer maximum number of lags of the 
+#' predictors included in the final ARDL prediction routine.
+#' @param jitter Numerical jitter for stability of internal solver algorithms. 
+#' The jitter is added to the diagonal entries of the variance covariance matrix 
+#' of the measurement errors.
+#' @param svd_method Either `"fast"` or `"precise"`. Option `"fast"` uses 
+#' Eigen's BDCSVD divide and conquer method for the computation of the singular 
+#' values. Option `"precise"` (default) implements the slower, but numerically 
+#' more stable JacobiSVD method. 
+#' 
+#' @details
+#' This function serves as a prediction wrapper for the
+#' \code{\link{twoStepDenseDFM}} and \code{\link{twoStepSDFM}} functions. `data`
+#' should be a mixed-frequency data set. Currently, only monthly and quarterly
+#' data are supported. With respect to the quarterly data, the function expects
+#' the realization of the quarterly observations to occur in the last month of
+#' the quarter. Indicate quarterly and monthly variables via `frequency` by
+#' setting the corresponding element of `frequency` to `4` for quarterly and to
+#' `12` for monthly data.
+#'
+#' This function is only able to compute predictions for quarterly variables.
+#' To impute the ragged edges of the monthly observations, and potentially
+#' compute additional predictions for the monthly variables, call `predict` on
+#' the `SDFMFit` object returned by \code{\link{twoStepDenseDFM}} / 
+#' \code{\link{twoStepSDFM}} (see \code{\link{predict.SDFMFit}}).
+#'
+#' `max_fcast_horizon` sets the maximum number of forecasts predicted starting
+#' from the final observation of the data set. For each target, the number of
+#' backcasts and whether or not a nowcast should be computed is determined
+#' internally. This is done in such a way that every missing quarterly
+#' observation of the targets is predicted.
+#'
+#' `max_ar_lag_order` governs the maximum number of lags of the current target
+#' used to predict said target in each ARDL model. `max_predictor_lag_order`
+#' governs the maximum number of lags of each additional quarterly predictor,
+#' including other potential targets and the aggregated factors, used to predict
+#' any given target in each ARDL model. The actual number of lags is internally
+#' estimated using the BIC. Setting `max_ar_lag_order = 0` disables the use of
+#' target lags in its own prediction function.
+#' 
+#' `sparse` toggles between a sparse DFM and a dense DFM. If `sparse = FALSE`,
+#' all SPCA stopping criteria and other parameters passed to the sparse
+#' estimation routine are ignored (for details on these parameters see
+#' \code{\link{twoStepDenseDFM}}). Parameters governing the Kalman Filter and
+#' Smoother are passed directly to \code{\link{twoStepDenseDFM}} / 
+#' \code{\link{twoStepSDFM}}. For details see the corresponding help pages.
+#' 
 #' @return 
-#' The `nowcast` function returns an object which, contains the following elements:
+#' The `nowcast` function returns named list containing the following objects:
 #' \describe{
-#' \item{\code{loading_matrix_estimate}}{A matrix of estimated loadings for each factor on each observed variable.}
-#' \item{\code{smoothed_factors}}{The smoothed factor estimates.}
-#' \item{\code{smoothed_state_variance}}{The estimated variance-covariance matrix of the residuals/errors.}
-#' \item{\code{factor_var_lag_order}}{The order of the VAR(max_factor_lag_order) model used in the factor model process.}
-#' \item{\code{companion_form_smoothed_factors}}{The smoothed factor estimates in companion form.}
-#' \item{\code{error_var_cov_cholesky_factor}}{A matrix representing any transformations applied to the factors for error decorrelation, if \code{decorr_errors} is TRUE.}
+#'   \item{Forecasts}{Numeric matrix of the target variables and their 
+#'   respective backcasts, nowcasts, and/or forecasts.}
+#'   \item{SDFM Fit}{An `SDFMFit` object holding the estimates of the model 
+#'   parameters and the latent factors (see \code{\link{twoStepSDFM}} or 
+#'   \code{\link{twoStepDenseDFM}}).}
 #' }
+#' 
+#' @author
+#' Domenic Franjic
+#' 
+#' @references
+#' \insertRef{Mariano2003new_coincident}{TwoStepSDFM}
+#' 
+#' \insertRef{marcellino2010factor}{TwoStepSDFM}
+#' 
+#' \insertRef{franjic2024nowcasting}{TwoStepSDFM}
+#' 
+#' @seealso
+#' \code{\link{sparsePCA}}: Routine for fitting estimating a sparse factor 
+#' loading matrix.
+#'  
+#' \code{\link{kalmanFilterSmoother}}: Routine for filtering and smoothing 
+#' latent factors.
+#' 
+#' \code{\link{twoStepSDFM}}: Two-step estimation routine for a sparse dynamic 
+#' factor model.
+#' 
+#' \code{\link{twoStepDenseDFM}}: Two-step estimation routine for a dense 
+#' dynamic factor model.
+#' 
+#' @examples
+#' data(mixed_freq_factor_model)
+#' no_of_vars <- dim(mixed_freq_factor_model$data)[2]
+#' no_of_factors <- dim(mixed_freq_factor_model$factors)[2]
+#' sparse_nowcast <- nowcast(data = mixed_freq_factor_model$data, variables_of_interest = c(1, 2),
+#'                           max_fcast_horizon = 4, delay = mixed_freq_factor_model$delay,
+#'                           selected = rep(floor(0.5 * no_of_vars), no_of_factors), 
+#'                           frequency = mixed_freq_factor_model$frequency, no_of_factors = no_of_factors, 
+#'                        sparse = TRUE)
+#' print(sparse_nowcast)
+#' dense_nowcast <- nowcast(data = mixed_freq_factor_model$data, variables_of_interest = c(1, 2),
+#'                          max_fcast_horizon = 4, delay = mixed_freq_factor_model$delay,
+#'                          selected = NULL, frequency = mixed_freq_factor_model$frequency, 
+#'                          no_of_factors = no_of_factors, sparse = FALSE)
+#' sparse_plots <- plot(sparse_nowcast)
+#' sparse_plots$`Single Pred. Fcast Density Plots Series 1`
+#' 
 #' @export
 nowcast <- function(data,
                     variables_of_interest,
@@ -80,29 +182,28 @@ nowcast <- function(data,
                     no_of_factors,
                     sparse = TRUE,
                     max_factor_lag_order = 10,
-                    decorr_errors = TRUE,
                     lag_estim_criterion = "BIC",
+                    decorr_errors = TRUE,
                     ridge_penalty = 1e-6,
                     lasso_penalty = NULL,
                     max_iterations = 1000,
                     max_no_steps = NULL,
+                    weights = NULL,
                     comp_null = 1e-15,
-                    check_rank = FALSE,
-                    conv_crit = 1e-4,
-                    conv_threshold = 1e-4,
-                    log = FALSE,
+                    spca_conv_crit = 1e-4,
                     parallel = FALSE,
                     max_ar_lag_order = 5,
-                    max_predictor_lag_order = 5) {
-  
-  
+                    max_predictor_lag_order = 5,
+                    jitter = 1e-8,
+                    svd_method = "precise") {
+  func_call <- match.call()
   
   # Misshandling
   
   # The following variables will be checked inside the twoStepSDFM function:
   #   selected, no_of_factors, max_factor_lag_order, decorr_errors,
-  #   ridge_penalty, lasso_penalty, max_iterations, max_no_steps, comp_null,
-  #   check_rank, conv_crit, conv_threshold, log
+  #   ridge_penalty, lasso_penalty, max_iterations, max_no_steps, weights, 
+  #   comp_null, spca_conv_crit,
   
   # Misshandling of the data matrix
   if(!is.zoo(data) && !is.xts(data)){
@@ -127,6 +228,30 @@ nowcast <- function(data,
     delay <- matrix(rep(0, no_of_variables), ncol = 1)
   }else{
     delay <- checkPositiveSignedParameterVector(delay, "delay", no_of_variables)
+  }
+  if(any(-max_fcast_horizon >= delay[variables_of_interest])) {
+    stop("`max_fcast_horizon` is too recent relative to the available missing data. Adjust delays or forecast horizon.")
+  }
+  
+  # Check for NAs in the dataset outside the ragged edges
+  na_ind <- FALSE
+  for(col in 1:dim(data)[2]){
+    na_ind <- any(is.na(data[1:(no_of_observations - delay[col]), col]))
+    if(na_ind){
+      stop(paste0("data has NA values outside the ragged edges.")) 
+    }
+  }
+  
+  
+  # Check for observations in the dataset inside the ragged edges
+  obs_ind <- FALSE
+  for(col in 1:dim(data)[2]){
+    if(delay[col] > 0){
+      obs_ind <- !all(is.na(data[(no_of_observations - delay[col] + 1):no_of_observations, col]))
+    }
+    if(obs_ind){
+      stop(paste0("data has observed values inside the ragged edges.")) 
+    }
   }
   
   # Mishandling of frequency
@@ -181,18 +306,18 @@ nowcast <- function(data,
                             max_factor_lag_order = max_factor_lag_order, 
                             decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion, 
                             ridge_penalty = ridge_penalty,  lasso_penalty = lasso_penalty, 
-                            max_iterations = max_iterations, max_no_steps = max_no_steps, 
-                            comp_null = comp_null, check_rank = check_rank, conv_crit = conv_crit, 
-                            conv_threshold = conv_threshold, log = log, parallel = parallel,
-                            fcast_horizon = fcast_horizon
+                            max_iterations = max_iterations, max_no_steps = max_no_steps,
+                            weights = weights, comp_null = comp_null, spca_conv_crit = spca_conv_crit,
+                            parallel = parallel, fcast_horizon = fcast_horizon, 
+                            jitter = jitter, svd_method = svd_method
     )
   }else{
     SDFM_fit <- twoStepDenseDFM(data = data[, which(frequency == 12), drop = FALSE], delay = delay[which(frequency == 12)],
                                 no_of_factors = no_of_factors,  
                                 max_factor_lag_order = max_factor_lag_order, 
                                 decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion, 
-                                comp_null = comp_null, check_rank = check_rank, log = log, 
-                                parallel = parallel, fcast_horizon = fcast_horizon
+                                comp_null = comp_null, parallel = parallel, 
+                                fcast_horizon = fcast_horizon, jitter = jitter
     )
   }
   
@@ -241,7 +366,7 @@ nowcast <- function(data,
                                factors = factors, target_variable_delay = target_variable_delay, 
                                quarterly_delay = quarterly_delay, lag_estim_criterion = lag_estim_criterion,
                                max_fcast_horizon = effective_fcast_horizon, max_ar_lag_order = max_ar_lag_order,
-                               max_predictor_lag_order = max_predictor_lag_order)
+                               max_predictor_lag_order = max_predictor_lag_order, jitter = jitter)
   
   # Create nice result object
   result <- list()
@@ -256,8 +381,8 @@ nowcast <- function(data,
   colnames(forecast_and_series) <- paste0(1:(2 * length(variables_of_interest)))
   for(n in 1:length(variables_of_interest)){
     forecast_and_series[1:dim(qtrly_series)[1], 2*n - 1] <- qtrly_series[, n]
-    forecast_and_series[(dim(qtrly_series)[1] - delay[variables_of_interest[n]] / 3 + 1):dim(forecast_and_series)[1], 2*n] <-
-      forecasts$`Avg. Point Forecast`[n, (dim(forecasts$`Avg. Point Forecast`)[2] - delay[variables_of_interest[n]] / 3 - max_fcast_horizon + 1):dim(forecasts$`Avg. Point Forecast`)[2]]
+    forecast_and_series[(dim(qtrly_series)[1] - floor(delay[variables_of_interest[n]] / 3) + 1):dim(forecast_and_series)[1], 2*n] <-
+      forecasts$`Avg. Point Forecast`[n, (dim(forecasts$`Avg. Point Forecast`)[2] - floor(delay[variables_of_interest[n]] / 3) - max_fcast_horizon + 1):dim(forecasts$`Avg. Point Forecast`)[2]]
     colnames(forecast_and_series)[2*n - 1] <- colnames(data)[variables_of_interest[n]]
     colnames(forecast_and_series)[2*n] <- paste0("Fcast ", colnames(data)[variables_of_interest[n]])
   }
@@ -275,20 +400,28 @@ nowcast <- function(data,
     names(result$`Single Predictor Forecasts`)[i] <- names(forecasts)[i]
   }
   
-  # Store the forecast results
-  result$`SDFM Fit` <- SDFM_fit
   
+  result$`SDFM Fit` <- SDFM_fit
+  result$call <- func_call
   class(result) <- "SDFMnowcast"
   return(result)
 }
 
 #' @name print.SDFMnowcast
 #' @title Generic print function for SDFMnowcast S3 objects
+#' 
 #' @param x `SDFMnowcast` object.
 #' @param ... Additional parameters for the plotting functions.
+#'
+#' @return
+#' No return value; Prints a summary to the console.
+#' 
+#' @author
+#' Domenic Franjic
+#' 
 #' @export
 print.SDFMnowcast <- function(x, ...) {
-  print(x$Forecasts)
+  print(tail(x$Forecasts, 10))
   invisible(x)
 }
 
@@ -296,9 +429,27 @@ print.SDFMnowcast <- function(x, ...) {
 #' @name plot.SDFMnowcast
 #' @title Generic plotting function for SDFMnowcast S3 objects
 #' @param x `SDFMnowcast` object.
+#' @param axis_text_size Numeric size of x- and y-axis labels. Prased to ggplot2 
+#' `theme(..., text = element_text(size = axis_text_size))`.
 #' @param ... Additional parameters for the plotting functions.
+#' 
+#' @return
+#' A named list storing of `ggplot` objects:
+#' \describe{
+#'   \item{`Single Pred. Fcast Density Plots x`}{`patchwork` / `ggplot` objects
+#'   graphing the distribution of forecasts generated by the predictors for
+#'   each prediction (backcasts, nowcasts, forecasts) for each target,
+#'   respectively. Altogether, there will be as many such objects as there are
+#'   targets, with `x` replaced by the column name of the target.}
+#' }
+#' 
+#' @author
+#' Domenic Franjic
+#' 
 #' @export
-plot.SDFMnowcast <- function(x, ...) {
+plot.SDFMnowcast <- function(x,                         
+                             axis_text_size = 20,
+                             ...) {
   out_list <- list()
   
   # Single Predictor Density Plots
@@ -341,21 +492,14 @@ plot.SDFMnowcast <- function(x, ...) {
                               " for ", relative_fcast_date),
                x = "Predicted Value", y = ""
           ) +
-          theme_minimal()
+          theme_minimal() + 
+          theme(text = element_text(size = axis_text_size))
         plot_list[[horizon]] <- current_density_plot
       }
       out_list[[h]] <- patchwork::wrap_plots(plot_list, ncol = 2)
       names(out_list)[h] <- paste0("Single Pred. Fcast Density Plots ", colnames(x$Forecasts)[2 * h - 1])
     }
   }
-  
-  insample_plots <- plot(x$`SDFM Fit`)
-  
-  out_list$`Factor Time Series Plots` <- insample_plots$`Factor Time Series Plots`
-  
-  out_list$`Loading Matrix Heatmap` <- insample_plots$`Loading Matrix Heatmap`
-  
-  out_list$`Meas. Error Var.-Cov. Matrix Heatmap` <- insample_plots$`Meas. Error Var.-Cov. Matrix Heatmap`
   
   return(out_list)
 }

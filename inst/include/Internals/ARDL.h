@@ -25,9 +25,15 @@
 #define ARDL
 
  // Including external libraries
+#if !defined(_MSC_VER)
 #include <RcppCommon.h>
 #include <Rcpp.h>
+#define EIGEN_NO_DEBUG
 #include <RcppEigen.h>
+#else
+#include <Eigen>
+#endif
+
 #include <stdlib.h>
 #include <math.h>
 #include <string>
@@ -38,7 +44,8 @@ Rcpp::List runARDL(
 	Rcpp::NumericVector predictor_variable,
 	const unsigned max_target_lags,
 	const unsigned max_predictor_lags,
-	const std::string crit
+	const std::string crit,
+	const double jitter
 );
 
 #endif /* defined(ARDL) */

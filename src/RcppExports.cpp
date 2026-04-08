@@ -13,8 +13,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // runARDL
-Rcpp::List runARDL(Rcpp::NumericVector target_variable, Rcpp::NumericVector target_variable_predictor, Rcpp::NumericVector predictor_variable, const unsigned max_target_lags, const unsigned max_predictor_lags, const std::string crit);
-RcppExport SEXP _TwoStepSDFM_runARDL(SEXP target_variableSEXP, SEXP target_variable_predictorSEXP, SEXP predictor_variableSEXP, SEXP max_target_lagsSEXP, SEXP max_predictor_lagsSEXP, SEXP critSEXP) {
+Rcpp::List runARDL(Rcpp::NumericVector target_variable, Rcpp::NumericVector target_variable_predictor, Rcpp::NumericVector predictor_variable, const unsigned max_target_lags, const unsigned max_predictor_lags, const std::string crit, const double jitter);
+RcppExport SEXP _TwoStepSDFM_runARDL(SEXP target_variableSEXP, SEXP target_variable_predictorSEXP, SEXP predictor_variableSEXP, SEXP max_target_lagsSEXP, SEXP max_predictor_lagsSEXP, SEXP critSEXP, SEXP jitterSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -24,13 +24,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const unsigned >::type max_target_lags(max_target_lagsSEXP);
     Rcpp::traits::input_parameter< const unsigned >::type max_predictor_lags(max_predictor_lagsSEXP);
     Rcpp::traits::input_parameter< const std::string >::type crit(critSEXP);
-    rcpp_result_gen = Rcpp::wrap(runARDL(target_variable, target_variable_predictor, predictor_variable, max_target_lags, max_predictor_lags, crit));
+    Rcpp::traits::input_parameter< const double >::type jitter(jitterSEXP);
+    rcpp_result_gen = Rcpp::wrap(runARDL(target_variable, target_variable_predictor, predictor_variable, max_target_lags, max_predictor_lags, crit, jitter));
     return rcpp_result_gen;
 END_RCPP
 }
 // runDL
-Rcpp::List runDL(Rcpp::NumericVector target_variable, Rcpp::NumericVector predictor_variable, const unsigned max_predictor_lags, const std::string crit);
-RcppExport SEXP _TwoStepSDFM_runDL(SEXP target_variableSEXP, SEXP predictor_variableSEXP, SEXP max_predictor_lagsSEXP, SEXP critSEXP) {
+Rcpp::List runDL(Rcpp::NumericVector target_variable, Rcpp::NumericVector predictor_variable, const unsigned max_predictor_lags, const std::string crit, const double jitter);
+RcppExport SEXP _TwoStepSDFM_runDL(SEXP target_variableSEXP, SEXP predictor_variableSEXP, SEXP max_predictor_lagsSEXP, SEXP critSEXP, SEXP jitterSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -38,7 +39,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type predictor_variable(predictor_variableSEXP);
     Rcpp::traits::input_parameter< const unsigned >::type max_predictor_lags(max_predictor_lagsSEXP);
     Rcpp::traits::input_parameter< const std::string >::type crit(critSEXP);
-    rcpp_result_gen = Rcpp::wrap(runDL(target_variable, predictor_variable, max_predictor_lags, crit));
+    Rcpp::traits::input_parameter< const double >::type jitter(jitterSEXP);
+    rcpp_result_gen = Rcpp::wrap(runDL(target_variable, predictor_variable, max_predictor_lags, crit, jitter));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -57,9 +59,57 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// runSPCA
+Rcpp::List runSPCA(Rcpp::NumericMatrix X_in, Rcpp::IntegerVector delay, Rcpp::IntegerVector selected, int R, double l2, Rcpp::NumericVector l1, int max_iterations, int steps, Rcpp::NumericVector weights, double comp_null, double spca_conv_crit, const bool parallel, const std::string svd_method, const bool normalise, const bool comp_var_expl);
+RcppExport SEXP _TwoStepSDFM_runSPCA(SEXP X_inSEXP, SEXP delaySEXP, SEXP selectedSEXP, SEXP RSEXP, SEXP l2SEXP, SEXP l1SEXP, SEXP max_iterationsSEXP, SEXP stepsSEXP, SEXP weightsSEXP, SEXP comp_nullSEXP, SEXP spca_conv_critSEXP, SEXP parallelSEXP, SEXP svd_methodSEXP, SEXP normaliseSEXP, SEXP comp_var_explSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_in(X_inSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type delay(delaySEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type selected(selectedSEXP);
+    Rcpp::traits::input_parameter< int >::type R(RSEXP);
+    Rcpp::traits::input_parameter< double >::type l2(l2SEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type l1(l1SEXP);
+    Rcpp::traits::input_parameter< int >::type max_iterations(max_iterationsSEXP);
+    Rcpp::traits::input_parameter< int >::type steps(stepsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type weights(weightsSEXP);
+    Rcpp::traits::input_parameter< double >::type comp_null(comp_nullSEXP);
+    Rcpp::traits::input_parameter< double >::type spca_conv_crit(spca_conv_critSEXP);
+    Rcpp::traits::input_parameter< const bool >::type parallel(parallelSEXP);
+    Rcpp::traits::input_parameter< const std::string >::type svd_method(svd_methodSEXP);
+    Rcpp::traits::input_parameter< const bool >::type normalise(normaliseSEXP);
+    Rcpp::traits::input_parameter< const bool >::type comp_var_expl(comp_var_explSEXP);
+    rcpp_result_gen = Rcpp::wrap(runSPCA(X_in, delay, selected, R, l2, l1, max_iterations, steps, weights, comp_null, spca_conv_crit, parallel, svd_method, normalise, comp_var_expl));
+    return rcpp_result_gen;
+END_RCPP
+}
+// runUVKFS
+Rcpp::List runUVKFS(Rcpp::NumericMatrix X_in, Rcpp::IntegerVector delay, Rcpp::NumericMatrix state_var_cov, Rcpp::NumericMatrix measurement_var_cov, Rcpp::NumericMatrix loading_matrix, Rcpp::NumericMatrix factor_var_coefficient_matrices, const int R, const int order, const int fcast_horizon, const bool decorr_errors, double comp_null, const bool parallel, const double jitter);
+RcppExport SEXP _TwoStepSDFM_runUVKFS(SEXP X_inSEXP, SEXP delaySEXP, SEXP state_var_covSEXP, SEXP measurement_var_covSEXP, SEXP loading_matrixSEXP, SEXP factor_var_coefficient_matricesSEXP, SEXP RSEXP, SEXP orderSEXP, SEXP fcast_horizonSEXP, SEXP decorr_errorsSEXP, SEXP comp_nullSEXP, SEXP parallelSEXP, SEXP jitterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type X_in(X_inSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type delay(delaySEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type state_var_cov(state_var_covSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type measurement_var_cov(measurement_var_covSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type loading_matrix(loading_matrixSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type factor_var_coefficient_matrices(factor_var_coefficient_matricesSEXP);
+    Rcpp::traits::input_parameter< const int >::type R(RSEXP);
+    Rcpp::traits::input_parameter< const int >::type order(orderSEXP);
+    Rcpp::traits::input_parameter< const int >::type fcast_horizon(fcast_horizonSEXP);
+    Rcpp::traits::input_parameter< const bool >::type decorr_errors(decorr_errorsSEXP);
+    Rcpp::traits::input_parameter< double >::type comp_null(comp_nullSEXP);
+    Rcpp::traits::input_parameter< const bool >::type parallel(parallelSEXP);
+    Rcpp::traits::input_parameter< const double >::type jitter(jitterSEXP);
+    rcpp_result_gen = Rcpp::wrap(runUVKFS(X_in, delay, state_var_cov, measurement_var_cov, loading_matrix, factor_var_coefficient_matrices, R, order, fcast_horizon, decorr_errors, comp_null, parallel, jitter));
+    return rcpp_result_gen;
+END_RCPP
+}
 // runSDFMKFS
-Rcpp::List runSDFMKFS(Rcpp::NumericMatrix X_in, Rcpp::IntegerVector delay, Rcpp::IntegerVector selected, int R, int order, bool decorr_errors, const char* crit, double l2, Rcpp::NumericVector l1, int max_iterations, int steps, double comp_null, bool check_rank, double conv_crit, double conv_threshold, bool log, double KFS_conv_crit, const bool parallel, const unsigned fcast_horizon);
-RcppExport SEXP _TwoStepSDFM_runSDFMKFS(SEXP X_inSEXP, SEXP delaySEXP, SEXP selectedSEXP, SEXP RSEXP, SEXP orderSEXP, SEXP decorr_errorsSEXP, SEXP critSEXP, SEXP l2SEXP, SEXP l1SEXP, SEXP max_iterationsSEXP, SEXP stepsSEXP, SEXP comp_nullSEXP, SEXP check_rankSEXP, SEXP conv_critSEXP, SEXP conv_thresholdSEXP, SEXP logSEXP, SEXP KFS_conv_critSEXP, SEXP parallelSEXP, SEXP fcast_horizonSEXP) {
+Rcpp::List runSDFMKFS(Rcpp::NumericMatrix X_in, Rcpp::IntegerVector delay, Rcpp::IntegerVector selected, int R, int order, bool decorr_errors, const char* crit, double l2, Rcpp::NumericVector l1, int max_iterations, int steps, Rcpp::NumericVector weights, double comp_null, double spca_conv_crit, const bool parallel, const unsigned fcast_horizon, const double jitter, const std::string svd_method);
+RcppExport SEXP _TwoStepSDFM_runSDFMKFS(SEXP X_inSEXP, SEXP delaySEXP, SEXP selectedSEXP, SEXP RSEXP, SEXP orderSEXP, SEXP decorr_errorsSEXP, SEXP critSEXP, SEXP l2SEXP, SEXP l1SEXP, SEXP max_iterationsSEXP, SEXP stepsSEXP, SEXP weightsSEXP, SEXP comp_nullSEXP, SEXP spca_conv_critSEXP, SEXP parallelSEXP, SEXP fcast_horizonSEXP, SEXP jitterSEXP, SEXP svd_methodSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -74,21 +124,20 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type l1(l1SEXP);
     Rcpp::traits::input_parameter< int >::type max_iterations(max_iterationsSEXP);
     Rcpp::traits::input_parameter< int >::type steps(stepsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type weights(weightsSEXP);
     Rcpp::traits::input_parameter< double >::type comp_null(comp_nullSEXP);
-    Rcpp::traits::input_parameter< bool >::type check_rank(check_rankSEXP);
-    Rcpp::traits::input_parameter< double >::type conv_crit(conv_critSEXP);
-    Rcpp::traits::input_parameter< double >::type conv_threshold(conv_thresholdSEXP);
-    Rcpp::traits::input_parameter< bool >::type log(logSEXP);
-    Rcpp::traits::input_parameter< double >::type KFS_conv_crit(KFS_conv_critSEXP);
+    Rcpp::traits::input_parameter< double >::type spca_conv_crit(spca_conv_critSEXP);
     Rcpp::traits::input_parameter< const bool >::type parallel(parallelSEXP);
     Rcpp::traits::input_parameter< const unsigned >::type fcast_horizon(fcast_horizonSEXP);
-    rcpp_result_gen = Rcpp::wrap(runSDFMKFS(X_in, delay, selected, R, order, decorr_errors, crit, l2, l1, max_iterations, steps, comp_null, check_rank, conv_crit, conv_threshold, log, KFS_conv_crit, parallel, fcast_horizon));
+    Rcpp::traits::input_parameter< const double >::type jitter(jitterSEXP);
+    Rcpp::traits::input_parameter< const std::string >::type svd_method(svd_methodSEXP);
+    rcpp_result_gen = Rcpp::wrap(runSDFMKFS(X_in, delay, selected, R, order, decorr_errors, crit, l2, l1, max_iterations, steps, weights, comp_null, spca_conv_crit, parallel, fcast_horizon, jitter, svd_method));
     return rcpp_result_gen;
 END_RCPP
 }
 // runDFMKFS
-Rcpp::List runDFMKFS(Rcpp::NumericMatrix X_in, Rcpp::IntegerVector delay, int R, int order, bool decorr_errors, const char* crit, double comp_null, bool check_rank, bool log, double KFS_conv_crit, const bool parallel, const unsigned fcast_horizon);
-RcppExport SEXP _TwoStepSDFM_runDFMKFS(SEXP X_inSEXP, SEXP delaySEXP, SEXP RSEXP, SEXP orderSEXP, SEXP decorr_errorsSEXP, SEXP critSEXP, SEXP comp_nullSEXP, SEXP check_rankSEXP, SEXP logSEXP, SEXP KFS_conv_critSEXP, SEXP parallelSEXP, SEXP fcast_horizonSEXP) {
+Rcpp::List runDFMKFS(Rcpp::NumericMatrix X_in, Rcpp::IntegerVector delay, int R, int order, bool decorr_errors, const char* crit, double comp_null, const bool parallel, const unsigned fcast_horizon, const double jitter);
+RcppExport SEXP _TwoStepSDFM_runDFMKFS(SEXP X_inSEXP, SEXP delaySEXP, SEXP RSEXP, SEXP orderSEXP, SEXP decorr_errorsSEXP, SEXP critSEXP, SEXP comp_nullSEXP, SEXP parallelSEXP, SEXP fcast_horizonSEXP, SEXP jitterSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -99,12 +148,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type decorr_errors(decorr_errorsSEXP);
     Rcpp::traits::input_parameter< const char* >::type crit(critSEXP);
     Rcpp::traits::input_parameter< double >::type comp_null(comp_nullSEXP);
-    Rcpp::traits::input_parameter< bool >::type check_rank(check_rankSEXP);
-    Rcpp::traits::input_parameter< bool >::type log(logSEXP);
-    Rcpp::traits::input_parameter< double >::type KFS_conv_crit(KFS_conv_critSEXP);
     Rcpp::traits::input_parameter< const bool >::type parallel(parallelSEXP);
     Rcpp::traits::input_parameter< const unsigned >::type fcast_horizon(fcast_horizonSEXP);
-    rcpp_result_gen = Rcpp::wrap(runDFMKFS(X_in, delay, R, order, decorr_errors, crit, comp_null, check_rank, log, KFS_conv_crit, parallel, fcast_horizon));
+    Rcpp::traits::input_parameter< const double >::type jitter(jitterSEXP);
+    rcpp_result_gen = Rcpp::wrap(runDFMKFS(X_in, delay, R, order, decorr_errors, crit, comp_null, parallel, fcast_horizon, jitter));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -137,11 +184,13 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_TwoStepSDFM_runARDL", (DL_FUNC) &_TwoStepSDFM_runARDL, 6},
-    {"_TwoStepSDFM_runDL", (DL_FUNC) &_TwoStepSDFM_runDL, 4},
+    {"_TwoStepSDFM_runARDL", (DL_FUNC) &_TwoStepSDFM_runARDL, 7},
+    {"_TwoStepSDFM_runDL", (DL_FUNC) &_TwoStepSDFM_runDL, 5},
     {"_TwoStepSDFM_runNoOfFactors", (DL_FUNC) &_TwoStepSDFM_runNoOfFactors, 5},
-    {"_TwoStepSDFM_runSDFMKFS", (DL_FUNC) &_TwoStepSDFM_runSDFMKFS, 19},
-    {"_TwoStepSDFM_runDFMKFS", (DL_FUNC) &_TwoStepSDFM_runDFMKFS, 12},
+    {"_TwoStepSDFM_runSPCA", (DL_FUNC) &_TwoStepSDFM_runSPCA, 15},
+    {"_TwoStepSDFM_runUVKFS", (DL_FUNC) &_TwoStepSDFM_runUVKFS, 13},
+    {"_TwoStepSDFM_runSDFMKFS", (DL_FUNC) &_TwoStepSDFM_runSDFMKFS, 18},
+    {"_TwoStepSDFM_runDFMKFS", (DL_FUNC) &_TwoStepSDFM_runDFMKFS, 10},
     {"_TwoStepSDFM_runStaticFM", (DL_FUNC) &_TwoStepSDFM_runStaticFM, 17},
     {NULL, NULL, 0}
 };

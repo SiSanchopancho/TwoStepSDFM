@@ -37,8 +37,15 @@
 #include <chrono>
 #include <fstream>
 #include <vector>
+
+#if !defined(_MSC_VER)
 #include <Rcpp.h>
+#define EIGEN_NO_DEBUG
 #include <RcppEigen.h>
+#else
+#include <Eigen>
+#endif
+
 #include <string.h>
 #include <sys/stat.h>
 #ifdef _WIN32
@@ -172,6 +179,7 @@ inline bool createFolder(const std::string& folderPath) {
 #endif
 }
 
+#if !defined(_MSC_VER)
 /** Ensure that a folder exists, create it if it does not */
 inline bool ensureFolderExists(const std::string& folderName) {
 
@@ -189,6 +197,7 @@ inline bool ensureFolderExists(const std::string& folderName) {
 		return true;
 	}
 }
+#endif
 
 /** Get a string of the current date formatted as dd-mm-yyyy */
 inline std::string getFormattedDate() {

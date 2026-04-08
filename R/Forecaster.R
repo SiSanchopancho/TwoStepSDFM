@@ -10,7 +10,7 @@ NULL
 
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-#  Copyright (C) 2024 Domenic Franjic
+#  Copyright (C) 2024-2026 Domenic Franjic
 #
 #  This file is part of TwoStepSDFM.
 #
@@ -43,7 +43,8 @@ forecastWrapper <- function(target_variables,
                             lag_estim_criterion,
                             max_fcast_horizon,
                             max_ar_lag_order,
-                            max_predictor_lag_order
+                            max_predictor_lag_order,
+                            jitter
 )
 {
   no_of_factors <- dim(factors)[1]
@@ -57,7 +58,7 @@ forecastWrapper <- function(target_variables,
   no_of_vars  <- no_of_qrtly_vars + no_of_target_vars
   no_of_qrtly_obs <- (dim(factors)[2] - 2) / 3
   min_fcast_horizons <- ifelse(target_variable_delay == 0, 
-                               1,
+                               0,
                                -floor(target_variable_delay / 3) + 1)
   return_object <- list()
   
@@ -93,7 +94,7 @@ forecastWrapper <- function(target_variables,
   
   fcasts <- matrix(NaN, no_of_target_vars, max_fcast_horizon - min(min_fcast_horizons) + 1)
   for(current_target in 1:no_of_target_vars){
-
+    
     # Start ARDL estimation loop over the predictor #
     
     current_fcasts <- matrix(NaN, no_of_vars + no_of_factors, max_fcast_horizon - min_fcast_horizons[current_target] + 1)
@@ -132,7 +133,8 @@ forecastWrapper <- function(target_variables,
                               horizon_specific_predictor,
                               max(max_ar_lag_order - max(h, 0), 1), 
                               max(max_predictor_lag_order - max(h, 0), 1),
-                              lag_estim_criterion)
+                              lag_estim_criterion,
+                              jitter)
           
           # Forecast
           forecast_predictors <- matrix(1, sum(ardl_fit$optimL_lag_order) + 3, 1) # Add three for the intercept and the "contemporaenous" observations
@@ -153,7 +155,8 @@ forecastWrapper <- function(target_variables,
           ardl_fit <- runDL(horizon_specific_target,
                             horizon_specific_predictor,
                             max(max_predictor_lag_order - max(h, 0), 1),
-                            lag_estim_criterion)
+                            lag_estim_criterion,
+                            jitter = jitter)
           
           # Forecast
           forecast_predictors <- matrix(1, ardl_fit$optimL_lag_order + 2, 1) # Add two for the intercept and the "contemporaenous" observations
@@ -162,7 +165,7 @@ forecastWrapper <- function(target_variables,
             head(all_qrtly_data[current_predictor, 
                                 (no_of_qrtly_obs - all_qtrly_data_delay[current_predictor]):1],
                  ardl_fit$optimL_lag_order + 1)
-            
+          
           current_fcasts[current_predictor, which(rel_fcast_horizons == h)] <-
             matrix(ardl_fit$coefficients, nrow = 1) %*% forecast_predictors
         }
@@ -185,7 +188,7 @@ forecastWrapper <- function(target_variables,
       colMeans(current_fcasts, na.rm = TRUE)
     
     # Start ARDL estimation loop over the predictor #
-
+    
   }
   
   # End ARDL estimation loop over the target variables #

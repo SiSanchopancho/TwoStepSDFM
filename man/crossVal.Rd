@@ -2,7 +2,7 @@
 % Please edit documentation in R/CrossVal.R
 \name{crossVal}
 \alias{crossVal}
-\title{Cross-validate the hyper-parameter of the mixed-frequency SDFM}
+\title{Cross-validate SDFM Hyper-Parameters}
 \usage{
 crossVal(
   data,
@@ -14,97 +14,194 @@ crossVal(
   seed,
   min_ridge_penalty,
   max_ridge_penalty,
-  cv_repititions,
+  cv_repetitions,
   cv_size,
   lasso_penalty_type,
   min_max_penalty,
   max_factor_lag_order = 10,
-  decorr_errors = TRUE,
   lag_estim_criterion = "BIC",
-  ridge_penalty = 1e-06,
-  lasso_penalty = NULL,
+  decorr_errors = TRUE,
   max_iterations = 1000,
-  max_no_steps = NULL,
+  weights = NULL,
   comp_null = 1e-15,
-  check_rank = FALSE,
-  conv_crit = 1e-04,
-  conv_threshold = 1e-04,
+  spca_conv_crit = 1e-04,
   parallel = FALSE,
   no_of_cores = 1,
   max_ar_lag_order = 5,
   max_predictor_lag_order = 5,
+  jitter = 1e-08,
+  svd_method = "precise",
   verbose = TRUE
 )
 }
 \arguments{
-\item{data}{\code{Zoo}/\code{xts} object.}
+\item{data}{Numeric (no_of_vars \eqn{\times}{x} no_of_obs) matrix of data or
+zoo/xts object sampled at mixed frequencies (quarterly and monthly).}
 
-\item{variable_of_interest}{Integer value indicating the index of the single target variable}
+\item{variable_of_interest}{Integer indicating the index of the target
+variables.}
 
-\item{fcast_horizon}{Integer value indicating the target horizon}
+\item{fcast_horizon}{Integer value indicating the target forecasting horizon.}
 
-\item{delay}{Integer vector of predictor delays.}
+\item{delay}{Integer vector of variable delays, measured as the number of
+months since the latest available observation.}
 
-\item{frequency}{Integer vector of frequencies of the variables in the data set (currently supported: \code{12} for monthly and \code{4} for quarterly data)}
+\item{frequency}{Integer vector of frequencies of the variables in the data
+set (currently supported: \code{12} for monthly and \code{4} for quarterly data).}
 
 \item{no_of_factors}{Integer number of factors.}
 
-\item{seed}{32-bit positive integer for drawing the random hyper-parameter candidates}
+\item{seed}{32-bit unsigned integer seed for all random processes inside the
+function.}
 
-\item{min_ridge_penalty}{Lower bound for the sampled ridge penalty coefficient}
+\item{min_ridge_penalty}{Numeric lower bound for the sampled ridge penalty
+coefficient candidates.}
 
-\item{max_ridge_penalty}{Upper bound for the sampled ridge penalty coefficient}
+\item{max_ridge_penalty}{Numeric upper bound for the sampled ridge penalty
+coefficient candidates.}
 
-\item{cv_repititions}{Integer number of predictions ought to be computed for each candidate set}
+\item{cv_repetitions}{Integer number of \code{fcast_horizon}-step-ahead
+predictions computed for each candidate set.}
 
-\item{cv_size}{Integer number of candidate sets}
+\item{cv_size}{Integer number of candidate sets.}
 
-\item{lasso_penalty_type}{Character indicating the lasso penalty type. \code{"selected"} uses the number of non-zero elements of the loading matrix. \code{"penalty"} uses the lasso size constraint directly. \code{"steps"} uses the number of steps.}
+\item{lasso_penalty_type}{Character indicating the lasso penalty type.
+If set to \code{"selected"}, the \eqn{\ell_1}{`l_1`}-size constraint will be
+returned as number of non-zero elements of each column of the loading matrix.
+If set to \code{"penalty"}, the lasso size constraint will be returned. If set
+to \code{"steps"}, the number of LARS-EN steps will be returned.}
 
-\item{min_max_penalty}{Vector of size tow, where the first element indicates the lower and the second element indicates the upper bound of the lasso penalty equivalent. If lasso_penalty_type is set to \code{"selected"} or \code{"steps"}, both elements must be strictly positive integers.}
+\item{min_max_penalty}{Vector of size two, where the first element indicates
+the lower and the second element indicates the upper bound of the lasso
+penalty equivalent. If \code{lasso_penalty_type} is set to \code{"selected"} or
+\code{"steps"}, both elements must be strictly positive integers.}
 
-\item{max_factor_lag_order}{Integer max P of the VAR(P) process of the factors.}
+\item{max_factor_lag_order}{Integer maximum order of the VAR process in the
+transition equation.}
 
-\item{decorr_errors}{Logical, whether or not the errors should be decorrelated.}
+\item{lag_estim_criterion}{Information criterion used for the estimation of
+the factor VAR order (\code{"BIC"} (default), \code{"AIC"}, \code{"HIC"}).}
 
-\item{lag_estim_criterion}{Information criterion used for the estimation of the factor VAR order (\code{"BIC"}, \code{"AIC"}, \code{"HIC"}).}
+\item{decorr_errors}{Logical, whether or not the errors should be
+decorrelated.}
 
-\item{ridge_penalty}{Ridge penalty.}
+\item{max_iterations}{Integer maximum number of iterations of the SPCA
+algorithm.}
 
-\item{lasso_penalty}{Numeric vector, lasso penalties for each factor (set to \code{NaN} if not intended as stopping criterion).}
+\item{weights}{Numeric vector, weights for each variable weighing the
+\eqn{\ell_1}{`l_1`} size constraint.}
 
-\item{max_iterations}{Integer maximum number of iterations.}
+\item{comp_null}{Numeric computational zero.}
 
-\item{max_no_steps}{Integer number of max_no_steps (used for LARS-EN as an alternative).}
+\item{spca_conv_crit}{Numeric conversion criterion for the SPCA algorithm.}
 
-\item{comp_null}{Computational zero.}
+\item{parallel}{Logical, whether or not to run the cross-validation loop in
+parallel.}
 
-\item{check_rank}{Logical, whether or not the rank of the variance-covariance matrix should be checked.}
+\item{no_of_cores}{Integer number of course to use when run in parallel.}
 
-\item{conv_crit}{Conversion criterion for the SPCA algorithm.}
+\item{max_ar_lag_order}{Integer maximum number of lags of the target variable
+included in the final ARDL prediction routine.}
 
-\item{conv_threshold}{Conversion criterion for the coordinate descent algorithm.}
+\item{max_predictor_lag_order}{Integer maximum number of lags of the
+predictors included in the final ARDL prediction routine.}
 
-\item{parallel}{Logical, whether or not to run the cross-validation loop in parallel.}
+\item{jitter}{Numerical jitter for stability of internal solver algorithms.
+The jitter is added to the diagonal entries of the variance covariance matrix
+of the measurement errors.}
 
-\item{no_of_cores}{Integer number of course to use when run in parallel}
+\item{svd_method}{Either \code{"fast"} or \code{"precise"}. Option \code{"fast"} uses
+Eigen's BDCSVD divide and conquer method for the computation of the singular
+values. Option \code{"precise"} (default) implements the slower, but numerically
+more stable JacobiSVD method.}
 
-\item{max_ar_lag_order}{Integer maximum number of lags of the target variable ought to be included in the nowcasting step}
-
-\item{max_predictor_lag_order}{Integer maximum number of lags of the predictors ought to be included in the nowcasting step}
-
-\item{verbose}{Logical, whether to print some progress tracking output to the console.}
+\item{verbose}{Logical, whether to print some progress tracking output to the
+console.}
 }
 \value{
-An \code{SDFMcrossVal} object containing the cross-validation and BIC results for all hyper-parameter combinations.
-The \code{crossVal} function returns an \code{SDFMcrossVal} object with the following elements:
+An object of class \code{SDFMcrossVal} with main components:
 \describe{
-\item{\code{CV}}{A list with components \code{CV Results} (matrix of cross-validation errors and corresponding hyper-parameter values) and
-\code{Min. CV} (row of \code{CV Results} with the minimum cross-validation error).}
-\item{\code{BIC}}{A list with components \code{BIC Results} (matrix of BIC values and corresponding hyper-parameter values) and
-\code{Min. BIC} (row of \code{BIC Results} with the minimum BIC).}
+\item{\code{CV}}{A list with components \code{`CV Results`} (matrix of all
+cross-validation errors and corresponding hyper-parameter values) and
+\code{`Min. CV`} (row of \verb{CV Results} with the minimum cross-validation
+error).}
+\item{\code{BIC}}{A list with components \verb{BIC Results} (matrix of all BIC values
+and corresponding hyper-parameter values) and \verb{Min. BIC} (row of
+\verb{BIC Results} with the minimum BIC).}
 }
 }
 \description{
-Cross-validate the hyper-parameter of the mixed-frequency SDFM
+This function uses time series cross-validation
+\insertCite{rob2018forecasting}{TwoStepSDFM} in combination with random
+hyper-parameter search \insertCite{bergstra2012random}{TwoStepSDFM} as
+described in \insertRef{franjic2024nowcasting}{TwoStepSDFM}.
+}
+\details{
+\code{fcast_horizon} should be set to the target prediction horizon, as
+hyper-parameters can differ substantially between different horizons. For
+nowcasting, use \code{fcast_horizon = 0}. For backcasting, \code{fcast_horizon} can be
+set to a negative number indicating the step-back backcasting horizon.
+
+Internally, candidates of the hyper-parameters are drawn randomly. However,
+a regular dense DFM will always be considered by default. The ridge
+penalty is drawn as \eqn{\exp(u)}{exp(u)}, where \eqn{u}{u} is uniformly
+distributed between \code{min_ridge_penalty} and \code{max_ridge_penalty}. If
+\code{lasso_penalty_type = "selected"}, the lasso penalty is drawn as a random
+vector \eqn{\bm{v}}{v}, where each entry is uniformly distributed. If
+\code{lasso_penalty_type = "steps"}, the lasso penalty is drawn as a random
+value \eqn{v}{v} that is uniformly distributed. If
+\code{lasso_penalty_type = "penalty"}, the lasso penalty is drawn as a random
+vector \eqn{\exp(\bm{v})}{exp(v)}, where each entry of
+\eqn{\bm{v}}{v} is uniformly distributed. In all three cases, the upper and
+lower bounds of the uniform distributions governing the lasso penalties are
+given by the first and second entry of \code{min_max_penalty}, respectively.
+
+For medium to large data sets in combination with a medium to large
+\code{cv_size}, it can be beneficial to set \code{parallel = TRUE}. This will enable
+parallelisation via the doParallel, doSNOW, foreach, and parallel packages
+in R. In this case, \code{no_of_cores} should be set to the number of physical
+cores of the user's machine. It is not advisable to use the number of logical
+cores, as this can considerably deteriorate performance.
+
+This function serves as a direct wrapper to \code{\link{nowcast}}. For more
+information on the additional function parameters, see the corresponding help
+page.
+}
+\examples{
+data(mixed_freq_factor_model)
+no_of_vars <- dim(mixed_freq_factor_model$data)[2]
+no_of_factors <- dim(mixed_freq_factor_model$factors)[2]
+cv_results <- crossVal(data = mixed_freq_factor_model$data, variable_of_interest = 1, 
+                       fcast_horizon = 0, delay = mixed_freq_factor_model$delay, frequency = mixed_freq_factor_model$frequency,
+                       no_of_factors = no_of_factors, seed = 25032026, min_ridge_penalty = 1e-5, 
+                       max_ridge_penalty = 10, cv_repetitions = 1, cv_size = 50, lasso_penalty_type = "selected",
+                       min_max_penalty = c(5, 45), verbose = FALSE)
+print(cv_results)
+cv_plots <- plot(cv_results)        
+cv_plots$`CV Results`
+cv_plots$`BIC Results` 
+
+}
+\references{
+\insertRef{bergstra2012random}{TwoStepSDFM}
+
+\insertRef{rob2018forecasting}{TwoStepSDFM}
+
+\insertRef{franjic2024nowcasting}{TwoStepSDFM}
+}
+\seealso{
+\code{\link{sparsePCA}}: Routine for fitting estimating a sparse factor
+loading matrix.
+
+\code{\link{kalmanFilterSmoother}}: Routine for filtering and smoothing
+latent factors.
+
+\code{\link{twoStepSDFM}}: Two-step estimation routine for a sparse dynamic
+factor model.
+
+\code{\link{twoStepDenseDFM}}: Two-step estimation routine for a dense
+dynamic factor model.
+}
+\author{
+Domenic Franjic
 }

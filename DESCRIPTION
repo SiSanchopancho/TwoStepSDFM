@@ -1,6 +1,6 @@
 Package: TwoStepSDFM
 Title: Estimate a Sparse Mixed Frequency Gaussian Factor Model Using a Two-Step Procedure
-Version: 0.1.5
+Version: 0.2.0
 Authors@R: person(
     given = "Domenic",
     family = "Franjic",
@@ -11,7 +11,7 @@ Maintainer: Domenic Franjic <franjic@uni-hohenheim.de>
 Description: Estimate a sparse Gaussian state-space model with mixed frequency
     data via sparse principal components analysis and the Kalman filter
     and smoother. For more details see Franjic and Schweikert (2024) <doi:10.2139/ssrn.4733872>.
-License: GPL-3
+License: GPL-3 + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
@@ -25,7 +25,11 @@ Imports:
     doSNOW,
     doParallel,
     foreach,
-    parallel
+    parallel,
+    Rdpack,
+    grDevices
+RdMacros: 
+    Rdpack
 LinkingTo:
     Rcpp,
     RcppEigen
@@ -36,3 +40,6 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
+Depends: 
+    R (>= 4.0)
+LazyData: TRUE

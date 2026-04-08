@@ -1,207 +1,204 @@
 ---
 title: "Introduction to TwoStepSDFM"
 output: rmarkdown::html_vignette
+bibliography: "../inst/REFERENCES.bib"
+link-citations: true
 vignette: >
  %\VignetteIndexEntry{Introduction to TwoStepSDFM}
  %\VignetteEngine{knitr::rmarkdown}
  %\VignetteEncoding{UTF-8}
 ---
-  
+ 
+ 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(
-collapse = TRUE,
-comment = "#>"
+knitr::opts_chunk$set(collapse = TRUE,
+                      comment = "#>",
+                      fig.width = 8,
+                      fig.height = 5,
+                      dev = "png",
+                      dpi = 150,
+                      out.width = "100%"
 )
 ```
 
-```{r setup}
+```{r setup, include = FALSE}
 library(TwoStepSDFM)
 ```
 
-## Overview
 
-The ``TwoStepSDFM`` package provides a fast implementation of the Kalman Filter and Smoother (hereinafter KFS, see Koopman and Durbin, 2000) to estimate factors in a mixed-frequency SDFM framework, explicitly accounting for cross-sectional correlation in the measurement error. The KFS is initialized using results from Sparse Principal Components Analysis (SPCA) by Zou and Hastie (2006) in a preliminary step. This approach generalizes the two-step estimator for approximate dynamic factor models by Giannone, Reichlin, and Small (2008) and Doz, Giannone, and Reichlin (2011). For more details see Franjic and Schweikert (2024).
+# Overview
 
-## Features
+The `TwoStepSDFM` package provides a fast and memory-efficient implementation of the cross-validation, prediction[^pred_footnote], and two-step estimation procedure for mixed-frequency *sparse dynamic factor models* (SDFM) outlined in @franjic2024nowcasting. The routines in this package also directly handle heterogeneous publication lags of the data, which can lead to missing observations at the end of the observation period (so-called *ragged edges*).
 
-- **Fast Model Simulation**: The ``simFM()`` function provides a flexible framework to simulate approximate DFMs.
-- **Estimation of the Number of Factors**: The ``noOfFactors()`` functions uses the Onatski (2009a,b) procedure to estimate the number of factors efficiently while providing good finite sample performance.
-- **Fast Model Estimation**: The ``twoStepSDFM()`` function provides a fast and convenient implementation of the two-step estimator outlined in Franjic and Schweikert (2024).
-- **Fast Hyper-Parameter Cross-Validation**: The ``crossVal()`` function provides a convinient, fast, and parallel cross-validation wrapper to retrieve the optimal hyper-parameters.
-- **Fast Model Prediction**: The ``nowcast()`` function is a highly convenient prediction function that automatically takes care of many issues that arise with mixed frequency data and ragged edges.
-- **Compatibility**: All functions take advantage of ``C++`` for enhanced speed.
+We estimate the sparse loading matrix via *sparse principal components analysis* (SPCA) [@zou2006sparse]. The latent states are then filtered via a univariate representation of the *Kalman Filter and Smoother* (KFS) as described in @koopman2000fast.
 
-## Example Usage
+Our approach is a direct generalisation of the classical two-step estimator for dense DFMs described in @Giannone2008Nowcasting and @Doz2011Two_step. Differing from the classical model, however, we allow regularisation to shrink some of the factor loadings towards or directly to zero. This is achieved by elastic-net type size constraints introduced to the PCA's least squares problem according to @zou2006sparse. We also explicitly account for cross-sectional correlation in the measurement error. For more details see @franjic2024nowcasting.
+
+[^pred_footnote]: Note that, due to the mixed-frequency structure, prediction here includes backcasts, nowcasts, and forecasts of the target variable.
+
+# Main Features
+
+- **Fast Model Simulation**: The `simFM()` function provides a flexible framework to simulate mixed-frequency data with ragged edges from an approximate DFM.
+- **Estimation of the Number of Factors**: The `noOfFactors()` function uses the @onatski2009testing procedure to estimate the number of factors efficiently while providing good finite sample performance.
+- **Fast Model Estimation**: The `twoStepSDFM()` function provides a fast, memory-efficient, and convenient implementation of the two-step estimator outlined in @franjic2024nowcasting.
+- **Fast Hyper-Parameter Cross-Validation**: The `crossVal()` function provides a fast and parallel cross-validation wrapper to retrieve the optimal hyper-parameters using time-series cross-validation [@rob2018forecasting] with random hyper-parameter search [@bergstra2012random].
+- **Fast Model Prediction**: The `nowcast()` function is a highly convenient prediction function for backcasts, nowcasts, and forecasts of multiple targets. It automatically takes care of all issues arising with mixed-frequency data and ragged edges.
+- **Compatibility**: All functions take advantage of `C++` for enhanced speed and memory-efficiency.
+
+# Side Features
+
+- **Fast dense DFM estimation and prediction**: The `nowcast()` function is also able to produce predictions of a dense DFM according to @Giannone2008Nowcasting. The function `twoStepDenseDFM()` additionally exposes an estimation procedure for the dense two-step estimator.
+
+- **Fast SPCA**: `sparsePCA()` exposes the internal `C++`-backed SPCA routine in `R`. This provides access to a fast and memory-efficient SPCA estimation routine as implemented by @zou2020elnet in pure `R`.
+
+- **Fast Kalman Filter and Smoother**: The `kalmanFilterSmoother()` function exposes the internal `C++`-backed KFS routine.
+
+# Example Usage
+
+Below, we will outline the usage of the main features of this package. To this end, we start by simulating what we refer to as a *pseudo mixed-frequency data vintage*.[^pmfdv] This vintage includes a set of stationary mixed-frequency variables, a vector indicating the variables' frequencies, and a vector indicating the variables' delays. Afterwards, we go over a step-by-step example on how to validate the hyper-parameters, estimate the model parameters, and predict using the data vintage.
+
+[^pmfdv]: We use the term *pseudo* as real-world vintages often contain data that is not necessarily stationary. These variables often rely on an individual transformation code. As the package does not provide means of automatically rendering data stationary, we assume all the data to be stationary. Users are thus advised to transform their data separately prior to the analysis.
+
+## Simulate Data
+
+We start our exposé by simulating data from an approximate DFM with measurement equation 
+$$
+\boldsymbol{x}_t = \boldsymbol{\Lambda} \boldsymbol{f}_{t} + \boldsymbol{\xi}_t,\quad \boldsymbol{\xi}_t \sim \mathcal{N}(\boldsymbol{\mu}, \boldsymbol{\Sigma}_{\xi}),
+$$
+and transition equation
+$$
+\boldsymbol{f}_t = \sum_{p=1}^P\boldsymbol{\Phi}_p \boldsymbol{f}_{t-p} + \boldsymbol{\epsilon}_t,\quad \boldsymbol{\epsilon}_t \sim \mathcal{N}(\boldsymbol{0}, \boldsymbol{\Sigma}_{f}), 
+$$
+for $t = 1, \dots,T$. The vector $\boldsymbol{x}_t := (x_{n,t})_{n=1}^{N}$ represents the vector of all *monthly* variables, including those which will be *aggregated into a quarterly representation* (quarterfied) later. $\boldsymbol{\Lambda} := (\lambda_{n,r})_{n,r=1}^{N,R}$ is the factor loading matrix that distributes the dynamics of the $R$ factors, represented by $\boldsymbol{f}_t := (f_{r,t})_{r=1}^R$, onto the data. $\boldsymbol{\Phi}_p:=(\phi_{r,s,p})_{r,s=1}^{R,R}$ is the $p$th transition VAR coefficient matrix. The vectors $\boldsymbol{\xi}_t := (\xi_{n,t})_{n=1}^N$ and $\boldsymbol{\epsilon}_t := (\epsilon_{r,t})_{r=1}^R$ represent the measurement and transition error, respectively. $\boldsymbol{\mu} := (\mu_{n})_{n=1}^N$ and $\boldsymbol{\Sigma}_{\xi}:=(\sigma_{\xi;n,m})_{n,m=1}^{N,N}$ represent the measurement error mean and measurement error variance-covariance matrix, respectively, and $\boldsymbol{\Sigma}_{f}:=(\sigma_{f;r,s})_{r,s=1}^{R,R}$ represents the transition error variance-covariance matrix.[^trans_mean]
+
+As our goal is to simulate mixed-frequency data, we will quarterfy five variables, i.e. 10% of all variables simulated below. We do so by using the geometric mean as described in @Mariano2003new_coincident:
+$$
+\boldsymbol{x}^*_{t}:= \frac{1}{3}\left(\boldsymbol{x}_{t} + 2\boldsymbol{x}_{t-1} + 3\boldsymbol{x}_{t-2} + 2\boldsymbol{x}_{t-3} + \boldsymbol{x}_{t-4}\right)
+$$
+for $t=3, 6, \dots,T - \mathrm{mod}(T,3)$. Note that this implies that the simulated data will always start in the first month of the corresponding quarter. The `simFM()` function will therefore check the `starting_date` when data gets quarterfied and turned into a `zoo` object.
+
+Lastly, we also want to impose a ragged edge structure onto the data. The ragged edges are set via the `delay` parameter. Note that the `delay` parameter differs from the `delay` parameter of the other estimation functions below. In the case of `simFM()`, `delay` refers to the number of months for monthly data and the number of quarters for quarterly data that will be missing. For example, consider `delay <- c(1, 1)` and assume the variable with index `1` will be quarterfied. In that case, the variable with index `1` will be delayed by 1 quarter, i.e., it will be missing 3 observations at the end of the panel. The variable with index `2` will be delayed by 1 month, i.e., it will be missing 1 observation at the end of the panel. In all other instances, including the `delay` object returned by `simFM()`, `delay` represents the number of months since the most recent publication.
+
+As a final remark, note that all RNG calls happen inside `C++`. Therefore, `set.seed()` will not affect the results of `simFM()`. Rather all random processes are governed by the `seed` argument provided to the function. The `set.seed()` call in the chunk below is only used for the reproducibility of the generation of the DFM parameters. 
+
+[^trans_mean]: Note that the choice of a zero-mean transition error is deliberate. As we work with a stationary transition equation, for every transition error mean $\boldsymbol{\nu}$ it holds that $\mathbb{E}(\boldsymbol{x}_t)=\boldsymbol{\mu} + \boldsymbol{\Lambda}\left(\boldsymbol{I} - \sum_{p=1}^P\boldsymbol{\Phi}_p\right)^{-1}\boldsymbol{\nu}$. Thus, simulating data from a state-space with measurement error mean $\boldsymbol{\mu}$ and transition error $\boldsymbol{\nu}$ is equivalent to simulating data from a linear state space with measurement error $\boldsymbol{\mu}^* := \boldsymbol{\mu} + \boldsymbol{\Lambda}\left(\boldsymbol{I} - \sum_{p=1}^P\boldsymbol{\Phi}_p\right)^{-1} \boldsymbol{\nu}$. Furthermore, for the purpose of the analysis, we will scale the data and thus explicitly assume that the transition error is zero mean.
 
 ```{r simulation, eval = TRUE, message = FALSE}
 
-# Simulate data
-
-set.seed(02102025)
-no_of_observations <- 300 + 3
-no_of_variables <- 50
-no_of_factors <- 2
+seed <- 02102025
+set.seed(seed)
+no_of_obs <- 300
+no_of_vars <- 50
+no_of_factors <- 3
 trans_error_var_cov <- diag(1, no_of_factors)
-loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
-meas_error_mean <- rep(0, no_of_variables)
-meas_error_var_cov <- diag(1, no_of_variables)
+loading_matrix <- matrix(rnorm(no_of_vars * no_of_factors), no_of_vars, no_of_factors)
+meas_error_mean <- rep(0, no_of_vars)
+meas_error_var_cov <- diag(1, no_of_vars)
 trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
 factor_lag_order <- 2
-simul_delay <- c(3, 6, floor(rexp(no_of_variables - 2, 1)))
+delay <- c(2, 1, floor(rexp(no_of_vars - 2, 1)))
 quarterfy <- TRUE
-quarterly_variable_ratio  <- 2/no_of_variables
+quarterly_variable_ratio <- 0.1
 corr <- TRUE
 beta_param <- 2
-seed <- 01102025 
-set.seed(seed)
 burn_in <- 999
 starting_date <- "1970-01-01"
-rescale <- TRUE
+rescale <- FALSE
 check_stationarity <- TRUE
 stationarity_check_threshold <- 1e-10
-
-FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
-            no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
-            meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
-            trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
-            factor_lag_order = factor_lag_order, delay = simul_delay, quarterfy = quarterfy, 
-            quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr, 
-            beta_param = beta_param, seed = seed, burn_in = burn_in, starting_date = starting_date,
-            rescale = rescale, check_stationarity = check_stationarity, 
-            stationarity_check_threshold = stationarity_check_threshold)
-monthly_data <- FM$data[, which(FM$frequency == 12)]
+factor_model <- simFM(no_of_obs = no_of_obs, no_of_vars = no_of_vars,
+                      no_of_factors = no_of_factors, loading_matrix = loading_matrix,
+                      meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
+                      trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff,
+                      factor_lag_order = factor_lag_order, delay = delay, quarterfy = quarterfy,
+                      quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr,
+                      beta_param = beta_param, seed = seed, burn_in = burn_in, 
+                      starting_date = starting_date, rescale = rescale, 
+                      check_stationarity = check_stationarity, 
+                      stationarity_check_threshold = stationarity_check_threshold)
+spca_plots <- plot(factor_model, axis_text_size = 10, legend_title_text_size = 5)
+spca_plots$`Data Plots`
+spca_plots$`Factor Time Series Plots`
+spca_plots$`Loading Matrix Heatmap`
 ```
 
-```{r factor_estim, eval = TRUE, message = FALSE}
-# Estimate the number of factors
+## Estimate the Number of Factors
 
-min_no_factors <- 1
-max_no_factors <- 7
-confidence_threshold <- 0.05
-factor_estim_results <- noOfFactors(monthly_data, min_no_factors, max_no_factors, confidence_threshold)
-factor_estim_results
-no_of_factors <- factor_estim_results$no_of_factors
+In the next step, we need to estimate the number of factors. We do so by using the procedure described in @onatski2009testing. Very loosely, this test infers the number of factors by looking at the maximum slopes between the eigenvalues of a special data Gram matrix. For more information on the procedure, see the literature cited above. Note that as mentioned above, data should be standardised prior to the analysis. Also, only provide monthly observations to `noOfFactors()`, as otherwise results might get skewed.
+
+The @onatski2009testing procedure is a repeated testing procedure with non-standard distributions of the slope coefficients of the eigenvalues. This distribution depends on the number of eigenvalues considered in the test. Therefore, a minimum and maximum number of factors must be provided. These values should be close enough such that the test has enough power, but also far enough apart such that we do not reject too early due to hitting the maximum number of factors. When working with this test, we found that using `max_no_factors - min_no_factors = 1` works quite well. 
+
+We also need to set a confidence threshold as a stopping rule of the testing procedure. In general, for finite samples, the @onatski2009testing procedure works quite well and in our experience better than information-based criteria, especially when working with data simulated from an SDFM with a high degree of sparsity. However, we also found that in some cases, the testing procedure seems to underestimate the number of factors if the threshold is set too strictly. Users should therefore set `confidence_threshold` comparatively large if the cost of underestimating the number of factors, i.e., including too few factors, is large.
+
+```{r no_of_fact_test, eval = TRUE, message = FALSE}
+mtly_data <- scale(factor_model$data[, which(factor_model$frequency == 12)])
+no_of_fact_test <- noOfFactors(mtly_data, min_no_factors = 1, max_no_factors = 7,
+                                  confidence_threshold = 0.2)
+print(no_of_fact_test)
 ```
 
-```{r sdfm_estim, eval = TRUE, message = FALSE}
-# Estimate the sparse DFM
+## Cross-Validate the Hyper-Parameters
 
-monthly_delay <- simul_delay[which(FM$frequency == 12)]
-selected <- rep(no_of_variables - 10, no_of_factors)
-max_factor_lag_order  <- 10
-decorr_errors <- TRUE 
-lag_estim_criterion  <- "BIC"
-ridge_penalty <- 1e-06
-lasso_penalty <- NULL
-max_iterations <- 1000
-max_no_steps <- NULL
-comp_null <- 1e-15
-check_rank <- FALSE
-conv_crit <- 1e-04 
-conv_threshold <- 1e-04
-log <- FALSE
-parallel <- FALSE
-fcast_horizon <- 10
+With an estimate of the number of factors at hand, we proceed to infer the hyper-parameters. Just as above, we standardise the data prior to the analysis. Here, however, we provide the full mixed-frequency data set, as the function handles the issues of the mixed-frequency structure internally.
 
-fit <- twoStepSDFM(data = monthly_data, delay = monthly_delay, selected = selected, 
-                   no_of_factors = no_of_factors,  max_factor_lag_order  = max_factor_lag_order,
-                   decorr_errors = decorr_errors,  lag_estim_criterion  = lag_estim_criterion, 
-                   ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, 
-                   max_iterations = max_iterations, max_no_steps = max_no_steps, 
-                   comp_null = comp_null,  check_rank = check_rank,  conv_crit = conv_crit, 
-                   conv_threshold = conv_threshold, log = log, parallel = parallel,
-                   fcast_horizon = fcast_horizon)
+Our cross-validation routine is a random hyper-parameter search [@bergstra2012random] time-series cross-validation [@rob2018forecasting] scheme. This means that the candidate values for the hyper-parameters are drawn randomly.[^seed_call_cross_val] Therefore, we do not provide a grid of parameter candidates but the bounds of the distribution governing the hyper-parameter candidates. For the global ridge penalty, candidates are drawn as $\exp(u)$, where $u$ is uniformly distributed between `min_ridge_penalty` and `max_ridge_penalty`.
 
-print(fit)
-graphs <- plot(fit)
-graphs$`Factor Time Series Plots`
-graphs$`Loading Matrix Heatmap`
-graphs$`Meas. Error Var.-Cov. Matrix Heatmap`
+For the factor-specific lasso penalties, it is necessary to first choose a stopping criterion. The internal SPCA problem, which is used to regularise the loading matrix, is solved via a LARS-EN type algorithm found in @zou2020elnet. This algorithm has the advantage of providing three different stopping criteria: `"selected"`, `"penalty"`, and `"steps"`. These criteria represent different conceptual approaches, but for cross-validation purposes, the choice between them is typically non-critical as they serve the same predictive goal. In the example below, we use `"selected"`.[^stopping_crit_detail] When using `"selected"`, the $\ell_1$ size constraints are expressed in terms of the number of non-zero loadings of the corresponding loading matrix column. Candidates are therefore drawn from a discrete uniform distribution over the natural numbers. The upper and lower bounds of this distribution are governed by the first and second entry of `min_max_penalty`, respectively.
+
+[^seed_call_cross_val]: Even though these random candidates are not drawn within `C++`, the function still requires a `seed` parameter. This is done for reproducibility, as we store the provided `seed` inside the function call object of the return object of `crossVal()`. Note that only the provided `seed` parameter will govern the internal RNG state of the function. Further, the internal `set.seed(seed)` call will not alter the global RNG state of the current `R` session, as the RNG state will be reset upon exit. 
+
+[^stopping_crit_detail]: For more details on the different stopping criteria, see the help page of `crossVal()` and `sparsePCA()`.
+
+```{r cross_val, eval = TRUE, message = FALSE}
+no_of_mtly_vars <- sum(factor_model$frequency == 12)
+all_data <- scale(factor_model$data)
+cross_val_res <- crossVal(data = all_data, variable_of_interest = 1, fcast_horizon = 0,
+                                 delay = factor_model$delay, frequency = factor_model$frequency, 
+                                 no_of_factors = no_of_fact_test$no_of_factors, seed = seed, 
+                                 min_ridge_penalty = 1e-6, max_ridge_penalty = 1e+5, cv_repetitions = 5,
+                                 cv_size = 100, lasso_penalty_type = "selected", min_max_penalty = c(5, no_of_mtly_vars),
+                                 verbose = FALSE)
+print(cross_val_res)
+cross_val_plot <- plot(cross_val_res)
+cross_val_plot$`CV Results`
 ```
 
-```{r corss_val, eval = TRUE, message = FALSE, echo = TRUE, results = 'hide'}
-# Cross-validate the hyper-parameters
+## Estimate the Parameters of the SDFM
 
-data <- FM$data
-variable_of_interest <- 2
-fcast_horizon <- 0
-delay <- simul_delay
-frequency <- FM$frequency
-seed <- 09102025
-min_ridge_penalty <- 0.01
-max_ridge_penalty <- 1
-lasso_penalty_type <- "selected"
-min_max_penalty <- c(10, no_of_variables - 1)
-# lasso_penalty_type <- "steps"
-# min_max_penalty <- c(10, 50 * (no_of_variables - 1))
-# lasso_penalty_type <- "penalty"
-# min_max_penalty <- c(0.0001, 10)
-cv_repititions <- 3
-cv_size <- 100
-max_factor_lag_order = 10
-decorr_errors = TRUE
-lag_estim_criterion = "BIC"
-ridge_penalty = 1e-6
-lasso_penalty = NULL
-max_iterations = 100
-max_no_steps = NULL
-comp_null = 1e-15
-check_rank = FALSE
-conv_crit = 1e-4
-conv_threshold = 1e-4
-log = FALSE
-max_ar_lag_order = 5
-max_predictor_lag_order = 5
+Before turning to the main prediction routine, we want to focus on the estimation of the model parameters first. While written with prediction as main focus, our package also provides the means to estimate the model parameters. For an SDFM, this is handled by the `twoStepSDFM()` function below. Its usage is straightforward. Note, however, that the function only accepts monthly data.
 
-cv <- crossVal(data = data, variable_of_interest = variable_of_interest, fcast_horizon = fcast_horizon,
-               delay = delay, frequency = frequency, no_of_factors = no_of_factors,
-               seed = seed, min_ridge_penalty = min_ridge_penalty, max_ridge_penalty = max_ridge_penalty,
-               cv_repititions = cv_repititions, cv_size = cv_size, lasso_penalty_type = lasso_penalty_type,
-               min_max_penalty = min_max_penalty, max_factor_lag_order = max_factor_lag_order,
-               decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
-               ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, max_iterations = max_iterations,
-               max_no_steps = max_no_steps, comp_null = comp_null, check_rank = check_rank,
-               conv_crit = conv_crit, conv_threshold = conv_threshold, parallel = FALSE, no_of_cores = 2,
-               max_ar_lag_order = max_ar_lag_order, max_predictor_lag_order = max_predictor_lag_order)
+```{r estim_sparse_dfm, eval = TRUE, message = FALSE}
+mtly_data <- scale(factor_model$data[, which(factor_model$frequency == 12)])
+mtly_delay <- factor_model$delay[which(factor_model$frequency == 12)]
+inferred_no_of_selected <- cross_val_res$CV$`Min. CV`[3:(3 + no_of_fact_test$no_of_factors - 1)]
+inferred_ridge_penalty <- cross_val_res$CV$`Min. CV`[1]
+sdfm_fit <- twoStepSDFM(data = mtly_data, delay = mtly_delay, selected = inferred_no_of_selected, 
+                        no_of_fact_test$no_of_factors, ridge_penalty = inferred_ridge_penalty)
+print(sdfm_fit)
+sdfm_fit_plot <- plot(sdfm_fit)
+sdfm_fit_plot$`Factor Time Series Plots`
+sdfm_fit_plot$`Loading Matrix Heatmap`
 ```
 
-```{r corss_val_results, eval = TRUE, message = FALSE, echo = TRUE}
-print(cv)
-graphs <- plot(cv)
-graphs$`CV Results`
-graphs$`BIC Results`
+## Predict Target Variables
+
+Finally, we turn to the nowcasting routine. Fundamentally, this routine is an unrestricted factor augmented MIDAS model as described in @marcellino2010factor. For each target, we use each other target, each additional quarterly predictor, and quarterfied factor, and predict the target via an individual (AR)DL model. The exact autoregressive and predictor lag order are inferred internally via the BIC for each equation. The final forecast is then given by the unweighted mean of all individual (AR)DL model forecasts.
+
+After cross-validation, we are set to directly predict the target variables. Here, just as with `crossVal()`, we are also able to provide the complete mixed-frequency data set. Note that, in contrast to the cross-validation function, it is possible to predict multiple targets across multiple horizons at once. One should keep in mind, however, that the optimal hyper-parameters are retrieved for a specific target and horizon (in our case the nowcast of the first quarterly variable). Therefore, in a serious prediction exercise, one should always tune the hyper-parameters for each target and horizon specifically.[^nowcast_flex_info] 
+
+To show off the abilities of this function, however, we still predict multiple targets and horizons. The first target is lagged by two quarters, while the second is lagged by only one. The maximum forecasting horizon is set to two. This means that for both targets we will forecast two steps ahead. For target one we will additionally compute a backcast and a nowcast. For target two only a nowcast will be computed. In general, `max_fcast_horizon` governs the number of step-ahead forecasts computed. nowcasts and backcasts are automatically computed depending on the delay of the targets. 
+
+[^nowcast_flex_info]: We still wrote the `nowcast()` function in such a flexible way as it is highly useful for quick assessments especially at the beginning when working with new data.
+
+```{r predict, eval = TRUE, message = FALSE}
+all_data <- scale(factor_model$data)
+inferred_no_of_selected <- cross_val_res$CV$`Min. CV`[3:(3 + no_of_fact_test$no_of_factors - 1)]
+inferred_ridge_penalty <- cross_val_res$CV$`Min. CV`[1]
+nc_results <- nowcast(data = all_data, variables_of_interest = c(1, 2), max_fcast_horizon = 2, 
+                      delay = factor_model$delay, ridge_penalty = inferred_ridge_penalty, selected = inferred_no_of_selected, frequency = factor_model$frequency, no_of_factors = no_of_fact_test$no_of_factors)
+nc_plot <- plot(nc_results)
+nc_plot$`Single Pred. Fcast Density Plots Series 1`
+nc_plot$`Single Pred. Fcast Density Plots Series 2`
 ```
 
-```{r nowcast, eval = TRUE, message = FALSE}
-# Prediction
-
-variables_of_interest <- 1:2
-max_fcast_horizon <- 4
-selected <- c(cv$CV$`Min. CV`[, 3:(3 + no_of_factors - 1)])
-ridge_penalty <- cv$CV$`Min. CV`[2]
-parallel <- FALSE
-max_ar_lag_order <- 5
-max_predictor_lag_order  <- 5
-
-sparse_results <- nowcast(data = data, variables_of_interest = variables_of_interest, 
-                          max_fcast_horizon = max_fcast_horizon, delay = delay, selected = selected,
-                          frequency = frequency, no_of_factors = no_of_factors, sparse = TRUE, 
-                          max_factor_lag_order  = max_factor_lag_order,  
-                          decorr_errors = decorr_errors, 
-                          lag_estim_criterion  = lag_estim_criterion,
-                          ridge_penalty = ridge_penalty, lasso_penalty = lasso_penalty, 
-                          max_iterations = max_iterations, max_no_steps = max_no_steps, 
-                          comp_null = comp_null, check_rank = check_rank,  
-                          conv_crit = conv_crit, conv_threshold = conv_threshold, 
-                          log = log, parallel = parallel, max_ar_lag_order = max_ar_lag_order,
-                          max_predictor_lag_order = max_predictor_lag_order
-)
-
-print(sparse_results)
-graphs <- plot(sparse_results)
-graphs$`Single Pred. Fcast Density Plots Series 1`
-graphs$`Single Pred. Fcast Density Plots Series 2`
-graphs$`Factor Time Series Plots`
-graphs$`Loading Matrix Heatmap`
-graphs$`Meas. Error Var.-Cov. Matrix Heatmap`
-```
+# References

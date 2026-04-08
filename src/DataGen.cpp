@@ -18,8 +18,11 @@
  * along with TwoStepSDFM. If not, see <https://www.gnu.org/licenses/>.
  */
 
-
+#if !defined(_MSC_VER)
 #include "Internals/DataGen.h"
+#else
+#include "DataGen.h"
+#endif
 
 /* Draw random correlation matrices */
 Eigen::MatrixXd DataGen::rndCorrMat(std::mt19937& gen, const double& beta_param, const unsigned& N)
@@ -237,10 +240,12 @@ void DataGen::staticFM(
         Eigen::MatrixXd R = rndCorrMat(gen, beta_param, N);
         if (!R.isApprox(R.transpose()))
         {
+#if !defined(_MSC_VER)
             Rcpp::Rcout << '\n' << "Error! Random Covariance-Matrix is not symmetric." << '\n';
+#endif
             return;
         }
-        VarCov = Sigma_e.cwiseSqrt() * R * Sigma_e.cwiseSqrt();
+        VarCov = Sigma_e.diagonal().cwiseSqrt().asDiagonal() * R * Sigma_e.diagonal().cwiseSqrt().asDiagonal();
     }
     else
     {

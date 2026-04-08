@@ -26,9 +26,15 @@
 #define _USE_MATH_DEFINES
 
 // Including external libraries
+#if !defined(_MSC_VER)
+#define EIGEN_NO_DEBUG
 #include <RcppEigen.h>
 #include <RcppCommon.h>
 #include <Rcpp.h>
+#else
+#include <Eigen>
+#endif
+
 #include <stdlib.h>
 #include <math.h>
 
@@ -120,6 +126,7 @@ inline int VARorder<HIC>(const Eigen::MatrixXd& F, const int& O, const double& c
     return order + 1;
 }
 
+#if !defined(_MSC_VER)
 Rcpp::List NoOfFactors(
   Rcpp::NumericMatrix data_matrix_in,
   Rcpp::NumericMatrix test_values,
@@ -127,6 +134,7 @@ Rcpp::List NoOfFactors(
   const int max_no_factors,
   const double confidence_level
 );
+#endif
 
 #endif /* defined(ORDERS) */
 

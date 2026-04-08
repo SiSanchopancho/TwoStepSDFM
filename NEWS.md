@@ -1,4 +1,1 @@
-# Upate notes for version 0.1.5
-
-* Updated the DESCRPTION file
-* Added a pure distributed lag forecasting routine for the nowcasting function
+# Upate notes for version 0.2.0* Updated the DESCRPTION file* Added a pure distributed lag forecasting routine for the nowcasting function* Debloated the number of headers of the whole package* Higher object-oriented programming focus in C++ backend* Several memory usage improvements* Added the possibility of choosing a faster SVD decomposition in the SPCA algorithm* Added an exposed SPCA routine to the package* Overhauled each function description for CRAN conformity* Added "call" argument to each function call* Added simulated datasets to the package

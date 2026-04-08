@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-#  Copyright \u00A9 2024 Domenic Franjic
+#  Copyright (c) 2024-2026 Domenic Franjic
 #
 #  This file is part of TwoStepSDFM.
 #
@@ -31,14 +31,6 @@ unlink("src/*.dll")
 devtools::clean_dll()
 devtools::clean_vignettes()
 
-# Compile-test setup (optional)
-Rcpp::compileAttributes()
-options(pkg.build_extra_flags = FALSE)
-devtools::document()
-devtools::build_vignettes()
-devtools::check(args = "--as-cran")
-
 # Build and install package
 devtools::build()
-install.packages("../TwoStepSDFM_0.1.5.tar.gz", repos = NULL, type = "source")
-
+install.packages("../TwoStepSDFM_0.2.0.tar.gz", repos = NULL, type = "source")

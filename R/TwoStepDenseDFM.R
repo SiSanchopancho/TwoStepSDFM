@@ -1,5 +1,6 @@
 #' @useDynLib TwoStepSDFM, .registration=TRUE
 #' @importFrom Rcpp sourceCpp
+#' @importFrom Rdpack reprompt
 #' @import zoo
 #' @import xts
 #' @import lubridate
@@ -10,7 +11,7 @@ NULL
 
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-#  Copyright (C) 2024 Domenic Franjic
+#  Copyright (C) 2024-2026 Domenic Franjic
 #
 #  This file is part of TwoStepSDFM.
 #
@@ -28,213 +29,247 @@ NULL
 #  along with TwoStepSDFM. If not, see <https://www.gnu.org/licenses/>.
 
 #' @name twoStepDenseDFM
-#' @title Estimate a DFM via PCA and Kalman Filter and Smoother.
+#' @title Two Step Dense Dynamic Factor Model Estimator.
 #' @description
-#' Estimate a dense (approximate) dynamic factor model via principal components 
-#' analysis and a state-space representation with Kalman filter and smoother, 
-#' following Giannone, Reichlin and Small (2008) <doi:10.1016/j.jmoneco.2008.05.010> 
-#' and Doz, Giannone and Reichlin (2011) <doi:10.1016/j.jeconom.2011.02.012>.
+#' Estimate a dense dynamic factor model with measurement equation
+#' \deqn{
+#'   \bm{x}_t = \bm{\Lambda} \bm{f}_{t} + \bm{\xi}_t,\quad \bm{\xi}_t \sim \mathcal{N}(\bm{0}, \bm{\Sigma}_{\xi}),
+#' }
+#' and transition equation
+#' \deqn{
+#'   \bm{f}_t = \sum_{p=0}^P\bm{\Phi}_p \bm{f}_{t-p} + \bm{\epsilon}_t,\quad \bm{\epsilon}_t \sim \mathcal{N}(\bm{0}, \bm{\Sigma}_{f}).
+#' }
+#' using principal components  analysis and the Kalman Filter and 
+#' Smoother according to \insertRef{Giannone2008Nowcasting}{TwoStepSDFM} and
+#' \insertRef{Doz2011Two_step}{TwoStepSDFM}.
 #' 
-#' @param data Numeric (no_of_variables x no_of_observations) matrix of data or zoo/xts object.
+#' @param data Numeric (no_of_vars \eqn{\times}{x} no_of_obs) matrix of data or 
+#' zoo/xts object sampled at the same frequency.
 #' @param delay Integer vector of variable delays.
 #' @param no_of_factors Integer number of factors.
-#' @param max_factor_lag_order Integer max P of the VAR(P) process of the factors.
-#' @param decorr_errors Logical, whether or not the errors should be decorrelated.
-#' @param lag_estim_criterion Information criterion used for the estimation of the factor VAR order ("BIC", "AIC", "HIC").
-#' @param comp_null Computational zero.
-#' @param check_rank Logical, whether or not the rank of the variance-covariance matrix should be checked.
-#' @param log Logical, whether or not output should be printed along the algorithm.
-#' @param parallel Logical, whether or not to use Eigen's internal parallel matrix operations.
-#' @param fcast_horizon Integer forecasting horizon for factor forecasts
-#'
-#' @return
-#' An object of class `DFMFit` with components:
+#' @param max_factor_lag_order Integer maximum order of the VAR process in the 
+#' transition equation.
+#' @param lag_estim_criterion Information criterion used for the estimation of 
+#' the factor VAR order (`"BIC"` (default), `"AIC"`, `"HIC"`).
+#' @param decorr_errors Logical, whether or not the errors should be 
+#' decorrelated.
+#' @param comp_null Numeric computational zero.
+#' @param parallel Logical, whether or not to use Eigen's internal parallel 
+#' matrix operations.
+#' @param fcast_horizon Integer number of additional Filter predictions into the 
+#' future.
+#' @param jitter Numerical jitter for stability of internal solver algorithms. 
+#' The jitter is added to the diagonal entries of the variance covariance matrix 
+#' of the measurement errors.
+#' 
+#' @details
+#' The function performs a two-step estimation procedure for dense dynamic 
+#' factor models as described in \insertRef{Giannone2008Nowcasting}{TwoStepSDFM}
+#' and \insertRef{Doz2011Two_step}{TwoStepSDFM}. In the first step, the factor 
+#' loading matrix is estimated using PCA. In the second step the latent factors
+#' are estimated using the univariate representation of the Kalman Filter and
+#' Smoother \insertCite{koopman2000fast}{TwoStepSDFM}.
+#' 
+#' With respect to the univariate representation of the Kalman filter and 
+#' smoother, `decorr_errors` indicates whether the data should be decorrelated 
+#' internally prior to filtering and smoothing. `jitter` is added to the 
+#' diagonal elements of the measurement variance–covariance matrix. For more 
+#' details, see \code{\link{kalmanFilterSmoother}}.
+#' 
+#' @return 
+#' An object of class SDFMFit with main components:
 #' \describe{
-#'   \item{data}{Original data matrix.}
-#'   \item{loading_matrix_estimate}{Matrix of estimated factor loadings.}
-#'   \item{smoothed_factors}{Matrix or `zoo` object containing the smoothed latent factors.}
-#'   \item{smoothed_state_variance}{Matrix with the state covariance matrices corresponding to the smoothed state vector (stacked in column-major order).}
-#'   \item{factor_var_lag_order}{Integer, selected lag order of the factor VAR model.}
-#'   \item{error_var_cov_cholesky_factor}{Lower-triangular Cholesky factor of the estimated measurement error variance–covariance matrix.}
+#'   \item{data}{Original data object.}
+#'   \item{loading_matrix_estim}{Numeric matrix of estimated factor loadings.}
+#'   \item{smoothed_factors}{Object containing the SPCA factor estimates. The 
+#'   object inherits its class from data: If data is provided as `zoo`, 
+#'   `factor_estim` will be a `zoo` object. If data is provided as matrix, 
+#'   `factor_estim` will be a (`no_of_factors`\eqn{\times}{x}`no_of_obs` 
+#'   matrix.}
+#'   \item{smoothed_state_variance}{(`no_of_factors`\eqn{\times}{x}(
+#'   `no_of_factors` * `no_of_obs`)) matrix, where each (`no_of_factors`
+#'   \eqn{\times}{x}`no_of_factors`) block represents the smoother uncertainty 
+#'   at time point\eqn{t}{t}.}
+#'   \item{factor_var_lag_order}{Integer order of the VAR process in the state 
+#'   equation.}
+#'   \item{error_var_cov_cholesky_factor}{Numeric lower-triangular Cholesky 
+#'   factor of the estimated measurement error variance–covariance matrix.}
+#'   \item{llt_success_code}{Integer indicating the status of the Cholesky 
+#'   factorization: `0` = LLT succeeded, `-1` = LLT failed but LDLT succeeded, 
+#'   `-2` = both failed and errors are treated as uncorrelated.}
 #' }
-#'
+#' 
+#' @author
+#' Domenic Franjic
+#' 
+#' @references
+#' \insertRef{koopman2000fast}{TwoStepSDFM}
+#' 
+#' \insertRef{Giannone2008Nowcasting}{TwoStepSDFM}
+#' 
+#' \insertRef{eigenweb}{TwoStepSDFM}
+#' 
+#' \insertRef{Doz2011Two_step}{TwoStepSDFM}
+#' 
+#' @seealso
+#' \code{\link{sparsePCA}}: Routine for fitting estimating a sparse factor 
+#' loading matrix.
+#'  
+#' \code{\link{kalmanFilterSmoother}}: Routine for filtering and smoothing 
+#' latent factors.
+#' 
+#' \code{\link{twoStepSDFM}}: Two-step estimation routine for a sparse dynamic 
+#' factor model.
+#' 
 #' @examples
-#' \dontrun{
-#' set.seed(02102025)
-#' no_of_observations <- 100
-#' no_of_variables <- 20
-#' no_of_factors <- 3
-#' trans_error_var_cov <- diag(1, no_of_factors)
-#' loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
-#' meas_error_mean <- rep(0, no_of_variables)
-#' meas_error_var_cov <- diag(1, no_of_variables)
-#' trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
-#' factor_lag_order <- 2
-#' FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
-#'             no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
-#'             meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
-#'             trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
-#'             factor_lag_order = factor_lag_order)
-#'
-#' # Estimate a dense 2-factor model
-#' fit <- twoStepDenseDFM(
-#'   data = FM$data,
-#'   delay = FM$delay,
-#'   no_of_factors = no_of_factors
-#' )
-#'
-#' print(fit)
-#' plots <- plot(fit)
-#' }
-#'
+#' data(factor_model)
+#' no_of_vars <- dim(factor_model$data)[2]
+#' no_of_factors <- dim(factor_model$factors)[2]
+#' dfm_fit <- twoStepDenseDFM(data = factor_model$data, delay = factor_model$delay, no_of_factors = no_of_factors)
+#' print(dfm_fit)
+#' dfm_plots <- plot(dfm_fit)
+#' dfm_plots$`Factor Time Series Plots`
+#' dfm_plots$`Loading Matrix Heatmap`
+#' dfm_plots$`Meas. Error Var.-Cov. Matrix Heatmap`
+#' dfm_plots$`Meas. Error Var.-Cov. Eigenvalue Plot`
+#' 
 #' @export
-twoStepDenseDFM <- function(data,
-                       delay,
-                       no_of_factors,
-                       max_factor_lag_order = 10,
-                       decorr_errors = TRUE,
-                       lag_estim_criterion = "BIC",
-                       comp_null = 1e-15,
-                       check_rank = FALSE,
-                       log = FALSE,
-                       parallel = FALSE,
-                       fcast_horizon = 0) {
+twoStepDenseDFM <- function (data, 
+                             delay, 
+                             no_of_factors, 
+                             max_factor_lag_order = 10, 
+                             lag_estim_criterion = "BIC", 
+                             decorr_errors = TRUE, 
+                             comp_null = 1e-15, 
+                             parallel = FALSE, 
+                             fcast_horizon = 0, 
+                             jitter = 1e-08) {
+  func_call <- match.call()
   
-  # Misshandling of the data matrix
-  if(!is.zoo(data) && !is.xts(data)){
+  # Mishandling of data
+  if (!is.zoo(data) && !is.xts(data)) {
     data_r <- try(t(as.matrix(data)), silent = TRUE)
     if (inherits(data_r, "try-error")) {
       stop(paste0("data must be a matrix, convertible to a matrix or a time-series/zoo object"))
     }
-  }else{
+  }
+  else {
     data_r <- try(coredata(data), silent = TRUE)
     if (inherits(data_r, "try-error")) {
       stop(paste0("data must be a matrix, convertible to a matrix or a time-series/zoo object"))
     }
   }
-  if(!is.numeric(data_r)){
+  if (!is.numeric(data_r)) {
     stop(paste0("data has non-numeric elements."))
   }
-  if(any(is.infinite(data_r))){
+  if (any(is.infinite(data_r))) {
     stop(paste0("data cannot have (-)Inf values."))
   }
-  
-  # Mishandling of delay
   no_of_variables <- dim(data_r)[2]
   no_of_observations <- dim(data_r)[1]
-  if(is.null(delay)){
+  
+  # Mishandling of delay
+  if (is.null(delay)) {
     delay <- matrix(rep(0, no_of_variables), ncol = 1)
-  }else{
+  }
+  else {
     delay <- checkPositiveSignedParameterVector(delay, "delay", no_of_variables)
   }
-  
-  # Check for NAs in the dataset outside the ragged edges
-  na_ind <- c()
-  for(col in 1:dim(data_r)[2]){
-    na_ind[col] <- any(is.na(data_r[1:(no_of_observations - delay[col]), col]))
+  na_ind <- FALSE
+  for (col in 1:dim(data_r)[2]) {
+    na_ind <- any(is.na(data_r[1:(no_of_observations - delay[col]), col]))
+    if (na_ind) {
+      stop(paste0("data has NA values outside the ragged edges."))
+    }
   }
-  if(any(na_ind)){
-    stop(paste0("data has NA values outside the ragged edges for the following variables: ", which(na_ind))) 
+  obs_ind <- FALSE
+  for (col in 1:dim(data_r)[2]) {
+    if (delay[col] > 0) {
+      obs_ind <- !all(is.na(data_r[(no_of_observations - delay[col] + 1):no_of_observations, col]))
+    }
+    if (obs_ind) {
+      stop(paste0("data has observed values inside the ragged edges."))
+    }
   }
-  data_r[is.na(data_r)] <- 0 # Override R NAs as they seem to not get properly parsed to C++
   
-  # Misshandling of dimensions
-  if(no_of_variables >= no_of_observations){
+  # Mishandling of dimensions and other misc. parameters
+  if (no_of_variables >= no_of_observations) {
     stop(paste0("Too few observations as no_of_variables >= no_of_observations."))
   }
-  
-  # Mishandling of number of factors
   no_of_factors <- checkPositiveSignedInteger(no_of_factors, "no_of_factors")
-  if(no_of_factors == 0){
+  if (no_of_factors == 0) {
     stop("no_of_factors must be strictly positive.")
   }
-  if(no_of_factors > no_of_variables){
+  if (no_of_factors > no_of_variables) {
     stop(paste0("no_of_factors must be smaller than no_of_variables."))
   }
-  
-  # Mishandling of number max_factor_lag_order
   max_factor_lag_order <- checkPositiveSignedInteger(max_factor_lag_order, "max_factor_lag_order")
-  if(max_factor_lag_order == 0){
-    stop(paste0("max_factor_lag_order must be strictly positve."))
+  if (max_factor_lag_order == 0) {
+    stop(paste0("max_factor_lag_order must be strictly positive."))
   }
-  
-  # Mishandling decorr_errors
   decorr_errors <- checkBoolean(decorr_errors, "decorr_errors")
-  
-  # Mishandling of lag_estim_criterion
-  if(is.null(lag_estim_criterion))
-  {
+  if (is.null(lag_estim_criterion)) {
     stop(paste0("lag_estim_criterion must be either \"BIC\", \"AIC\", or \"HIC\"."))
   }
-  if(!(lag_estim_criterion %in% c("AIC", "BIC", "HIC"))){
+  if (!(lag_estim_criterion %in% c("AIC", "BIC", "HIC"))) {
     stop(paste0("lag_estim_criterion must be either \"BIC\", \"AIC\", or \"HIC\"."))
   }
-  
-  # Mishandling of comp_null
   comp_null <- checkPositiveDouble(comp_null, "comp_null")
-  if(comp_null == 0){
+  if (comp_null == 0) {
     warning("comp_null should not be exactly 0. It will be jittered before further use.")
     comp_null <- 1e-15
   }
-  
-  # Mishandling of check_rank
-  check_rank <- checkBoolean(check_rank, "check_rank")
-  
-  # Mishandling of check_rank
-  log <- checkBoolean(log, "log")
-  
-  # Mishandling of check_rank
   parallel <- checkBoolean(parallel, "parallel")
-  
-  # Mishandling of comp_null
   fcast_horizon <- checkPositiveSignedInteger(fcast_horizon, "fcast_horizon")
+  jitter <- checkPositiveDouble(jitter, "jitter")
   
-  result <- runDFMKFS(
-    X_in = data_r,
-    delay = delay,
-    R = as.integer(no_of_factors),
-    order = as.integer(max_factor_lag_order),
-    decorr_errors = decorr_errors,
-    crit = lag_estim_criterion,
-    comp_null = comp_null,
-    check_rank = check_rank,
-    log = log,
-    KFS_conv_crit = 1e-15, # This disables intrinsic checking of thewhether or not the filter converged, as the user will be able to make this decision in non-simulation scenarios
-    parallel = parallel,
-    fcast_horizon = fcast_horizon
-  )
+  # Estimate model parameter and filter latent factors
+  result <- runDFMKFS(X_in = data_r, delay = delay, R = as.integer(no_of_factors), 
+                      order = as.integer(max_factor_lag_order),  decorr_errors = decorr_errors, 
+                      crit = lag_estim_criterion, comp_null = comp_null, 
+                      parallel = parallel, fcast_horizon = fcast_horizon, 
+                      jitter = jitter)
   
-  # Rename the results
-  names(result) <- c("loading_matrix_estimate", "filtered_state_variance", "companion_form_smoothed_factors",
-                     "smoothed_state_variance", "error_var_cov_cholesky_factor",
-                     "factor_var_lag_order")
+  # Re-name the results
+  names(result) <- c("loading_matrix_estimate", "filtered_state_variance", 
+                     "companion_form_smoothed_factors", "smoothed_state_variance", 
+                     "error_var_cov_cholesky_factor", "factor_var_lag_order", 
+                     "llt_success_code")
   
-  # Create the non-companion-form factors and loading matrix
-  if(result$factor_var_lag_order == 1){
-    result$smoothed_factors <- result$companion_form_smoothed_factors[, 1:(no_of_observations + fcast_horizon), drop = FALSE]
-  }else{
-    smoothed_factors <- matrix(NaN, no_of_factors, no_of_observations + fcast_horizon)
-    for(p in (result$factor_var_lag_order - 1):1){
-      smoothed_factors[, (result$factor_var_lag_order - p)] <- result$companion_form_smoothed_factors[(no_of_factors * p + 1):(no_of_factors * (p + 1)), 1, drop = FALSE]
-    }
-    smoothed_factors[, result$factor_var_lag_order:(no_of_observations + fcast_horizon)] <- result$companion_form_smoothed_factors[1:no_of_factors, 1:(dim(result$companion_form_smoothed_factors)[2] - 1), drop = FALSE]
-    result$smoothed_factors <- smoothed_factors[, 1:(no_of_observations + fcast_horizon), drop = FALSE]
-  }
+  # Retrieve the factors and loading matrix from the companion forms
+  result$smoothed_factors <- result$companion_form_smoothed_factors[1:no_of_factors, 1:(no_of_observations + fcast_horizon), drop = FALSE]
   rownames(result$smoothed_factors) <- paste0("Factor ", 1:no_of_factors)
   result$loading_matrix_estimate <- result$loading_matrix_estimate[, 1:no_of_factors, drop = FALSE]
+  
+  # Store the data in the return object
   result$data <- data
-  if(fcast_horizon > 0){
-    no_of_cols <- no_of_observations * no_of_factors
-    block_size <- fcast_horizon * no_of_factors
-    result$smoothed_state_variance <- cbind(result$smoothed_state_variance,
-                                            result$filtered_state_variance[, (no_of_cols - block_size + 1):no_of_cols, drop = FALSE])
+  
+  # Retrieve the correct KFS uncertainty blocks from the companion form
+  no_of_cols <- no_of_observations * no_of_factors
+  block_size <- result$factor_var_lag_order * no_of_factors
+  temp_smoothed_state_variance <- result$smoothed_state_variance
+  result$smoothed_state_variance <- matrix(NaN, no_of_factors, no_of_factors * (no_of_observations + fcast_horizon))
+  result$smoothed_state_variance[, 1:no_of_factors] <- temp_smoothed_state_variance[1:no_of_factors, 1:no_of_factors]
+  for (curr_obs in 2:(no_of_observations + fcast_horizon)) {
+    block_starting_index <- (curr_obs - 1) * block_size + 1
+    block_ending_index <- block_starting_index + no_of_factors - 1
+    factor_block_starting_ind <- (curr_obs - 1) * no_of_factors + 1
+    factor_block_ending_ind <- factor_block_starting_ind + no_of_factors - 1
+    if (curr_obs <= no_of_observations) {
+      result$smoothed_state_variance[, factor_block_starting_ind:factor_block_ending_ind] <- 
+        temp_smoothed_state_variance[1:no_of_factors, block_starting_index:block_ending_index]
+    }
+    else {
+      result$smoothed_state_variance[, factor_block_starting_ind:factor_block_ending_ind] <- 
+        result$filtered_state_variance[1:no_of_factors, block_starting_index:block_ending_index]
+    }
   }
   
-  # Re-shuffle the results objects to be in a more logical ordering
-  result <- result[c("data", "loading_matrix_estimate", "smoothed_factors", "smoothed_state_variance",
-                     "factor_var_lag_order", "error_var_cov_cholesky_factor")]
+  # Re-shuffle the results and cut some of them for logical coherency and debloating
+  result <- result[c("data", "loading_matrix_estimate", "smoothed_factors", "smoothed_state_variance", 
+                     "factor_var_lag_order", "error_var_cov_cholesky_factor", "llt_success_code")]
   
-  # Compute the cholesky of the measurement error var.-cov.
+  # Compute the Cholesky factor as runDFMKFS only returns the inverse of the lower triangular Cholesky factor
   result$error_var_cov_cholesky_factor <- tryCatch({
     solve(result$error_var_cov_cholesky_factor)
   }, error = function(e) {
@@ -244,220 +279,16 @@ twoStepDenseDFM <- function(data,
     result$error_var_cov_cholesky_factor[upper.tri(result$error_var_cov_cholesky_factor)] <- 0
   }
   
-  if(is.zoo(data) || is.xts(data)){ # Also convert factors to time series
+  # Turn the smoothed factors into zoo object if data is a zoo object
+  if (is.zoo(data) || is.xts(data)) {
     start_vector <- c(year(time(data)[1]), month(time(data)[1]))
     result$smoothed_factors <- as.zoo(ts(t(result$smoothed_factors), start = start_vector, frequency = 12))
   }
   
-  class(result) <- "DFMFit"
+  # Collect preliminary objects in the return object
+  result$call <- func_call
+  result$factor_fcast_horizon <- fcast_horizon
+  result$data_delay <- delay
+  class(result) <- "SDFMFit"
   return(result)
 }
-
-#' @name print.DFMFit
-#' @title Generic printing function for DFMFit S3 objects
-#' @description
-#' Print a compact summary of an `DFMFit` object.
-#'
-#' @param x `DFMFit` object.
-#' @param ... Additional parameters for the plotting functions.
-#'
-#' @return
-#' No return value; Prints a summary to the console.
-#'
-#' @examples
-#' \dontrun{
-#' set.seed(02102025)
-#' no_of_observations <- 100
-#' no_of_variables <- 20
-#' no_of_factors <- 3
-#' trans_error_var_cov <- diag(1, no_of_factors)
-#' loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
-#' meas_error_mean <- rep(0, no_of_variables)
-#' meas_error_var_cov <- diag(1, no_of_variables)
-#' trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
-#' factor_lag_order <- 2
-#' FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
-#'             no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
-#'             meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
-#'             trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
-#'             factor_lag_order = factor_lag_order)
-#'
-#' # Estimate a dense 2-factor model
-#' fit <- twoStepDenseDFM(
-#'   data = FM$data,
-#'   delay = FM$delay,
-#'   no_of_factors = no_of_factors
-#' )
-#'
-#' print(fit)
-#' }
-#'
-#' @export
-print.DFMFit <- function(x, ...) {
-  simulated_time_series <- is.zoo(x$smoothed_factors)
-  no_of_factors <- ifelse(simulated_time_series, dim(x$smoothed_factors)[2], dim(x$smoothed_factors)[1])
-  cat("Simulated Dynamic Factor Model\n")
-  cat("=========================================================================\n")
-  cat("No. of Observations                        :", ifelse(simulated_time_series, dim(x$data)[1], dim(x$data)[2]), "\n")
-  cat("No. of Variables                           :", ifelse(simulated_time_series, dim(x$data)[2], dim(x$data)[1]), "\n")
-  cat("No. of Factors                             :", no_of_factors, "\n")
-  cat("Factor Lag Order                           :", x$factor_var_lag_order, "\n")
-  cat("=========================================================================\n")
-  cat("Head of the factors :\n")
-  if(simulated_time_series){
-    print(head(x$smoothed_factors, 5))
-  }else{
-    print(x$smoothed_factors[, 1:5])
-  }
-  cat("Tail of the factors :\n")
-  if(simulated_time_series){
-    print(tail(x$smoothed_factors, 5))
-  }else{
-    print(x$smoothed_factors[, (dim(x$smoothed_factors)[2] - 4):(dim(x$smoothed_factors)[2])])
-  }
-  cat("Head of the loading matrix :\n")
-  print(head(x$loading_matrix_estimate, 5))
-  cat("Tail of the loading matrix :\n")
-  print(tail(x$loading_matrix_estimate, 5))
-  cat("=========================================================================\n")
-  invisible(x)
-}
-
-#' @name plot.DFMFit
-#' @title Generic plotting function for DFMFit S3 objects
-#' @description
-#' Create diagnostic plots for a `DFMFit` object, including factor time series plots,
-#' the loading matrix heatmap and the measurement error variance–covariance matrix heatmap.
-#'
-#' @param x `DFMFit` object.
-#' @param ... Additional parameters for the plotting functions.
-#'
-#' @return
-#' A named list of plot objects:
-#' \describe{
-#'   \item{`Factor Time Series Plots`}{`patchwork`/`ggplot` object showing the estimated factors over time with 95% confidence bands of the Kalman Filter and Smoother.}
-#'   \item{`Loading Matrix Heatmap`}{`ggplot` object showing a heatmap of the estimated factor loadings.}
-#'   \item{`Meas. Error Var.-Cov. Matrix Heatmap`}{`ggplot` object showing a heatmap of the measurement error variance–covariance matrix.}
-#' }
-#'
-#' @examples
-#' \dontrun{
-#' set.seed(02102025)
-#' no_of_observations <- 100
-#' no_of_variables <- 20
-#' no_of_factors <- 3
-#' trans_error_var_cov <- diag(1, no_of_factors)
-#' loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
-#' meas_error_mean <- rep(0, no_of_variables)
-#' meas_error_var_cov <- diag(1, no_of_variables)
-#' trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
-#' factor_lag_order <- 2
-#' FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
-#'             no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
-#'             meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
-#'             trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
-#'             factor_lag_order = factor_lag_order)
-#'
-#' # Estimate a dense 2-factor model
-#' fit <- twoStepDenseDFM(
-#'   data = FM$data,
-#'   delay = FM$delay,
-#'   no_of_factors = no_of_factors
-#' )
-#' 
-#' # Inspect the results
-#' plots <- plot(fit)
-#' plots$`Factor Time Series Plots`
-#' plots$`Loading Matrix Heatmap`
-#' plots$`Meas. Error Var.-Cov. Matrix Heatmap`
-#' }
-#'
-#' @export
-plot.DFMFit <- function(x, ...) {
-  out_list <- list()
-  if(is.zoo(x$data)){
-    series_names <- colnames(x$data)
-    no_of_factors <- dim(x$smoothed_factors)[2]
-    time_vector <- as.Date(time(x$smoothed_factors))
-    factors <- x$smoothed_factors
-  }else{
-    series_names <- rownames(x$data)
-    no_of_factors <- dim(x$smoothed_factors)[1]
-    time_vector <- 1:dim(x$smoothed_factors)[2]
-    factors <- t(x$smoothed_factors)
-    factors <- as.zoo(ts(factors, start = c(1, 1), frequency = 12))
-  }
-  
-  # Create plots for the factors
-  pot_list_factors <- list()
-  seq_along_dates <- 1:length(as.Date(time(factors)))
-  for(factor in 1:no_of_factors){
-    
-    correction_factor <- 1.96 * sqrt(pmax(x$smoothed_state_variance[factor, seq(1, length(as.Date(time(factors))) * no_of_factors, by = no_of_factors)], 1e-15))
-    current_factor <- data.frame(
-      Date = as.Date(time(factors)),
-      Value = factors[seq_along_dates, factor],
-      `Upper 95%-CI` = factors[seq_along_dates, factor] + correction_factor,
-      `Lower 95%-CI` = factors[seq_along_dates, factor] - correction_factor,
-      check.names = FALSE
-    )
-    
-    current_line_plot <- ggplot(current_factor, aes(x = Date, y = Value)) +
-      geom_ribbon(aes(ymin = `Lower 95%-CI`, ymax = `Upper 95%-CI`), fill = "#88ccee", alpha = 0.4) +
-      geom_line(colour = "black") +
-      labs(title = paste0("Factor ", factor), y = "") +
-      theme_minimal()
-    
-    pot_list_factors[[factor]] <- current_line_plot
-  }
-  out_list$`Factor Time Series Plots` <- patchwork::wrap_plots(pot_list_factors, ncol = 1)
-  
-  # Loading matrix heatmap plot
-  lambda_df <- as.data.frame(x$loading_matrix_estimate)
-  colnames(lambda_df) <- paste0("Factor ", 1:no_of_factors)
-  if(dim(x$loading_matrix_estimate)[2] == 1){
-    stacked_loadings <- lambda_df
-    stacked_loadings$Factor <- "Factor 1"
-  }else{
-    stacked_loadings <- stack(lambda_df[, ]) 
-  }
-  colnames(stacked_loadings) <- c("Loading", "Factor")
-  stacked_loadings$Variable <- factor(rep(series_names, no_of_factors), levels = rev(series_names))
-  out_list$`Loading Matrix Heatmap` <- ggplot(stacked_loadings, aes(x = Factor, y = Variable)) +
-    geom_tile(data = subset(stacked_loadings, Loading != 0), aes(fill = Loading), width = 0.9, height = 0.8) +
-    geom_tile(data = subset(stacked_loadings, Loading == 0), fill = "black", width = 0.9, height = 0.8) +
-    scale_fill_gradient2(low = "#88ccee", high = "#117733", na.value = "#882255", mid = "#FFFFFF") +
-    scale_x_discrete(expand = c(0, 0)) +
-    theme_minimal() +
-    theme(axis.text.x = element_text(vjust = 0.5, hjust = 1),
-          strip.text.y = element_blank(),
-          panel.spacing = unit(0.01, "lines"),
-          panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank())
-  
-  # Measurement error var.-cov. matrix heatmap plot
-  
-  if (!is.character(x$error_var_cov_cholesky_factor)) {
-    measurement_error_var_cov_df <- as.data.frame(x$error_var_cov_cholesky_factor %*% t(x$error_var_cov_cholesky_factor))
-    colnames(measurement_error_var_cov_df) <- series_names
-    stacked_measurement_error_var_cov <- stack(measurement_error_var_cov_df[, series_names])
-    colnames(stacked_measurement_error_var_cov) <- c("(Co-)Variance", "Variable")
-    stacked_measurement_error_var_cov$`(Co-)Variable` <- factor(rep(series_names, length(series_names)), levels = rev(series_names))
-    out_list$`Meas. Error Var.-Cov. Matrix Heatmap` <- 
-      ggplot(stacked_measurement_error_var_cov, aes(x = Variable, y = `(Co-)Variable`)) +
-      geom_tile(data = stacked_measurement_error_var_cov, aes(fill = `(Co-)Variance`), width = 0.8, height = 0.8) +
-      scale_fill_gradient2(low = "#88ccee", high = "#117733", na.value = "#882255", mid = "#FFFFFF") +
-      scale_x_discrete(expand = c(0, 0)) +
-      theme_minimal() +
-      theme(axis.text.x = element_text(vjust = 0.5, hjust = 1, angle = -90),
-            strip.text.y = element_blank(),
-            panel.spacing = unit(0.01, "lines"),
-            panel.grid.major = element_blank(), 
-            panel.grid.minor = element_blank())
-  }else{
-    out_list$`Meas. Error Var.-Cov. Matrix Heatmap` <- x$error_var_cov_cholesky_factor
-  }
-  
-  return(out_list)
-}
-

@@ -24,7 +24,12 @@
 #define CHOL_UP_DOWN
 
 // Including external libraries
+#if !defined(_MSC_VER)
+#define EIGEN_NO_DEBUG
 #include <RcppEigen.h>
+#else
+#include <Eigen>
+#endif
 #include <math.h>
 #include <cfloat>
 

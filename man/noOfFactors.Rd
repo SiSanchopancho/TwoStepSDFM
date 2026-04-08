@@ -2,17 +2,17 @@
 % Please edit documentation in R/EstimateFactors.R
 \name{noOfFactors}
 \alias{noOfFactors}
-\title{Estimate the number of factors using the Onatski (2010) procedure.}
+\title{Estimate the number of Factors}
 \usage{
 noOfFactors(
   data,
   min_no_factors = 1,
-  max_no_factors = 15,
+  max_no_factors = 7,
   confidence_threshold = 0.05
 )
 }
 \arguments{
-\item{data}{Numeric (no_of_variables x no_of_observations) matrix of data or zoo/xts object.}
+\item{data}{Numeric (no_of_vars \eqn{\times}{x} no_of_obs) matrix of data or zoo/xts object sampled at the same frequency.}
 
 \item{min_no_factors}{Integer minimum number of factors to be tested.}
 
@@ -21,14 +21,59 @@ noOfFactors(
 \item{confidence_threshold}{Numeric threshold value to stop the testing procedure.}
 }
 \value{
-A list with components:
+An object of class \code{NoOfFactorsFit} with components:
 \describe{
-\item{\code{no_of_factors}}{Estimated number of factors (integer).}
-\item{\code{p_value}}{P-value of the last test in the Onatski (2010) procedure.}
-\item{\code{confidence_threshold}}{The significance level used in the test.}
-\item{\code{statistic}}{Test statistic value of the last test.}
+\item{no_of_factors}{Integer estimated number of factors.}
+\item{p_value}{Numeric \eqn{p}{p}-value of the final test.}
+\item{confidence_threshold}{Numeric significance level used.}
+\item{statistic}{Numeric test statistic value of the last test.}
+\item{eigen_values}{Numeric vector of eigenvectors of the complex data Gram
+matrix.}
 }
 }
 \description{
-Estimate the number of factors using the Onatski (2010) procedure.
+Estimate the number of factors of a linear Gaussian latent factor model using
+via an eigenvalue slope test according to  \insertRef{onatski2009testing}{TwoStepSDFM}.
+}
+\details{
+The procedure splits the data matrix along the time dimension into
+two equally sized (\code{no_of_vars} \eqn{\times}{x} \code{cut_off}) sub-matrices
+\eqn{\bm{X}_{1/2}}{`data_fst_half`} and
+\eqn{\bm{X}_{2/2}}{`data_snd_half`}. It then proceeds to build
+\eqn{\tilde{\bm{X}} := \bm{X}_{1/2} + i\bm{X}_{2/2}}{`complex_data = data_fst_half + i * data_snd_half`},
+where \eqn{i=\sqrt{-1}}{`i=sqrt(-1)`}. We then compute eigenvalues of the
+Gram matrix \eqn{\tilde{\bm{X}}
+\tilde{\bm{X}}^{\dagger}}{\code{complex_data \%*\% Conj(t(complex_data))}}, where
+\eqn{\tilde{\bm{X}}^{\dagger}}{`Conj(t(complex_data))`} represents the
+adjoint. Finally, a test based on the computed eigenvalues is performed.
+This test is an iterative testing procedure, starting by testing the null
+that the true number of factors is \code{min_no_factors}. If the test is rejected
+by comparison of the \eqn{p}{p}-value against \code{confidence_threshold}, we
+test whether the true number of factors is \code{min_no_factors + 1} until we can
+no longer reject at \code{confidence_threshold} or \code{max_no_factors} is reached.
+
+As the distribution of the eigenvalues under the null is nonstandard
+\insertCite{onatski2009testing}{TwoStepSDFM},
+simulated critical values are used. They are retrieved from
+\insertRef{onatski2009testing_supl}{TwoStepSDFM}. As the range of the simulated critical
+values is limited, the minimum and maximum number of potential factors
+is limited such that \code{max_no_factors} should be no more than
+\code{min_no_factors + 17}. However, it is recommended to operate well below this
+maximum as the test size decreases with \code{max_no_factors - min_no_factors}.
+}
+\examples{
+data(factor_model)
+no_of_factors_estim <- noOfFactors(data = factor_model$data, min_no_factors = 1, max_no_factors = 5, confidence_threshold = 0.05)
+print(no_of_factors_estim)
+factor_estim_plots <- plot(no_of_factors_estim)
+factor_estim_plots$`Eigen Value Plot`
+
+}
+\references{
+\insertRef{onatski2009testing}{TwoStepSDFM}
+
+\insertRef{onatski2009testing_supl}{TwoStepSDFM}
+}
+\author{
+Domenic Franjic
 }

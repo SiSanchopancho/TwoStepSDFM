@@ -17,8 +17,12 @@
  * You should have received a copy of the GNU General Public License
  * along with TwoStepSDFM. If not, see <https://www.gnu.org/licenses/>.
  */
-
+#if !defined(_MSC_VER)
 #include "Internals/CholUpDown.h"
+#else
+#include "CholUpDown.h"
+#endif
+
 
  /* Updating the Cholesky decomposition of the Gram matrix */
  /* Source:

@@ -1,5 +1,6 @@
 #' @useDynLib TwoStepSDFM, .registration=TRUE
 #' @importFrom Rcpp sourceCpp
+#' @importFrom Rdpack reprompt
 #' @import zoo
 #' @import xts
 #' @import lubridate
@@ -14,7 +15,7 @@ NULL
 
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-#  Copyright (C) 2024 Domenic Franjic
+#  Copyright (C) 2024-2026 Domenic Franjic
 #
 #  This file is part of TwoStepSDFM.
 #
@@ -32,44 +33,153 @@ NULL
 #  along with TwoStepSDFM. If not, see <https://www.gnu.org/licenses/>.
 
 #' @name crossVal
-#' @title Cross-validate the hyper-parameter of the mixed-frequency SDFM
-#' @param data ``Zoo``/``xts`` object.
-#' @param variable_of_interest Integer value indicating the index of the single target variable
-#' @param fcast_horizon Integer value indicating the target horizon
-#' @param delay Integer vector of predictor delays.
-#' @param frequency Integer vector of frequencies of the variables in the data set (currently supported: ``12`` for monthly and ``4`` for quarterly data)
+#' 
+#' @title Cross-validate SDFM Hyper-Parameters
+#' 
+#' @description
+#' This function uses time series cross-validation 
+#' \insertCite{rob2018forecasting}{TwoStepSDFM} in combination with random 
+#' hyper-parameter search \insertCite{bergstra2012random}{TwoStepSDFM} to 
+#' validate the hyper-parameters of a sparse dynamic factor model as described  
+#' in \insertRef{franjic2024nowcasting}{TwoStepSDFM}
+#' 
+#' @param data Numeric (no_of_vars \eqn{\times}{x} no_of_obs) matrix of data or 
+#' zoo/xts object sampled at mixed frequencies (quarterly and monthly).
+#' @param variable_of_interest Integer indicating the index of the target 
+#' variables.
+#' @param fcast_horizon Integer value indicating the target forecasting horizon.
+#' @param delay Integer vector of variable delays, measured as the number of 
+#' months since the latest available observation.
+#' @param frequency Integer vector of frequencies of the variables in the data 
+#' set (currently supported: `12` for monthly and `4` for quarterly data).
 #' @param no_of_factors Integer number of factors.
-#' @param seed 32-bit positive integer for drawing the random hyper-parameter candidates
-#' @param min_ridge_penalty Lower bound for the sampled ridge penalty coefficient
-#' @param max_ridge_penalty Upper bound for the sampled ridge penalty coefficient
-#' @param cv_repititions Integer number of predictions ought to be computed for each candidate set
-#' @param cv_size Integer number of candidate sets
-#' @param lasso_penalty_type Character indicating the lasso penalty type. ``"selected"`` uses the number of non-zero elements of the loading matrix. ``"penalty"`` uses the lasso size constraint directly. ``"steps"`` uses the number of steps.
-#' @param min_max_penalty Vector of size tow, where the first element indicates the lower and the second element indicates the upper bound of the lasso penalty equivalent. If lasso_penalty_type is set to ``"selected"`` or ``"steps"``, both elements must be strictly positive integers.
-#' @param max_factor_lag_order Integer max P of the VAR(P) process of the factors.
-#' @param decorr_errors Logical, whether or not the errors should be decorrelated.
-#' @param lag_estim_criterion Information criterion used for the estimation of the factor VAR order (``"BIC"``, ``"AIC"``, ``"HIC"``).
-#' @param ridge_penalty Ridge penalty.
-#' @param lasso_penalty Numeric vector, lasso penalties for each factor (set to ``NaN`` if not intended as stopping criterion).
-#' @param max_iterations Integer maximum number of iterations.
-#' @param max_no_steps Integer number of max_no_steps (used for LARS-EN as an alternative).
-#' @param comp_null Computational zero.
-#' @param check_rank Logical, whether or not the rank of the variance-covariance matrix should be checked.
-#' @param conv_crit Conversion criterion for the SPCA algorithm.
-#' @param conv_threshold Conversion criterion for the coordinate descent algorithm.
-#' @param parallel Logical, whether or not to run the cross-validation loop in parallel.
-#' @param no_of_cores Integer number of course to use when run in parallel
-#' @param max_ar_lag_order Integer maximum number of lags of the target variable ought to be included in the nowcasting step
-#' @param max_predictor_lag_order Integer maximum number of lags of the predictors ought to be included in the nowcasting step
-#' @param verbose Logical, whether to print some progress tracking output to the console.
-#' @return An `SDFMcrossVal` object containing the cross-validation and BIC results for all hyper-parameter combinations.
-#' The `crossVal` function returns an `SDFMcrossVal` object with the following elements:
+#' @param seed 32-bit unsigned integer seed for all random processes inside the 
+#' function.
+#' @param min_ridge_penalty Numeric lower bound for the sampled ridge penalty 
+#' coefficient candidates.
+#' @param max_ridge_penalty Numeric upper bound for the sampled ridge penalty 
+#' coefficient candidates.
+#' @param cv_repetitions Integer number of `fcast_horizon`-step-ahead 
+#' predictions computed for each candidate set.
+#' @param cv_size Integer number of candidate sets.
+#' @param lasso_penalty_type Character indicating the lasso penalty type. 
+#' If set to ``"selected"``, the \eqn{\ell_1}{`l_1`}-size constraint will be 
+#' returned as number of non-zero elements of each column of the loading matrix. 
+#' If set to ``"penalty"``, the lasso size constraint will be returned. If set 
+#' to ``"steps"``, the number of LARS-EN steps will be returned.
+#' @param min_max_penalty Vector of size two, where the first element indicates 
+#' the lower and the second element indicates the upper bound of the lasso 
+#' penalty equivalent. If `lasso_penalty_type` is set to ``"selected"`` or 
+#' ``"steps"``, both elements must be strictly positive integers.
+#' @param max_factor_lag_order Integer maximum order of the VAR process in the 
+#' transition equation.
+#' @param lag_estim_criterion Information criterion used for the estimation of 
+#' the factor VAR order (`"BIC"` (default), `"AIC"`, `"HIC"`).
+#' @param decorr_errors Logical, whether or not the errors should be 
+#' decorrelated.
+#' @param max_iterations Integer maximum number of iterations of the SPCA 
+#' algorithm.
+#' @param weights Numeric vector, weights for each variable weighing the 
+#' \eqn{\ell_1}{`l_1`} size constraint.
+#' @param comp_null Numeric computational zero.
+#' @param spca_conv_crit Numeric conversion criterion for the SPCA algorithm.
+#' @param parallel Logical, whether or not to run the cross-validation loop in 
+#' parallel.
+#' @param no_of_cores Integer number of cores to use when run in parallel.
+#' @param max_ar_lag_order Integer maximum number of lags of the target variable
+#' included in the final ARDL prediction routine.
+#' @param max_predictor_lag_order Integer maximum number of lags of the 
+#' predictors included in the final ARDL prediction routine.
+#' @param jitter Numerical jitter for stability of internal solver algorithms. 
+#' The jitter is added to the diagonal entries of the variance covariance matrix 
+#' of the measurement errors.
+#' @param svd_method Either `"fast"` or `"precise"`. Option `"fast"` uses 
+#' Eigen's BDCSVD divide and conquer method for the computation of the singular 
+#' values. Option `"precise"` (default) implements the slower, but numerically 
+#' more stable JacobiSVD method.
+#' @param verbose Logical, whether to print some progress tracking output to the 
+#' console. 
+#' 
+#' @details
+#' `fcast_horizon` should be set to the target prediction horizon, as
+#' hyper-parameters can differ substantially between different horizons. For
+#' nowcasting, use `fcast_horizon = 0`. For backcasting, `fcast_horizon` can be
+#' set to a negative number indicating the step-back backcasting horizon.
+#'
+#' Internally, candidates of the hyper-parameters are drawn randomly. However,
+#' a regular dense DFM will always be considered by default. The ridge
+#' penalty is drawn as \eqn{\exp(u)}{exp(u)}, where \eqn{u}{u} is uniformly
+#' distributed between `min_ridge_penalty` and `max_ridge_penalty`. If
+#' `lasso_penalty_type = "selected"`, the lasso penalty is drawn as a random
+#' vector \eqn{\bm{v}}{v}, where each entry is uniformly distributed. If
+#' `lasso_penalty_type = "steps"`, the lasso penalty is drawn as a random
+#' value \eqn{v}{v} that is uniformly distributed. If
+#' `lasso_penalty_type = "penalty"`, the lasso penalty is drawn as a random
+#' vector \eqn{\exp(\bm{v})}{exp(v)}, where each entry of
+#' \eqn{\bm{v}}{v} is uniformly distributed. In all three cases, the upper and
+#' lower bounds of the uniform distributions governing the lasso penalties are
+#' given by the first and second entry of `min_max_penalty`, respectively.
+#'
+#' For medium to large data sets in combination with a medium to large
+#' `cv_size`, it can be beneficial to set `parallel = TRUE`. This will enable
+#' parallelisation via the doParallel, doSNOW, foreach, and parallel packages
+#' in R. In this case, `no_of_cores` should be set to the number of physical
+#' cores of the user's machine. It is not advisable to use the number of logical
+#' cores, as this can considerably deteriorate performance.
+#'
+#' This function serves as a direct wrapper to \code{\link{nowcast}}. For more
+#' information on the additional function parameters, see the corresponding help
+#' page.
+#' 
+#' @return
+#' An object of class `SDFMcrossVal` with main components:
 #' \describe{
-#'   \item{\code{CV}}{A list with components \code{CV Results} (matrix of cross-validation errors and corresponding hyper-parameter values) and
-#'     \code{Min. CV} (row of \code{CV Results} with the minimum cross-validation error).}
-#'   \item{\code{BIC}}{A list with components \code{BIC Results} (matrix of BIC values and corresponding hyper-parameter values) and
-#'     \code{Min. BIC} (row of \code{BIC Results} with the minimum BIC).}
+#'   \item{`CV`}{A list with components \code{`CV Results`} (matrix of all
+#'   cross-validation errors and corresponding hyper-parameter values) and
+#'     \code{`Min. CV`} (row of `CV Results` with the minimum cross-validation 
+#'     error).}
+#'   \item{`BIC`}{A list with components `BIC Results` (matrix of all BIC values 
+#'   and corresponding hyper-parameter values) and `Min. BIC` (row of
+#'   `BIC Results` with the minimum BIC).}
 #' }
+#'
+#' @author
+#' Domenic Franjic
+#' 
+#' @references
+#' \insertRef{bergstra2012random}{TwoStepSDFM}
+#' 
+#' \insertRef{rob2018forecasting}{TwoStepSDFM}
+#' 
+#' \insertRef{franjic2024nowcasting}{TwoStepSDFM}
+#' 
+#' @seealso
+#' \code{\link{sparsePCA}}: Routine for fitting estimating a sparse factor 
+#' loading matrix.
+#'  
+#' \code{\link{kalmanFilterSmoother}}: Routine for filtering and smoothing 
+#' latent factors.
+#' 
+#' \code{\link{twoStepSDFM}}: Two-step estimation routine for a sparse dynamic 
+#' factor model.
+#' 
+#' \code{\link{twoStepDenseDFM}}: Two-step estimation routine for a dense 
+#' dynamic factor model.
+#' 
+#' @examples
+#' data(mixed_freq_factor_model)
+#' no_of_vars <- dim(mixed_freq_factor_model$data)[2]
+#' no_of_factors <- dim(mixed_freq_factor_model$factors)[2]
+#' cv_results <- crossVal(data = mixed_freq_factor_model$data, variable_of_interest = 1, 
+#'                        fcast_horizon = 0, delay = mixed_freq_factor_model$delay, frequency = mixed_freq_factor_model$frequency,
+#'                        no_of_factors = no_of_factors, seed = 25032026, min_ridge_penalty = 1e-5, 
+#'                        max_ridge_penalty = 10, cv_repetitions = 1, cv_size = 50, lasso_penalty_type = "selected",
+#'                        min_max_penalty = c(5, 45), verbose = FALSE)
+#' print(cv_results)
+#' cv_plots <- plot(cv_results)        
+#' cv_plots$`CV Results`
+#' cv_plots$`BIC Results` 
+#' 
 #' @export
 crossVal <- function(data,
                      variable_of_interest,
@@ -80,33 +190,52 @@ crossVal <- function(data,
                      seed,
                      min_ridge_penalty,
                      max_ridge_penalty,
-                     cv_repititions,
+                     cv_repetitions,
                      cv_size,
                      lasso_penalty_type,
                      min_max_penalty,
                      max_factor_lag_order = 10,
-                     decorr_errors = TRUE,
                      lag_estim_criterion = "BIC",
-                     ridge_penalty = 1e-6,
-                     lasso_penalty = NULL,
+                     decorr_errors = TRUE,
                      max_iterations = 1000,
-                     max_no_steps = NULL,
+                     weights = NULL,
                      comp_null = 1e-15,
-                     check_rank = FALSE,
-                     conv_crit = 1e-4,
-                     conv_threshold = 1e-4,
+                     spca_conv_crit = 1e-4,
                      parallel = FALSE,
                      no_of_cores = 1,
                      max_ar_lag_order = 5,
                      max_predictor_lag_order = 5,
+                     jitter = 1e-8,
+                     svd_method = "precise",
                      verbose = TRUE) {
+  func_call <- match.call()
   
   
   # Mishandling
   
   # Mishandling of seed
   seed <- checkPositiveSignedInteger(seed, "seed", 33)
-  set.seed(seed)
+  if (!is.null(seed)) {
+    # Save the current global seed if not NULL
+    if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+      old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+      had_seed <- TRUE
+    } else {
+      had_seed <- FALSE
+    }
+    
+    # Re-set the global seed upon exit
+    on.exit({
+      if (had_seed) {
+        assign(".Random.seed", old_seed, envir = .GlobalEnv)
+      } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+        rm(".Random.seed", envir = .GlobalEnv)
+      }
+    }, add = TRUE)
+    
+    # Set the seed inside the function for reproducibility and the ability to save the seed value inside call
+    set.seed(seed)
+  }
   
   # Misshandling of the data matrix
   if(!is.zoo(data) && !is.xts(data)){
@@ -127,6 +256,27 @@ crossVal <- function(data,
     delay <- matrix(rep(0, no_of_variables), ncol = 1)
   }else{
     delay <- checkPositiveSignedParameterVector(delay, "delay", no_of_variables)
+  }
+  
+  # Check for NAs in the dataset outside the ragged edges
+  na_ind <- FALSE
+  for(col in 1:dim(data)[2]){
+    na_ind <- any(is.na(data[1:(no_of_observations - delay[col]), col]))
+    if(na_ind){
+      stop(paste0("data has NA values outside the ragged edges.")) 
+    }
+  }
+  
+  
+  # Check for observations in the dataset inside the ragged edges
+  obs_ind <- FALSE
+  for(col in 1:dim(data)[2]){
+    if(delay[col] > 0){
+      obs_ind <- !all(is.na(data[(no_of_observations - delay[col] + 1):no_of_observations, col]))
+    }
+    if(obs_ind){
+      stop(paste0("data has observed values inside the ragged edges.")) 
+    }
   }
   
   # Mishandling of variable_of_interest
@@ -154,10 +304,10 @@ crossVal <- function(data,
     stop(paste0("max_ridge_penalty cannot be smaller than min_ridge_penalty."))
   }
   
-  # Mishandling of cv_repititions
-  cv_repititions <- checkPositiveSignedInteger(cv_repititions, "cv_repititions")
-  if(cv_repititions == 0){
-    stop(paste0("cv_repititions must be striclty positive."))
+  # Mishandling of cv_repetitions
+  cv_repetitions <- checkPositiveSignedInteger(cv_repetitions, "cv_repetitions")
+  if(cv_repetitions == 0){
+    stop(paste0("cv_repetitions must be striclty positive."))
   }
   
   # Mishandling of cv_size
@@ -222,11 +372,11 @@ crossVal <- function(data,
     if(month(time(data))[no_of_observations] %in% c(1, 4, 7, 10)){
       data <- data[1:(no_of_observations - 1), ]
       no_of_observations <- dim(data)[1]
-    }
-    warning(paste0("data must end at the last month of the final quarter. data is cropped for further use."))
-    if(month(time(data))[no_of_observations] %in% c(2, 5, 8, 11)){
+      delay[which(frequency == 4)] <- pmax(delay[which(frequency == 4)] - 1, 0)
+    }else if(month(time(data))[no_of_observations] %in% c(2, 5, 8, 11)){
       data <- data[1:(no_of_observations - 2), ]
       no_of_observations <- dim(data)[1]
+      delay[which(frequency == 4)] <- pmax(delay[which(frequency == 4)] - 2, 0)
     }
   }
   
@@ -269,9 +419,9 @@ crossVal <- function(data,
     min_cv <- .Machine$double.xmax
     min_bic <- .Machine$double.xmax
     for(h in 1:cv_size){
-
+      
       current_results <- 
-        nowcastSpecificationHelper(cv_repititions = cv_repititions, no_of_factors = no_of_factors, no_of_variables = no_of_variables, 
+        nowcastSpecificationHelper(cv_repetitions = cv_repetitions, no_of_factors = no_of_factors, no_of_variables = no_of_variables, 
                                    no_of_observations = no_of_observations, no_of_mtly_variables = no_of_mtly_variables,
                                    lasso_penalty_type = lasso_penalty_type,
                                    data = data, variable_of_interest = variable_of_interest, 
@@ -280,9 +430,10 @@ crossVal <- function(data,
                                    max_factor_lag_order = max_factor_lag_order, 
                                    decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                                    max_iterations = max_iterations, comp_null = comp_null, 
-                                   check_rank = check_rank, conv_crit = conv_crit,
-                                   conv_threshold = conv_threshold, max_ar_lag_order = max_ar_lag_order,
-                                   max_predictor_lag_order = max_predictor_lag_order)
+                                   spca_conv_crit = spca_conv_crit, max_ar_lag_order = max_ar_lag_order,
+                                   max_predictor_lag_order = max_predictor_lag_order, 
+                                   jitter = jitter, svd_method = svd_method, weights = weights
+        )
       
       bic_results[h, 1] <- current_results$bic
       
@@ -324,7 +475,7 @@ crossVal <- function(data,
                        .export = global_vars_to_export) %dopar% {
                          
                          current_results <- 
-                           nowcastSpecificationHelper(cv_repititions = cv_repititions, no_of_factors = no_of_factors, no_of_variables = no_of_variables, 
+                           nowcastSpecificationHelper(cv_repetitions = cv_repetitions, no_of_factors = no_of_factors, no_of_variables = no_of_variables, 
                                                       no_of_observations = no_of_observations, no_of_mtly_variables = no_of_mtly_variables,
                                                       lasso_penalty_type = lasso_penalty_type,
                                                       data = data, variable_of_interest = variable_of_interest, 
@@ -333,9 +484,9 @@ crossVal <- function(data,
                                                       max_factor_lag_order = max_factor_lag_order, 
                                                       decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                                                       max_iterations = max_iterations, comp_null = comp_null, 
-                                                      check_rank = check_rank, conv_crit = conv_crit,
-                                                      conv_threshold = conv_threshold, max_ar_lag_order = max_ar_lag_order,
-                                                      max_predictor_lag_order = max_predictor_lag_order)
+                                                      spca_conv_crit = spca_conv_crit, max_ar_lag_order = max_ar_lag_order,
+                                                      max_predictor_lag_order = max_predictor_lag_order, 
+                                                      jitter = jitter, svd_method = svd_method, weights)
                          
                          out <- as.data.frame(matrix(NaN, 1, 2))
                          colnames(out) <- names(current_results)
@@ -391,25 +542,27 @@ crossVal <- function(data,
     `Min. BIC` = bic_out[which.min(bic_out[, 1]), , drop = FALSE]
   )
   
-  
+  result$call <- match.call()
   class(result) <- "SDFMcrossVal"
   return(result)
 }
 
+#' Helper function to wrap the nowcasting routine
 #' @keywords internal
-nowcastSpecificationHelper <- function(cv_repititions, no_of_factors, no_of_variables,
+nowcastSpecificationHelper <- function(cv_repetitions, no_of_factors, no_of_variables,
                                        no_of_observations, no_of_mtly_variables,
                                        lasso_penalty_type, data, variable_of_interest, 
                                        fcast_horizon, delay,  candidates, frequency, 
                                        max_factor_lag_order, decorr_errors, 
                                        lag_estim_criterion, max_iterations,  comp_null, 
-                                       check_rank, conv_crit, conv_threshold, 
-                                       max_ar_lag_order, max_predictor_lag_order){
+                                       spca_conv_crit,  max_ar_lag_order, 
+                                       max_predictor_lag_order, jitter, svd_method,
+                                       weights){
   
   fcast_error <- c()
   fcast_ind <- 1
-  for(t in rev(seq(from = delay[variable_of_interest], by = 3, length.out = cv_repititions))){
-
+  for(t in rev(seq(from = delay[variable_of_interest], by = 3, length.out = cv_repetitions))){
+    
     oos_observation <- data[no_of_observations - t, variable_of_interest]
     is_data <- makeRaggedEdges(data[1:(no_of_observations - t), , drop = FALSE], delay)
     current_no_of_obs <- dim(is_data)[1]
@@ -422,10 +575,11 @@ nowcastSpecificationHelper <- function(cv_repititions, no_of_factors, no_of_vari
                                  decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                                  ridge_penalty = candidates[1], lasso_penalty = NULL,
                                  max_iterations = max_iterations, max_no_steps = NULL,
-                                 comp_null = comp_null, check_rank = check_rank, 
-                                 conv_crit = conv_crit, conv_threshold = conv_threshold,
-                                 log = FALSE, parallel = FALSE, max_ar_lag_order = max_ar_lag_order,
-                                 max_predictor_lag_order = max_predictor_lag_order)
+                                 weights = weights,
+                                 comp_null = comp_null, spca_conv_crit = spca_conv_crit,
+                                 parallel = FALSE, max_ar_lag_order = max_ar_lag_order,
+                                 max_predictor_lag_order = max_predictor_lag_order, jitter = jitter,
+                                 svd_method = svd_method)
     }else if(lasso_penalty_type %in% "penalty"){
       current_nowcast <- nowcast(data = is_data, variables_of_interest = variable_of_interest, 
                                  max_fcast_horizon = fcast_horizon, delay = delay, 
@@ -435,10 +589,11 @@ nowcastSpecificationHelper <- function(cv_repititions, no_of_factors, no_of_vari
                                  decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                                  ridge_penalty = candidates[1], lasso_penalty = candidates[2:(no_of_factors + 1)],
                                  max_iterations = max_iterations, max_no_steps = NULL,
-                                 comp_null = comp_null, check_rank = check_rank, 
-                                 conv_crit = conv_crit, conv_threshold = conv_threshold,
-                                 log = FALSE, parallel = FALSE, max_ar_lag_order = max_ar_lag_order,
-                                 max_predictor_lag_order = max_predictor_lag_order)
+                                 weights = weights,
+                                 comp_null = comp_null, spca_conv_crit = spca_conv_crit,
+                                 parallel = FALSE, max_ar_lag_order = max_ar_lag_order,
+                                 max_predictor_lag_order = max_predictor_lag_order, jitter = jitter,
+                                 svd_method = svd_method)
     }else if(lasso_penalty_type %in% "steps"){
       current_nowcast <- nowcast(data = is_data, variables_of_interest = variable_of_interest, 
                                  max_fcast_horizon = fcast_horizon, delay = delay, 
@@ -447,15 +602,15 @@ nowcastSpecificationHelper <- function(cv_repititions, no_of_factors, no_of_vari
                                  max_factor_lag_order = max_factor_lag_order, 
                                  decorr_errors = decorr_errors, lag_estim_criterion = lag_estim_criterion,
                                  ridge_penalty = candidates[1], lasso_penalty = NULL,
-                                 max_iterations = max_iterations, 
-                                 max_no_steps = candidates[2],
-                                 comp_null = comp_null, check_rank = check_rank, 
-                                 conv_crit = conv_crit, conv_threshold = conv_threshold,
-                                 log = FALSE, parallel = FALSE, max_ar_lag_order = max_ar_lag_order,
-                                 max_predictor_lag_order = max_predictor_lag_order)
+                                 max_iterations = max_iterations, max_no_steps = candidates[2],
+                                 weights = weights,
+                                 comp_null = comp_null, spca_conv_crit = spca_conv_crit,
+                                 parallel = FALSE, max_ar_lag_order = max_ar_lag_order,
+                                 max_predictor_lag_order = max_predictor_lag_order, jitter = jitter,
+                                 svd_method = svd_method)
       
     }
-
+    
     nowcast_indicator <- which(as.yearqtr(time(current_nowcast$Forecasts)) == as.yearqtr(time(is_data)[current_no_of_obs]))
     fcast_error[fcast_ind] <- coredata(current_nowcast$Forecasts[fcast_horizon + nowcast_indicator, 2]) - coredata(oos_observation)
     fcast_ind <- fcast_ind + 1
@@ -475,7 +630,17 @@ nowcastSpecificationHelper <- function(cv_repititions, no_of_factors, no_of_vari
 }
 
 #' @method print SDFMcrossVal
-#' @return No return value, called for side effects.
+#' @title Generic print function for SDFMcrossVal S3 objects
+#' 
+#' @param x `SDFMcrossVal` object.
+#' @param ... Additional parameters for the plotting functions.
+#'
+#' @return
+#' No return value; Prints a summary to the console.
+#'
+#' @author
+#' Domenic Franjic
+#' 
 #' @export
 print.SDFMcrossVal <- function(x, ...) {
   
@@ -518,9 +683,34 @@ print.SDFMcrossVal <- function(x, ...) {
 }
 
 #' @method plot SDFMcrossVal
-#' @return A named list of two ggplot objects: \code{CV Results} and \code{BIC Results}.
+#' @title Generic plotting function for SDFMcrossVal S3 objects
+#' @param x `SDFMcrossVal` object.
+#' @param axis_text_size Numeric size of x- and y-axis labels. Prased to ggplot2 
+#' `theme(..., text = element_text(size = axis_text_size))`.
+#' @param legend_title_text_size Numeric size of x- and y-axis labels. Prased to
+#' ggplot2 
+#' `theme(..., legend.title = element_text(size = legend_title_text_size))`.
+#' @param ... Additional parameters for the plotting functions.
+#' 
+#' @return
+#' A named list of `ggplot` objects:
+#' \describe{
+#'   \item{`CV Results`}{`ggplot` object of the cross-validation error against 
+#'   the log Ridge penalty. The overall sparsity level of the loading matrix
+#'   induced by the lasso penalty is indicated by point shapes and colours.}
+#'   \item{`BIC Results`}{`ggplot` object of the BIC against the log Ridge 
+#'   penalty. The overall sparsity level of the loading matrix induced by the 
+#'   lasso penalty is indicated by point shapes and colours.}
+#' }
+#'
+#' @author
+#' Domenic Franjic
+#' 
 #' @export
-plot.SDFMcrossVal <- function(x, ...) {
+plot.SDFMcrossVal <- function(x,                         
+                              axis_text_size = 20, 
+                              legend_title_text_size = 20,  
+                              ...) {
   out_list <- list()
   
   # Plot depending on which stopping criterion has been used
@@ -560,20 +750,22 @@ plot.SDFMcrossVal <- function(x, ...) {
     y_max_limit <- max(cv_data$`CV Errors`)
     out_list$`CV Results` <- ggplot(cv_data, aes(x = `Ridge Penalty`, y = `CV Errors`, colour = `Avg. Lasso Penalty`, 
                                                  shape = `Avg. Lasso Penalty`)) +
-      geom_point(size = 2) +
+      geom_point(size = 3.5) +
       geom_hline(yintercept = cv_data$`CV Errors`[1], colour = "black") +
       scale_colour_manual(values =  c("#88CCEE", "#44799E", "#000000", "#41784A", "#117733"),
                           name = "Avg. Lasso Penalty") +
       scale_shape_discrete(name = "Avg. Lasso Penalty") +
       geom_point(data = subset(cv_data, `CV Errors` == min(`CV Errors`)), aes(x = `Ridge Penalty`, y = `CV Errors`), 
-                 colour = "black", fill = "#882255", size = 3, shape = 22) +
+                 colour = "black", fill = "#882255", size = 7, shape = 22) +
       scale_y_continuous(trans = "log10", limits = c(y_min_limit, y_max_limit)) + 
       scale_x_continuous(trans = "log10") +
       annotate("text",  x = best_ridge, y = best_cv_error,
                label = best_combo, angle = 0, vjust = 1.6, hjust = 1, size = 4, color = "darkred") +
       labs(x = "log Ridge Penalty",
            y = "log CV Error") +
-      theme_minimal()
+      theme_minimal() + 
+      theme(text = element_text(size = axis_text_size),
+            legend.title = element_text(size = legend_title_text_size))
     
     # BIC results
     bic_data <- data.frame(x$BIC$`BIC Results`, check.names = FALSE)
@@ -591,20 +783,22 @@ plot.SDFMcrossVal <- function(x, ...) {
     y_bic_max_limit <- max(bic_data$`BIC`)
     out_list$`BIC Results` <- ggplot(bic_data, aes(x = `Ridge Penalty`, y = `BIC`, colour = `Avg. Lasso Penalty`, 
                                                    shape = `Avg. Lasso Penalty`)) +
-      geom_point(size = 2) +
+      geom_point(size = 3.5) +
       geom_hline(yintercept = bic_data$BIC[1], colour = "black") +
       scale_colour_manual(values =  c("#88CCEE", "#44799E", "#000000", "#41784A", "#117733"),
                           name = "Avg. Lasso Penalty") +
       scale_shape_discrete(name = "Avg. Lasso Penalty") +
       geom_point(data = subset(bic_data, `BIC` == min(`BIC`)), aes(x = `Ridge Penalty`, y = `BIC`), 
-                 colour = "black", fill = "#882255", size = 3, shape = 22) +
+                 colour = "black", fill = "#882255", size = 7, shape = 22) +
       scale_y_continuous(limits = c(y_bic_min_limit, y_bic_max_limit)) + 
       scale_x_continuous(trans = "log10") +
       annotate("text",  x = best_bic_ridge, y = best_bic,
                label = best_bic_combo, angle = 0, vjust = 1.6, hjust = 1, size = 4, color = "darkred") +
       labs(x = "log Ridge Penalty",
            y = "BIC") +
-      theme_minimal()
+      theme_minimal() + 
+      theme(text = element_text(size = axis_text_size),
+            legend.title = element_text(size = legend_title_text_size))
     
   }else if(any(grepl("# non-zero Loadings", colnames(x$CV$`CV Results`), ignore.case = FALSE))){
     
@@ -641,20 +835,22 @@ plot.SDFMcrossVal <- function(x, ...) {
     y_max_limit <- max(cv_data$`CV Errors`)
     out_list$`CV Results` <- ggplot(cv_data, aes(x = `Ridge Penalty`, y = `CV Errors`, colour = `Sparsity Ratio`, 
                                                  shape = `Sparsity Ratio`)) +
-      geom_point(size = 2) +
+      geom_point(size = 3.5) +
       geom_hline(yintercept = cv_data$`CV Errors`[1], colour = "black") +
       scale_colour_manual(values =  c("#88CCEE", "#44799E", "#000000", "#41784A", "#117733"),
                           name = "Sparsity Ratio") +
       scale_shape_discrete(name = "Sparsity Ratio") +
       geom_point(data = subset(cv_data, `CV Errors` == min(`CV Errors`)), aes(x = `Ridge Penalty`, y = `CV Errors`), 
-                 colour = "black", fill = "#882255", size = 3, shape = 22) +
+                 colour = "black", fill = "#882255", size = 7, shape = 22) +
       scale_y_continuous(trans = "log10", limits = c(y_min_limit, y_max_limit)) + 
       scale_x_continuous(trans = "log10") +
       annotate("text",  x = best_ridge, y = best_cv_error,
                label = best_combo, angle = 0, vjust = 1.6, hjust = 1, size = 4, color = "darkred") +
       labs(x = "log Ridge Penalty",
            y = "log CV Error") +
-      theme_minimal()
+      theme_minimal() + 
+      theme(text = element_text(size = axis_text_size),
+            legend.title = element_text(size = legend_title_text_size))
     
     # BIC results
     bic_data <- data.frame(x$BIC$`BIC Results`, check.names = FALSE)
@@ -672,20 +868,22 @@ plot.SDFMcrossVal <- function(x, ...) {
     y_bic_max_limit <- max(bic_data$`BIC`)
     out_list$`BIC Results` <- ggplot(bic_data, aes(x = `Ridge Penalty`, y = `BIC`, colour = `Sparsity Ratio`, 
                                                    shape = `Sparsity Ratio`)) +
-      geom_point(size = 2) +
+      geom_point(size = 3.5) +
       geom_hline(yintercept = bic_data$BIC[1], colour = "black") +
       scale_colour_manual(values =  c("#88CCEE", "#44799E", "#000000", "#41784A", "#117733"),
                           name = "Sparsity Ratio") +
       scale_shape_discrete(name = "Sparsity Ratio") +
       geom_point(data = subset(bic_data, `BIC` == min(`BIC`)), aes(x = `Ridge Penalty`, y = `BIC`), 
-                 colour = "black", fill = "#882255", size = 3, shape = 22) +
+                 colour = "black", fill = "#882255", size = 7, shape = 22) +
       scale_y_continuous(limits = c(y_bic_min_limit, y_bic_max_limit)) + 
       scale_x_continuous(trans = "log10") +
       annotate("text",  x = best_bic_ridge, y = best_bic,
                label = best_bic_combo, angle = 0, vjust = 1.6, hjust = 1, size = 4, color = "darkred") +
       labs(x = "log Ridge Penalty",
            y = "BIC") +
-      theme_minimal()
+      theme_minimal() + 
+      theme(text = element_text(size = axis_text_size),
+            legend.title = element_text(size = legend_title_text_size))
     
   }else if(any(grepl("Maximum No. of LARS Steps", colnames(x$CV$`CV Results`), ignore.case = FALSE))){
     cv_data <- data.frame(x$CV$`CV Results`, check.names = FALSE)
@@ -714,20 +912,22 @@ plot.SDFMcrossVal <- function(x, ...) {
     y_max_limit <- max(cv_data$`CV Errors`)
     out_list$`CV Results` <- ggplot(cv_data, aes(x = `Ridge Penalty`, y = `CV Errors`, colour = `# of LARS Steps`, 
                                                  shape = `# of LARS Steps`)) +
-      geom_point(size = 2) +
+      geom_point(size = 3.5) +
       geom_hline(yintercept = cv_data$`CV Errors`[1], colour = "black") +
       scale_colour_manual(values =  c("#88CCEE", "#44799E", "#000000", "#41784A", "#117733"),
                           name = "# of LARS Steps") +
       scale_shape_discrete(name = "# of LARS Steps") +
       geom_point(data = subset(cv_data, `CV Errors` == min(`CV Errors`)), aes(x = `Ridge Penalty`, y = `CV Errors`), 
-                 colour = "black", fill = "#882255", size = 3, shape = 22) +
+                 colour = "black", fill = "#882255", size = 7, shape = 22) +
       scale_y_continuous(trans = "log10", limits = c(y_min_limit, y_max_limit)) + 
       scale_x_continuous(trans = "log10") +
       annotate("text",  x = best_ridge, y = best_cv_error,
                label = best_combo, angle = 0, vjust = 1.6, hjust = 1, size = 4, color = "darkred") +
       labs(x = "log Ridge Penalty",
            y = "log CV Error") +
-      theme_minimal()
+      theme_minimal() + 
+      theme(text = element_text(size = axis_text_size),
+            legend.title = element_text(size = legend_title_text_size))
     
     # BIC results
     bic_data <- data.frame(x$BIC$`BIC Results`, check.names = FALSE)
@@ -739,20 +939,22 @@ plot.SDFMcrossVal <- function(x, ...) {
     y_bic_max_limit <- max(bic_data$`BIC`)
     out_list$`BIC Results` <- ggplot(bic_data, aes(x = `Ridge Penalty`, y = `BIC`, colour = `# of LARS Steps`, 
                                                    shape = `# of LARS Steps`)) +
-      geom_point(size = 2) +
+      geom_point(size = 3.5) +
       geom_hline(yintercept = bic_data$BIC[1], colour = "black") +
       scale_colour_manual(values =  c("#88CCEE", "#44799E", "#000000", "#41784A", "#117733"),
                           name = "# of LARS Steps") +
       scale_shape_discrete(name = "# of LARS Steps") +
       geom_point(data = subset(bic_data, `BIC` == min(`BIC`)), aes(x = `Ridge Penalty`, y = `BIC`), 
-                 colour = "black", fill = "#882255", size = 3, shape = 22) +
+                 colour = "black", fill = "#882255", size = 7, shape = 22) +
       scale_y_continuous(limits = c(y_bic_min_limit, y_bic_max_limit)) + 
       scale_x_continuous(trans = "log10") +
       annotate("text",  x = best_bic_ridge, y = best_bic,
                label = best_bic_combo, angle = 0, vjust = 1.6, hjust = 1, size = 4, color = "darkred") +
       labs(x = "log Ridge Penalty",
            y = "BIC") +
-      theme_minimal()
+      theme_minimal() + 
+      theme(text = element_text(size = axis_text_size),
+            legend.title = element_text(size = legend_title_text_size))
   }
   
   return(out_list)

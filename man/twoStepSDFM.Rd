@@ -2,7 +2,7 @@
 % Please edit documentation in R/TwoStepSDFM.R
 \name{twoStepSDFM}
 \alias{twoStepSDFM}
-\title{Estimate an SDFM via SPCA and Kalman Filter and Smoother}
+\title{Two Step Sparse Dynamic Factor Model Estimator.}
 \usage{
 twoStepSDFM(
   data,
@@ -10,103 +10,168 @@ twoStepSDFM(
   selected,
   no_of_factors,
   max_factor_lag_order = 10,
-  decorr_errors = TRUE,
   lag_estim_criterion = "BIC",
+  decorr_errors = TRUE,
   ridge_penalty = 1e-06,
   lasso_penalty = NULL,
   max_iterations = 1000,
   max_no_steps = NULL,
+  weights = NULL,
   comp_null = 1e-15,
-  check_rank = FALSE,
-  conv_crit = 1e-04,
-  conv_threshold = 1e-04,
-  log = FALSE,
+  spca_conv_crit = 1e-04,
   parallel = FALSE,
-  fcast_horizon = 0
+  fcast_horizon = 0,
+  jitter = 1e-08,
+  svd_method = "precise"
 )
 }
 \arguments{
-\item{data}{Numeric (no_of_variables x no_of_observations) matrix of data or zoo/xts object.}
+\item{data}{Numeric (no_of_vars \eqn{\times}{x} no_of_obs) matrix of data or
+zoo/xts object sampled at the same frequency.}
 
-\item{delay}{Integer vector of variable delays.}
+\item{delay}{Integer vector of variable delays, measured as the number of
+months since the latest available observation.}
 
-\item{selected}{Integer vector of the number of selected variables for each factor.}
+\item{selected}{Integer vector of the number of selected variables for each
+factor.}
 
 \item{no_of_factors}{Integer number of factors.}
 
-\item{max_factor_lag_order}{Integer max P of the VAR(P) process of the factors.}
+\item{max_factor_lag_order}{Integer maximum order of the VAR process in the
+transition equation.}
 
-\item{decorr_errors}{Logical, whether or not the errors should be decorrelated.}
+\item{lag_estim_criterion}{Information criterion used for the estimation of
+the factor VAR order (\code{"BIC"} (default), \code{"AIC"}, \code{"HIC"}).}
 
-\item{lag_estim_criterion}{Information criterion used for the estimation of the factor VAR order ("BIC", "AIC", "HIC").}
+\item{decorr_errors}{Logical, whether or not the errors should be
+decorrelated.}
 
 \item{ridge_penalty}{Ridge penalty.}
 
-\item{lasso_penalty}{Numeric vector, lasso penalties for each factor (set to NaN if not intended as stopping criterion).}
+\item{lasso_penalty}{Numeric vector, lasso penalties for each factor (set to
+NULL to disable as stopping criterion).}
 
 \item{max_iterations}{Integer maximum number of iterations.}
 
-\item{max_no_steps}{Integer number of max_no_steps (used for LARS-EN as an alternative).}
+\item{max_no_steps}{Integer number of LARS steps (set to NULL to disable as
+stopping criterion).}
 
-\item{comp_null}{Computational zero.}
+\item{weights}{Numeric vector, weights for each variable weighing the
+\eqn{\ell_1}{`l_1`} size constraint.}
 
-\item{check_rank}{Logical, whether or not the rank of the variance-covariance matrix should be checked.}
+\item{comp_null}{Numeric computational zero.}
 
-\item{conv_crit}{Conversion criterion for the SPCA algorithm.}
+\item{spca_conv_crit}{Conversion threshold for the SPCA algorithm.}
 
-\item{conv_threshold}{Conversion criterion for the coordinate descent algorithm.}
+\item{parallel}{Logical, whether or not to use Eigen's internal parallel
+matrix operations.}
 
-\item{log}{Logical, whether or not output should be printed along the algorithm.}
+\item{fcast_horizon}{Integer number of additional Filter predictions into the
+future.}
 
-\item{parallel}{Logical, whether or not to use Eigen's internal parallel matrix operations.}
+\item{jitter}{Numerical jitter for stability of internal solver algorithms.
+The jitter is added to the diagonal entries of the variance covariance matrix
+of the measurement errors.}
 
-\item{fcast_horizon}{Integer forecasting horizon for factor forecasts}
+\item{svd_method}{Either "fast" or "precise". Option "fast" uses Eigen's
+BDCSVD divide and conquer method for the computation of the singular values.
+Option "precise" (default) implements the slower, but numerically more stable
+JacobiSVD method \insertCite{eigenweb}{TwoStepSDFM}.}
 }
 \value{
-An object of class \code{SDFMFit} with components:
-\describe{
-\item{data}{Original data matrix.}
-\item{loading_matrix_estimate}{Matrix of estimated factor loadings.}
-\item{smoothed_factors}{Matrix or \code{zoo} object containing the smoothed latent factors.}
-\item{smoothed_state_variance}{Matrix with the state covariance matrices corresponding to the smoothed state vector (stacked in column-major order).}
-\item{factor_var_lag_order}{Integer, selected lag order of the factor VAR model.}
-\item{error_var_cov_cholesky_factor}{Lower-triangular Cholesky factor of the estimated measurement error variance–covariance matrix.}
+An object of class SDFMFit with main components:
+#' \describe{
+\item{data}{Original data object.}
+\item{loading_matrix_estim}{Numeric matrix of estimated factor loadings.}
+\item{smoothed_factors}{Object containing the SPCA factor estimates. The
+object inherits its class from data: If data is provided as \code{zoo},
+\code{factor_estim} will be a \code{zoo} object. If data is provided as matrix,
+\code{factor_estim} will be a (\code{no_of_factors}\eqn{\times}{x}\code{no_of_obs}
+matrix.}
+\item{smoothed_state_variance}{(\code{no_of_factors}\eqn{\times}{x}(
+\code{no_of_factors} * \code{no_of_obs})) matrix, where each (\code{no_of_factors}
+\eqn{\times}{x}\code{no_of_factors}) block represents the smoother uncertainty
+at time point\eqn{t}{t}.}
+\item{factor_var_lag_order}{Integer order of the VAR process in the state
+equation.}
+\item{error_var_cov_cholesky_factor}{Numeric lower-triangular Cholesky
+factor of the estimated measurement error variance–covariance matrix.}
+\item{llt_success_code}{Integer indicating the status of the Cholesky
+factorization: \code{0} = LLT succeeded, \code{-1} = LLT failed but LDLT succeeded,
+\code{-2} = both failed and errors are treated as uncorrelated.}
 }
 }
 \description{
-Estimate a sparse mixed-frequency Gaussian dynamic factor model using
-sparse principal components analysis and a state-space representation
-with Kalman filter and smoother. For more details see Franjic and Schweikert (2024) \url{doi:10.2139/ssrn.4733872}.
+Estimate a sparse dynamic factor model with measurement equation
+\deqn{
+  \bm{x}_t = \bm{\Lambda} \bm{f}_{t} + \bm{\xi}_t,\quad \bm{\xi}_t \sim \mathcal{N}(\bm{0}, \bm{\Sigma}_{\xi}),
+}
+and transition equation
+\deqn{
+  \bm{f}_t = \sum_{p=0}^P\bm{\Phi}_p \bm{f}_{t-p} + \bm{\epsilon}_t,\quad \bm{\epsilon}_t \sim \mathcal{N}(\bm{0}, \bm{\Sigma}_{f}).
+}
+using sparse principal components  analysis and the Kalman Filter and
+Smoother according to \insertRef{franjic2024nowcasting}{TwoStepSDFM}.
+}
+\details{
+The function performs a two-step estimation procedure for sparse dynamic
+factor models as described in \insertRef{franjic2024nowcasting}{TwoStepSDFM}.
+In the first step, the factor loading matrix is estimated using SPCA
+\insertCite{zou2006sparse}{TwoStepSDFM}. This will shrink some of the
+loadings towards or exactly to zero. In the second step the latent factors
+are estimated using the univariate representation of the Kalman Filter and
+Smoother \insertCite{koopman2000fast}{TwoStepSDFM}.
+
+The function takes three stopping criteria for the SPCA algorithm:
+\code{selected}, \code{lasso_penalty}, and \code{max_no_steps}. The argument \code{weights}
+allows specifying weights for the \eqn{\ell_1}{l1} constraint.  \code{svd_method}
+controls the decomposition method for internal SVDs. For a detailed
+description of these arguments and the SPCA step, see
+\code{\link{sparsePCA}}.
+
+With respect to the univariate representation of the Kalman filter and
+smoother, \code{decorr_errors} indicates whether the data should be decorrelated
+internally prior to filtering and smoothing. \code{jitter} is added to the
+diagonal elements of the measurement variance–covariance matrix. For more
+details, see \code{\link{kalmanFilterSmoother}}.
+
+For more information on the two-step estimation procedure see
+\insertRef{franjic2024nowcasting}{TwoStepSDFM}.
 }
 \examples{
-\dontrun{
-set.seed(02102025)
-no_of_observations <- 100
-no_of_variables <- 20
-no_of_factors <- 3
-trans_error_var_cov <- diag(1, no_of_factors)
-loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
-meas_error_mean <- rep(0, no_of_variables)
-meas_error_var_cov <- diag(1, no_of_variables)
-trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
-factor_lag_order <- 2
-FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
-            no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
-            meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
-            trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
-            factor_lag_order = factor_lag_order)
+data(factor_model)
+no_of_vars <- dim(factor_model$data)[2]
+no_of_factors <- dim(factor_model$factors)[2]
+sdfm_fit <- twoStepSDFM(data = factor_model$data, delay = factor_model$delay,
+                        selected = rep(floor(0.5 * no_of_vars), no_of_factors),
+                        no_of_factors = no_of_factors)
+print(sdfm_fit)
+sdfm_plots <- plot(sdfm_fit)
+sdfm_plots$`Factor Time Series Plots`
+sdfm_plots$`Loading Matrix Heatmap`
+sdfm_plots$`Meas. Error Var.-Cov. Matrix Heatmap`
+sdfm_plots$`Meas. Error Var.-Cov. Eigenvalue Plot`
 
-# Estimate a 2-factor model
-fit <- twoStepSDFM(
-  data = FM$data,
-  delay = FM$delay,
-  selected = rep(floor(0.2 * no_of_variables), no_of_factors),
-  no_of_factors = no_of_factors
-)
-
-# Inspect the results
-print(fit)
-plots <- plot(fit)
 }
+\references{
+\insertRef{koopman2000fast}{TwoStepSDFM}
 
+\insertRef{zou2006sparse}{TwoStepSDFM}
+
+\insertRef{eigenweb}{TwoStepSDFM}
+
+\insertRef{franjic2024nowcasting}{TwoStepSDFM}
+}
+\seealso{
+\code{\link{sparsePCA}}: Routine for fitting estimating a sparse factor
+loading matrix.
+
+\code{\link{kalmanFilterSmoother}}: Routine for filtering and smoothing
+latent factors.
+
+\code{\link{twoStepDenseDFM}}: Two-step estimation routine for a dense
+dynamic factor model.
+}
+\author{
+Domenic Franjic
 }

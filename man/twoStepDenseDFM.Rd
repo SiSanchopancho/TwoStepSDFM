@@ -2,89 +2,132 @@
 % Please edit documentation in R/TwoStepDenseDFM.R
 \name{twoStepDenseDFM}
 \alias{twoStepDenseDFM}
-\title{Estimate a DFM via PCA and Kalman Filter and Smoother.}
+\title{Two Step Dense Dynamic Factor Model Estimator.}
 \usage{
 twoStepDenseDFM(
   data,
   delay,
   no_of_factors,
   max_factor_lag_order = 10,
-  decorr_errors = TRUE,
   lag_estim_criterion = "BIC",
+  decorr_errors = TRUE,
   comp_null = 1e-15,
-  check_rank = FALSE,
-  log = FALSE,
   parallel = FALSE,
-  fcast_horizon = 0
+  fcast_horizon = 0,
+  jitter = 1e-08
 )
 }
 \arguments{
-\item{data}{Numeric (no_of_variables x no_of_observations) matrix of data or zoo/xts object.}
+\item{data}{Numeric (no_of_vars \eqn{\times}{x} no_of_obs) matrix of data or
+zoo/xts object sampled at the same frequency.}
 
 \item{delay}{Integer vector of variable delays.}
 
 \item{no_of_factors}{Integer number of factors.}
 
-\item{max_factor_lag_order}{Integer max P of the VAR(P) process of the factors.}
+\item{max_factor_lag_order}{Integer maximum order of the VAR process in the
+transition equation.}
 
-\item{decorr_errors}{Logical, whether or not the errors should be decorrelated.}
+\item{lag_estim_criterion}{Information criterion used for the estimation of
+the factor VAR order (\code{"BIC"} (default), \code{"AIC"}, \code{"HIC"}).}
 
-\item{lag_estim_criterion}{Information criterion used for the estimation of the factor VAR order ("BIC", "AIC", "HIC").}
+\item{decorr_errors}{Logical, whether or not the errors should be
+decorrelated.}
 
-\item{comp_null}{Computational zero.}
+\item{comp_null}{Numeric computational zero.}
 
-\item{check_rank}{Logical, whether or not the rank of the variance-covariance matrix should be checked.}
+\item{parallel}{Logical, whether or not to use Eigen's internal parallel
+matrix operations.}
 
-\item{log}{Logical, whether or not output should be printed along the algorithm.}
+\item{fcast_horizon}{Integer number of additional Filter predictions into the
+future.}
 
-\item{parallel}{Logical, whether or not to use Eigen's internal parallel matrix operations.}
-
-\item{fcast_horizon}{Integer forecasting horizon for factor forecasts}
+\item{jitter}{Numerical jitter for stability of internal solver algorithms.
+The jitter is added to the diagonal entries of the variance covariance matrix
+of the measurement errors.}
 }
 \value{
-An object of class \code{DFMFit} with components:
-\describe{
-\item{data}{Original data matrix.}
-\item{loading_matrix_estimate}{Matrix of estimated factor loadings.}
-\item{smoothed_factors}{Matrix or \code{zoo} object containing the smoothed latent factors.}
-\item{smoothed_state_variance}{Matrix with the state covariance matrices corresponding to the smoothed state vector (stacked in column-major order).}
-\item{factor_var_lag_order}{Integer, selected lag order of the factor VAR model.}
-\item{error_var_cov_cholesky_factor}{Lower-triangular Cholesky factor of the estimated measurement error variance–covariance matrix.}
+An object of class SDFMFit with main components:
+#' \describe{
+\item{data}{Original data object.}
+\item{loading_matrix_estim}{Numeric matrix of estimated factor loadings.}
+\item{smoothed_factors}{Object containing the SPCA factor estimates. The
+object inherits its class from data: If data is provided as \code{zoo},
+\code{factor_estim} will be a \code{zoo} object. If data is provided as matrix,
+\code{factor_estim} will be a (\code{no_of_factors}\eqn{\times}{x}\code{no_of_obs}
+matrix.}
+\item{smoothed_state_variance}{(\code{no_of_factors}\eqn{\times}{x}(
+\code{no_of_factors} * \code{no_of_obs})) matrix, where each (\code{no_of_factors}
+\eqn{\times}{x}\code{no_of_factors}) block represents the smoother uncertainty
+at time point\eqn{t}{t}.}
+\item{factor_var_lag_order}{Integer order of the VAR process in the state
+equation.}
+\item{error_var_cov_cholesky_factor}{Numeric lower-triangular Cholesky
+factor of the estimated measurement error variance–covariance matrix.}
+\item{llt_success_code}{Integer indicating the status of the Cholesky
+factorization: \code{0} = LLT succeeded, \code{-1} = LLT failed but LDLT succeeded,
+\code{-2} = both failed and errors are treated as uncorrelated.}
 }
 }
 \description{
-Estimate a dense (approximate) dynamic factor model via principal components
-analysis and a state-space representation with Kalman filter and smoother,
-following Giannone, Reichlin and Small (2008) \url{doi:10.1016/j.jmoneco.2008.05.010}
-and Doz, Giannone and Reichlin (2011) \url{doi:10.1016/j.jeconom.2011.02.012}.
+Estimate a dense dynamic factor model with measurement equation
+\deqn{
+  \bm{x}_t = \bm{\Lambda} \bm{f}_{t} + \bm{\xi}_t,\quad \bm{\xi}_t \sim \mathcal{N}(\bm{0}, \bm{\Sigma}_{\xi}),
+}
+and transition equation
+\deqn{
+  \bm{f}_t = \sum_{p=0}^P\bm{\Phi}_p \bm{f}_{t-p} + \bm{\epsilon}_t,\quad \bm{\epsilon}_t \sim \mathcal{N}(\bm{0}, \bm{\Sigma}_{f}).
+}
+using principal components  analysis and the Kalman Filter and
+Smoother according to \insertRef{Giannone2008Nowcasting}{TwoStepSDFM} and
+\insertRef{Doz2011Two_step}{TwoStepSDFM}.
+}
+\details{
+The function performs a two-step estimation procedure for dense dynamic
+factor models as described in \insertRef{Giannone2008Nowcasting}{TwoStepSDFM}
+and \insertRef{Doz2011Two_step}{TwoStepSDFM}. In the first step, the factor
+loading matrix is estimated using PCA. In the second step the latent factors
+are estimated using the univariate representation of the Kalman Filter and
+Smoother \insertCite{koopman2000fast}{TwoStepSDFM}.
+
+With respect to the univariate representation of the Kalman filter and
+smoother, \code{decorr_errors} indicates whether the data should be decorrelated
+internally prior to filtering and smoothing. \code{jitter} is added to the
+diagonal elements of the measurement variance–covariance matrix. For more
+details, see \code{\link{kalmanFilterSmoother}}.
 }
 \examples{
-\dontrun{
-set.seed(02102025)
-no_of_observations <- 100
-no_of_variables <- 20
-no_of_factors <- 3
-trans_error_var_cov <- diag(1, no_of_factors)
-loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
-meas_error_mean <- rep(0, no_of_variables)
-meas_error_var_cov <- diag(1, no_of_variables)
-trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
-factor_lag_order <- 2
-FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
-            no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
-            meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
-            trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
-            factor_lag_order = factor_lag_order)
+data(factor_model)
+no_of_vars <- dim(factor_model$data)[2]
+no_of_factors <- dim(factor_model$factors)[2]
+dfm_fit <- twoStepDenseDFM(data = factor_model$data, delay = factor_model$delay, no_of_factors = no_of_factors)
+print(dfm_fit)
+dfm_plots <- plot(dfm_fit)
+dfm_plots$`Factor Time Series Plots`
+dfm_plots$`Loading Matrix Heatmap`
+dfm_plots$`Meas. Error Var.-Cov. Matrix Heatmap`
+dfm_plots$`Meas. Error Var.-Cov. Eigenvalue Plot`
 
-# Estimate a dense 2-factor model
-fit <- twoStepDenseDFM(
-  data = FM$data,
-  delay = FM$delay,
-  no_of_factors = no_of_factors
-)
-
-print(fit)
-plots <- plot(fit)
 }
+\references{
+\insertRef{koopman2000fast}{TwoStepSDFM}
 
+\insertRef{Giannone2008Nowcasting}{TwoStepSDFM}
+
+\insertRef{eigenweb}{TwoStepSDFM}
+
+\insertRef{Doz2011Two_step}{TwoStepSDFM}
+}
+\seealso{
+\code{\link{sparsePCA}}: Routine for fitting estimating a sparse factor
+loading matrix.
+
+\code{\link{kalmanFilterSmoother}}: Routine for filtering and smoothing
+latent factors.
+
+\code{\link{twoStepSDFM}}: Two-step estimation routine for a sparse dynamic
+factor model.
+}
+\author{
+Domenic Franjic
 }

@@ -4,56 +4,37 @@
 \alias{plot.SDFMFit}
 \title{Generic plotting function for SDFMFit S3 objects}
 \usage{
-\method{plot}{SDFMFit}(x, ...)
+\method{plot}{SDFMFit}(x, axis_text_size = 20, legend_title_text_size = 20, ...)
 }
 \arguments{
 \item{x}{\code{SDFMFit} object.}
+
+\item{axis_text_size}{Numeric size of x- and y-axis labels. Passed to ggplot2
+\code{theme(..., text = element_text(size = axis_text_size))}.}
+
+\item{legend_title_text_size}{Numeric size of x- and y-axis labels. Passed to
+ggplot2
+\code{theme(..., legend.title = element_text(size = legend_title_text_size))}.}
 
 \item{...}{Additional parameters for the plotting functions.}
 }
 \value{
 A named list of plot objects:
 \describe{
-\item{\verb{Factor Time Series Plots}}{\code{patchwork}/\code{ggplot} object showing the estimated factors over time with 95\% confidence bands of the Kalman Filter and Smoother.}
-\item{\verb{Loading Matrix Heatmap}}{\code{ggplot} object showing a heatmap of the estimated factor loadings. Zeros are highlighted in black.}
-\item{\verb{Meas. Error Var.-Cov. Matrix Heatmap}}{\code{ggplot} object showing a heatmap of the measurement error variance–covariance matrix.}
+\item{\verb{Factor Time Series Plots}}{\code{patchwork}/\code{ggplot} object graphing the
+estimated factors over time with 95\% confidence bands based on the smoother
+uncertainty of the Kalman Filter and Smoother.}
+\item{\verb{Loading Matrix Heatmap}}{\code{ggplot} object showing a heatmap of the
+estimated factor loadings. Zeros are highlighted in black.}
+\item{\verb{Meas. Error Var.-Cov. Matrix Heatmap}}{\code{ggplot} object showing a
+heatmap of the measurement error variance-covariance matrix.}
+\item{\verb{Eigenvalue Plot}}{\code{ggplot} object showing a bar plot of the
+eigenvalues of the measurement error variance–covariance matrix.}
 }
 }
 \description{
-Create diagnostic plots for an \code{SDFMFit} object, including factor time series,
-the loading matrix heatmap and the measurement error variance–covariance matrix heatmap.
+Generic plotting function for SDFMFit S3 objects
 }
-\examples{
-\dontrun{
-set.seed(02102025)
-no_of_observations <- 100
-no_of_variables <- 20
-no_of_factors <- 3
-trans_error_var_cov <- diag(1, no_of_factors)
-loading_matrix <- matrix(round(rnorm(no_of_variables * no_of_factors)), no_of_variables, no_of_factors)
-meas_error_mean <- rep(0, no_of_variables)
-meas_error_var_cov <- diag(1, no_of_variables)
-trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
-factor_lag_order <- 2
-FM <- simFM(no_of_observations = no_of_observations, no_of_variables = no_of_variables, 
-            no_of_factors = no_of_factors, loading_matrix = loading_matrix, 
-            meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
-            trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff, 
-            factor_lag_order = factor_lag_order)
-
-# Estimate a 2-factor model
-fit <- twoStepSDFM(
-  data = FM$data,
-  delay = FM$delay,
-  selected = rep(floor(0.2 * no_of_variables), no_of_factors),
-  no_of_factors = no_of_factors
-)
-
-# Inspect the results
-plots <- plot(fit)
-plots$`Factor Time Series Plots`
-plots$`Loading Matrix Heatmap`
-plots$`Meas. Error Var.-Cov. Matrix Heatmap`
-}
-
+\author{
+Domenic Franjic
 }

@@ -20,6 +20,7 @@
 
 #include "../inst/include/Internals/Orders.h"
 
+#if !defined(_MSC_VER)
 // Source: Onatski, A. (2009). Supplement to "Testing hypotheses about the number of factors in large factor models". In Econometrica, 77(5). The Econometric Society. https://www.econometricsociety.org/publications/econometrica/issue-supplemental-materials/2009/09
  //' @description
   //' This function is for internal use only and may change in future releases
@@ -68,7 +69,9 @@ Rcpp::List runNoOfFactors(
   return Rcpp::List::create(Rcpp::Named("no_of_factors") = Rcpp::wrap(no_of_factors),
     Rcpp::Named("p_value") = Rcpp::wrap(p_value),
     Rcpp::Named("test_statistic") = Rcpp::wrap(test_statistic),
-    Rcpp::Named("confidence_threshold") = Rcpp::wrap(confidence_threshold)
+    Rcpp::Named("confidence_threshold") = Rcpp::wrap(confidence_threshold),
+    Rcpp::Named("eigen_values") = Rcpp::wrap(eigen_values)
   );
 
 }
+#endif

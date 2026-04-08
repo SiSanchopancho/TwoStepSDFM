@@ -25,11 +25,16 @@
 #define ENET_SOLVER
 
  // Including external libraries
+#if !defined(_MSC_VER)
+#include <Rcpp.h>
+#define EIGEN_NO_DEBUG
 #include <RcppEigen.h>
+#else
+#include <Eigen>
+#endif
 #include <stdlib.h>
 #include <math.h>
 #include <cfloat>
-#include <Rcpp.h>
 
 // Including internal libraries
 #include "CholUpDown.h"
@@ -39,11 +44,14 @@
 - Zou, H., Hastie, T., & Zou, M. H. (2016). Package "elasticnet". (https://cran.r-project.org/web/packages/elasticnet/index.html)
 - Efron, B., Hastie, T., Johnstone, I., & Tibshirani, R. (2004). Least angle regression. (DOI: 10.1214/009053604000000067)
 - Zou, H., & Hastie, T. (2005). Regularization and variable selection via the elastic net. Journal of the Royal Statistical Society Series B: Statistical Methodology, 67(2), 301-320. (DOI: https://doi.org/10.1111/j.1467-9868.2005.00527.x)
+- Zou, H., & Zhang, H. H. (2009). On the adaptive elastic-net with a diverging number of parameters. Annals of statistics, 37(4), 1733.
+- Zou, H. (2006). The adaptive lasso and its oracle properties. Journal of the American statistical association, 101(476), 1418-1429.
 */
 template<bool return_penalties>
 Eigen::MatrixXd LARS(
   const Eigen::VectorXd& y,  // VOI
-  const Eigen::MatrixXd& X, // Predictors
+  const Eigen::MatrixXd& X_in, // Predictors
+  const Eigen::VectorXd& weights,
   const double& l2 = 10e-6, // l2 Penalty
   double l1 = NAN, // l1 penalty (used for stopping)
   int selected_in = INT_MAX, // Number of selected variables
@@ -55,7 +63,7 @@ Eigen::MatrixXd LARS(
   /* Dummies */
 
   // Integers
-  const int N = static_cast<int>(X.cols()), T = static_cast<Eigen::Index>(X.rows());
+  const int N = static_cast<int>(X_in.cols()), T = static_cast<Eigen::Index>(X_in.rows());
   int selected = selected_in, just_left = -1, curr_var_index = -1, gamma_index = -1, size_A_C = N, size_A = 0, s = 0, drop_index = -1;
 
   // Bools
@@ -65,7 +73,7 @@ Eigen::MatrixXd LARS(
   double gamma = DBL_MAX, gamma_hat = DBL_MAX, A_A = DBL_MAX, gamma_tilde = DBL_MAX, C_hat = DBL_MAX, l2_sqrt = sqrt(l2), l2_sqrt_inv = 1 / sqrt(1 + l2);
 
   // Matrices
-  Eigen::MatrixXd L = Eigen::MatrixXd::Zero(N, N);
+  Eigen::MatrixXd L = Eigen::MatrixXd::Zero(N, N), X = X_in * weights.cwiseInverse().asDiagonal();
 
   // Vectors
   Eigen::VectorXd w_A_vec = Eigen::VectorXd::Zero(N), L_T_G_inv = Eigen::VectorXd::Zero(N), G_A_inv_one = Eigen::VectorXd::Zero(N), g_tilde = Eigen::VectorXd::Zero(N),
@@ -234,7 +242,7 @@ Eigen::MatrixXd LARS(
         return pen(Eigen::seq(0, s)) * (2.0 / l2_sqrt_inv);
       }
       else {
-        return beta_hat;
+        return weights.cwiseInverse().asDiagonal() * beta_hat;
       }
 
     }
@@ -279,7 +287,7 @@ Eigen::MatrixXd LARS(
           return pen(Eigen::seq(0, s)) * (2.0 / l2_sqrt_inv);
         }
         else {
-          return beta_hat;
+          return weights.cwiseInverse().asDiagonal() * beta_hat;
         }
       }
     }
@@ -293,7 +301,7 @@ Eigen::MatrixXd LARS(
     return pen(Eigen::seq(0, s)) * (2.0 / l2_sqrt_inv);
   }
   else {
-    return beta_hat;
+    return weights.cwiseInverse().asDiagonal() * beta_hat;
   }
 }
 

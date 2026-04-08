@@ -19,7 +19,12 @@
  */
 
 
+
+#if !defined(_MSC_VER)
 #include "Internals/DataHandle.h"
+#else
+#include "DataHandle.h"
+#endif
 
 /* Compute the variance co-variance matrix */
 Eigen::MatrixXd DataHandle::cov(const Eigen::MatrixXd& X_in)
