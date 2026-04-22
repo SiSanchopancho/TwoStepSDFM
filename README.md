@@ -20,17 +20,17 @@ The ``TwoStepSDFM`` package provides a fast implementation of the Kalman Filter 
 - **Fast SPCA**: ``sparsePCA()`` exposes the internal ``C++``-backed SPCA routine in ``R``. This provides access to a fast and memory-efficient SPCA estimation routine as implemented by Zou and Hastie (2020) in pure R.
 - **Fast Kalman Filter and Smoother**: The ``kalmanFilterSmoother()`` function exposes the internal ``C++``-backed KFS routine.
 
+## Installation
+
+The package is available on CRAN and can be installed via ``install.packages("TwoStepSDFM")``. If this turns out to be no longer possible, run the PackageBuilder.R file.
+
 ## Prerequisites
+
+For the installation from source via the PackageBuilder.R file, the following is required:
 
 - **Rcpp**: A package for integrating `C++` code into `R` (Eddelbuettel and François, 2011). [Rcpp CRAN repository](https://CRAN.R-project.org/package=Rcpp)
 - **RcppEigen**: A package for integrating the `Eigen` linear algebra library into `R` (Bates and Eddelbuettel, 2013). [RcppEigen CRAN repository](https://CRAN.R-project.org/package=RcppEigen)
 - **GCC compiler** (version 5.0 or later) [GCC Website](https://gcc.gnu.org/).
-
-## Installation
-
-### Compile from scratch
-
-The package is available on CRAN and can be installed via ``install.packages("TwoStepSDFM")``. If this turns out to be no longer possible, run the PackageBuilder.R file.
 
 ## Usage
 
