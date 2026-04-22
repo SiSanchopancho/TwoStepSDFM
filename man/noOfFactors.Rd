@@ -63,7 +63,8 @@ maximum as the test size decreases with \code{max_no_factors - min_no_factors}.
 }
 \examples{
 data(factor_model)
-no_of_factors_estim <- noOfFactors(data = factor_model$data, min_no_factors = 1, max_no_factors = 5, confidence_threshold = 0.05)
+no_of_factors_estim <- noOfFactors(data = factor_model$data, min_no_factors = 1, 
+                                   max_no_factors = 5, confidence_threshold = 0.05)
 print(no_of_factors_estim)
 factor_estim_plots <- plot(no_of_factors_estim)
 factor_estim_plots$`Eigen Value Plot`

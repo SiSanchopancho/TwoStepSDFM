@@ -32,5 +32,7 @@ devtools::clean_dll()
 devtools::clean_vignettes()
 
 # Build and install package
-devtools::build()
-install.packages("../TwoStepSDFM_0.2.0.tar.gz", repos = NULL, type = "source")
+Rcpp::compileAttributes()
+pkgload::load_all(compile = FALSE)
+roxygen2::roxygenise(load_code = "source")
+devtools::install()

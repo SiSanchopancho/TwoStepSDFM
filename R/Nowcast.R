@@ -162,8 +162,8 @@ NULL
 #' sparse_nowcast <- nowcast(data = mixed_freq_factor_model$data, variables_of_interest = c(1, 2),
 #'                           max_fcast_horizon = 4, delay = mixed_freq_factor_model$delay,
 #'                           selected = rep(floor(0.5 * no_of_vars), no_of_factors), 
-#'                           frequency = mixed_freq_factor_model$frequency, no_of_factors = no_of_factors, 
-#'                        sparse = TRUE)
+#'                           frequency = mixed_freq_factor_model$frequency, 
+#'                           no_of_factors = no_of_factors, sparse = TRUE)
 #' print(sparse_nowcast)
 #' dense_nowcast <- nowcast(data = mixed_freq_factor_model$data, variables_of_interest = c(1, 2),
 #'                          max_fcast_horizon = 4, delay = mixed_freq_factor_model$delay,

@@ -48,7 +48,7 @@ of the measurement errors.}
 }
 \value{
 An object of class SDFMFit with main components:
-#' \describe{
+\describe{
 \item{data}{Original data object.}
 \item{loading_matrix_estim}{Numeric matrix of estimated factor loadings.}
 \item{smoothed_factors}{Object containing the SPCA factor estimates. The
@@ -100,7 +100,8 @@ details, see \code{\link{kalmanFilterSmoother}}.
 data(factor_model)
 no_of_vars <- dim(factor_model$data)[2]
 no_of_factors <- dim(factor_model$factors)[2]
-dfm_fit <- twoStepDenseDFM(data = factor_model$data, delay = factor_model$delay, no_of_factors = no_of_factors)
+dfm_fit <- twoStepDenseDFM(data = factor_model$data, delay = factor_model$delay, 
+                           no_of_factors = no_of_factors)
 print(dfm_fit)
 dfm_plots <- plot(dfm_fit)
 dfm_plots$`Factor Time Series Plots`

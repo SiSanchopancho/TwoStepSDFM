@@ -136,12 +136,14 @@ NULL
 #' selected <- rep(floor(0.5 * no_of_vars), no_of_factors)
 #' lasso_penalty <- exp(runif(no_of_factors, -10, 1))
 #' max_no_steps <- 1000
-#' spca_fit <- sparsePCA(data = factor_model$data, delay = factor_model$delay, selected = selected,
-#'                       no_of_factors = no_of_factors, ridge_penalty = 1e-2, lasso_penalty = lasso_penalty,
-#'                       max_iterations = 1000, weights = NULL, max_no_steps = max_no_steps, comp_null = 1e-15,
-#'                       spca_conv_crit = 1e-04, parallel = FALSE, svd_method = "precise", normalise = FALSE,
-#'                       comp_var_expl = TRUE
-#' )
+#' spca_fit <- sparsePCA(data = factor_model$data, delay = factor_model$delay, 
+#'                       selected = selected, no_of_factors = no_of_factors, 
+#'                       ridge_penalty = 1e-2, lasso_penalty = lasso_penalty,
+#'                       max_iterations = 1000, weights = NULL, 
+#'                       max_no_steps = max_no_steps, comp_null = 1e-15,
+#'                       spca_conv_crit = 1e-04, parallel = FALSE, 
+#'                       svd_method = "precise", normalise = FALSE,
+#'                       comp_var_expl = TRUE)
 #' print(spca_fit)
 #' spca_plots <- plot(spca_fit)
 #' spca_plots$`Factor Time Series Plots`

@@ -29,38 +29,8 @@ months since the latest available observation.}
 }
 }
 \source{
-Generated via
-seed <- 02102025
-set.seed(seed)
-no_of_obs <- 300
-no_of_vars <- 50
-no_of_factors <- 3
-trans_error_var_cov <- diag(1, no_of_factors)
-loading_matrix <- matrix(rnorm(no_of_vars * no_of_factors), no_of_vars, no_of_factors)
-meas_error_mean <- rep(0, no_of_vars)
-meas_error_var_cov <- diag(1, no_of_vars)
-trans_var_coeff <- cbind(diag(0.5, no_of_factors), -diag(0.25, no_of_factors))
-factor_lag_order <- 2
-delay <- c(2, 1, floor(rexp(no_of_vars - 2, 1)))
-quarterfy <- TRUE
-quarterly_variable_ratio <- 0.1
-corr <- TRUE
-beta_param <- 2
-burn_in <- 999
-starting_date <- "1970-01-01"
-rescale <- FALSE
-check_stationarity <- TRUE
-stationarity_check_threshold <- 1e-10
-mixed_freq_factor_model <- simFM(no_of_obs = no_of_obs, no_of_vars = no_of_vars,
-no_of_factors = no_of_factors, loading_matrix = loading_matrix,
-meas_error_mean = meas_error_mean, meas_error_var_cov = meas_error_var_cov,
-trans_error_var_cov = trans_error_var_cov, trans_var_coeff = trans_var_coeff,
-factor_lag_order = factor_lag_order, delay = delay, quarterfy = quarterfy,
-quarterly_variable_ratio  = quarterly_variable_ratio, corr = corr,
-beta_param = beta_param, seed = seed, burn_in = burn_in,
-starting_date = starting_date, rescale = rescale,
-check_stationarity = check_stationarity,
-stationarity_check_threshold = stationarity_check_threshold)
+Generated via Generated via \code{simFM()}. For details see
+\code{mixed_freq_factor_model$call}.
 }
 \usage{
 mixed_freq_factor_model

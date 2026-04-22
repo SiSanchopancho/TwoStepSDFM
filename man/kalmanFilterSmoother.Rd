@@ -61,7 +61,7 @@ decorrelated (should be \code{TRUE} if \code{meas_error_var_cov} is not diagonal
 matrix operations.}
 
 \item{jitter}{Numerical jitter for stability of internal solver algorithms.
-The jitter is added to the diagonal entries of the variance covariance matrix
+The jitter is added to the diagonal entries of the variance-covariance matrix
 of the measurement errors.}
 }
 \value{
@@ -107,7 +107,7 @@ that the data can be decorrelated internally prior to filtering and smoothing.
 When decorrelating, the function first adds \code{jitter} to the diagonal elements
 of \code{meas_error_var_cov} and then tries to compute the Cholesky factor via
 Eigen's standard LLT decomposition \insertCite{eigenweb}{TwoStepSDFM}. If the
-initial decorrelation fails, the silently switches to Eigen's more robust,
+initial decorrelation fails, it silently switches to Eigen's more robust,
 but slower, LDLT decomposition with pivoting
 \insertCite{eigenweb}{TwoStepSDFM}. If this also fails, it is likely that
 \code{meas_error_var_cov} is not well-behaved. The analysis should be repeated
@@ -120,10 +120,14 @@ data(factor_model)
 no_of_factors <- dim(factor_model$factors)[2]
 factor_lag_order <- dim(factor_model$trans_var_coeff)[2] / no_of_factors
 filter_fit <- kalmanFilterSmoother(data = factor_model$data, delay = factor_model$delay, 
-                                   no_of_factors = no_of_factors, loading_matrix = factor_model$loading_matrix, 
-                                   meas_error_var_cov = factor_model$meas_error_var_cov, trans_error_var_cov = factor_model$trans_error_var_cov,
-                                   trans_var_coeff = factor_model$trans_var_coeff, factor_lag_order = factor_lag_order, 
-                                   fcast_horizon = 5, decorr_errors = TRUE,  comp_null = 1e-15, parallel = FALSE,  jitter = 1e-8)
+                                   no_of_factors = no_of_factors, 
+                                   loading_matrix = factor_model$loading_matrix, 
+                                   meas_error_var_cov = factor_model$meas_error_var_cov, 
+                                   trans_error_var_cov = factor_model$trans_error_var_cov,
+                                   trans_var_coeff = factor_model$trans_var_coeff, 
+                                   factor_lag_order = factor_lag_order, 
+                                   fcast_horizon = 5, decorr_errors = TRUE,  
+                                   comp_null = 1e-15, parallel = FALSE,  jitter = 1e-8)
 print(filter_fit)
 filter_plots <- plot(filter_fit)
 filter_plots$`Factor Time Series Plots`

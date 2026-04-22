@@ -98,7 +98,7 @@ algorithm.}
 \item{parallel}{Logical, whether or not to run the cross-validation loop in
 parallel.}
 
-\item{no_of_cores}{Integer number of course to use when run in parallel.}
+\item{no_of_cores}{Integer number of cores to use when run in parallel.}
 
 \item{max_ar_lag_order}{Integer maximum number of lags of the target variable
 included in the final ARDL prediction routine.}
@@ -133,8 +133,9 @@ and corresponding hyper-parameter values) and \verb{Min. BIC} (row of
 \description{
 This function uses time series cross-validation
 \insertCite{rob2018forecasting}{TwoStepSDFM} in combination with random
-hyper-parameter search \insertCite{bergstra2012random}{TwoStepSDFM} as
-described in \insertRef{franjic2024nowcasting}{TwoStepSDFM}.
+hyper-parameter search \insertCite{bergstra2012random}{TwoStepSDFM} to
+validate the hyper-parameters of a sparse dynamic factor model as described
+in \insertRef{franjic2024nowcasting}{TwoStepSDFM}
 }
 \details{
 \code{fcast_horizon} should be set to the target prediction horizon, as
@@ -172,9 +173,11 @@ data(mixed_freq_factor_model)
 no_of_vars <- dim(mixed_freq_factor_model$data)[2]
 no_of_factors <- dim(mixed_freq_factor_model$factors)[2]
 cv_results <- crossVal(data = mixed_freq_factor_model$data, variable_of_interest = 1, 
-                       fcast_horizon = 0, delay = mixed_freq_factor_model$delay, frequency = mixed_freq_factor_model$frequency,
-                       no_of_factors = no_of_factors, seed = 25032026, min_ridge_penalty = 1e-5, 
-                       max_ridge_penalty = 10, cv_repetitions = 1, cv_size = 50, lasso_penalty_type = "selected",
+                       fcast_horizon = 0, delay = mixed_freq_factor_model$delay, 
+                       frequency = mixed_freq_factor_model$frequency,
+                       no_of_factors = no_of_factors, seed = 25032026,
+                       min_ridge_penalty = 1e-5, max_ridge_penalty = 10, 
+                       cv_repetitions = 1, cv_size = 50, lasso_penalty_type = "selected",
                        min_max_penalty = c(5, 45), verbose = FALSE)
 print(cv_results)
 cv_plots <- plot(cv_results)        

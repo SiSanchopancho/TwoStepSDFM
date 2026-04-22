@@ -124,10 +124,14 @@ NULL
 #' no_of_factors <- dim(factor_model$factors)[2]
 #' factor_lag_order <- dim(factor_model$trans_var_coeff)[2] / no_of_factors
 #' filter_fit <- kalmanFilterSmoother(data = factor_model$data, delay = factor_model$delay, 
-#'                                    no_of_factors = no_of_factors, loading_matrix = factor_model$loading_matrix, 
-#'                                    meas_error_var_cov = factor_model$meas_error_var_cov, trans_error_var_cov = factor_model$trans_error_var_cov,
-#'                                    trans_var_coeff = factor_model$trans_var_coeff, factor_lag_order = factor_lag_order, 
-#'                                    fcast_horizon = 5, decorr_errors = TRUE,  comp_null = 1e-15, parallel = FALSE,  jitter = 1e-8)
+#'                                    no_of_factors = no_of_factors, 
+#'                                    loading_matrix = factor_model$loading_matrix, 
+#'                                    meas_error_var_cov = factor_model$meas_error_var_cov, 
+#'                                    trans_error_var_cov = factor_model$trans_error_var_cov,
+#'                                    trans_var_coeff = factor_model$trans_var_coeff, 
+#'                                    factor_lag_order = factor_lag_order, 
+#'                                    fcast_horizon = 5, decorr_errors = TRUE,  
+#'                                    comp_null = 1e-15, parallel = FALSE,  jitter = 1e-8)
 #' print(filter_fit)
 #' filter_plots <- plot(filter_fit)
 #' filter_plots$`Factor Time Series Plots`

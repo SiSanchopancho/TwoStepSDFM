@@ -11,6 +11,7 @@
 #' @import doSNOW
 #' @import foreach
 #' @import parallel
+#' @import withr
 NULL
 
 # SPDX-License-Identifier: GPL-3.0-or-later
@@ -171,9 +172,11 @@ NULL
 #' no_of_vars <- dim(mixed_freq_factor_model$data)[2]
 #' no_of_factors <- dim(mixed_freq_factor_model$factors)[2]
 #' cv_results <- crossVal(data = mixed_freq_factor_model$data, variable_of_interest = 1, 
-#'                        fcast_horizon = 0, delay = mixed_freq_factor_model$delay, frequency = mixed_freq_factor_model$frequency,
-#'                        no_of_factors = no_of_factors, seed = 25032026, min_ridge_penalty = 1e-5, 
-#'                        max_ridge_penalty = 10, cv_repetitions = 1, cv_size = 50, lasso_penalty_type = "selected",
+#'                        fcast_horizon = 0, delay = mixed_freq_factor_model$delay, 
+#'                        frequency = mixed_freq_factor_model$frequency,
+#'                        no_of_factors = no_of_factors, seed = 25032026,
+#'                        min_ridge_penalty = 1e-5, max_ridge_penalty = 10, 
+#'                        cv_repetitions = 1, cv_size = 50, lasso_penalty_type = "selected",
 #'                        min_max_penalty = c(5, 45), verbose = FALSE)
 #' print(cv_results)
 #' cv_plots <- plot(cv_results)        
@@ -215,27 +218,6 @@ crossVal <- function(data,
   
   # Mishandling of seed
   seed <- checkPositiveSignedInteger(seed, "seed", 33)
-  if (!is.null(seed)) {
-    # Save the current global seed if not NULL
-    if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-      old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-      had_seed <- TRUE
-    } else {
-      had_seed <- FALSE
-    }
-    
-    # Re-set the global seed upon exit
-    on.exit({
-      if (had_seed) {
-        assign(".Random.seed", old_seed, envir = .GlobalEnv)
-      } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
-        rm(".Random.seed", envir = .GlobalEnv)
-      }
-    }, add = TRUE)
-    
-    # Set the seed inside the function for reproducibility and the ability to save the seed value inside call
-    set.seed(seed)
-  }
   
   # Misshandling of the data matrix
   if(!is.zoo(data) && !is.xts(data)){
@@ -394,16 +376,20 @@ crossVal <- function(data,
   
   log_min_ridge_penalty <- log(min_ridge_penalty)
   log_max_ridge_penalty <- log(max_ridge_penalty)
-  for(i in 2:cv_size){
-    candidates[i, 1] <- exp(runif(1, log_min_ridge_penalty, log_max_ridge_penalty))
-    if(lasso_penalty_type %in% "steps"){
-      candidates[i, 2] <- floor(runif(1, min_max_penalty[1], min_max_penalty[2]))
-    }else if (lasso_penalty_type %in% "penalty") {
-      candidates[i, 2:(no_of_factors + 1)] <- exp(runif(no_of_factors, log(min_max_penalty[1]), log(min_max_penalty[2])))
-    }else if (lasso_penalty_type %in% "selected") {
-      candidates[i, 2:(no_of_factors + 1)] <- floor(runif(no_of_factors, min_max_penalty[1], min_max_penalty[2]))
-    }
-  }
+  with_seed(seed,
+            {
+              for(i in 2:cv_size){
+                candidates[i, 1] <- exp(runif(1, log_min_ridge_penalty, log_max_ridge_penalty))
+                if(lasso_penalty_type %in% "steps"){
+                  candidates[i, 2] <- floor(runif(1, min_max_penalty[1], min_max_penalty[2]))
+                }else if (lasso_penalty_type %in% "penalty") {
+                  candidates[i, 2:(no_of_factors + 1)] <- exp(runif(no_of_factors, log(min_max_penalty[1]), log(min_max_penalty[2])))
+                }else if (lasso_penalty_type %in% "selected") {
+                  candidates[i, 2:(no_of_factors + 1)] <- floor(runif(no_of_factors, min_max_penalty[1], min_max_penalty[2]))
+                }
+              }
+            }
+  )
   
   cv_results <- matrix(NaN, cv_size, 1)
   bic_results <- matrix(NaN, cv_size, 1)
@@ -627,6 +613,7 @@ nowcastSpecificationHelper <- function(cv_repetitions, no_of_factors, no_of_vari
   cv_h <- mean(fcast_error^2)
   
   return(list(cv = cv_h, bic = bic_h))
+  
 }
 
 #' @method print SDFMcrossVal
