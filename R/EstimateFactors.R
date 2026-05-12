@@ -28,19 +28,23 @@ NULL
 #' @title Estimate the number of Factors
 #' @description
 #' Estimate the number of factors of a linear Gaussian latent factor model using 
-#' via an eigenvalue slope test according to  \insertRef{onatski2009testing}{TwoStepSDFM}.
-#' @param data Numeric (no_of_vars \eqn{\times}{x} no_of_obs) matrix of data or zoo/xts object sampled at the same frequency.
+#' the eigenvalue slope test of \insertRef{onatski2009testing}{TwoStepSDFM} and 
+#' the infromation criterion based approach of 
+#' \insertRef{bai2002determining}{TwoStepSDFM}.
+#' @param data Numeric (no_of_vars \eqn{\times}{x} no_of_obs) matrix of data or 
+#' zoo/xts object sampled at the same frequency.
 #' @param min_no_factors Integer minimum number of factors to be tested.
-#' @param max_no_factors Integer maximum number of factors to be tested (should be at most min_no_factors + 17).
+#' @param max_no_factors Integer maximum number of factors to be tested (should 
+#' be at most min_no_factors + 17).
 #' @param confidence_threshold Numeric threshold value to stop the testing procedure.
 #' 
 #' @details
-#' The procedure splits the data matrix along the time dimension into 
-#' two equally sized (`no_of_vars` \eqn{\times}{x} `cut_off`) sub-matrices 
-#' \eqn{\bm{X}_{1/2}}{`data_fst_half`} and 
-#' \eqn{\bm{X}_{2/2}}{`data_snd_half`}. It then proceeds to build 
+#' The \insertCite{onatski2009testing}{TwoStepSDFM} procedure splits the data 
+#' matrix along the time dimension into two equally sized (`no_of_vars` 
+#' \eqn{\times}{x} `cut_off`) sub-matrices \eqn{\bm{X}_{1/2}}{`data_fst_half`} 
+#' and \eqn{\bm{X}_{2/2}}{`data_snd_half`}. It then proceeds to build 
 #' \eqn{\tilde{\bm{X}} := \bm{X}_{1/2} + i\bm{X}_{2/2}}{`complex_data = data_fst_half + i * data_snd_half`},
-#' where \eqn{i=\sqrt{-1}}{`i=sqrt(-1)`}. We then compute eigenvalues of the 
+#' where \eqn{i=\sqrt{-1}}{`i=sqrt(-1)`}. We then compute the eigenvalues of the 
 #' Gram matrix \eqn{\tilde{\bm{X}} 
 #' \tilde{\bm{X}}^{\dagger}}{`complex_data %*% Conj(t(complex_data))`}, where 
 #' \eqn{\tilde{\bm{X}}^{\dagger}}{`Conj(t(complex_data))`} represents the 
@@ -54,11 +58,18 @@ NULL
 #' As the distribution of the eigenvalues under the null is nonstandard
 #' \insertCite{onatski2009testing}{TwoStepSDFM}, 
 #' simulated critical values are used. They are retrieved from
-#' \insertRef{onatski2009testing_supl}{TwoStepSDFM}. As the range of the simulated critical 
-#' values is limited, the minimum and maximum number of potential factors 
-#' is limited such that `max_no_factors` should be no more than 
-#' `min_no_factors + 17`. However, it is recommended to operate well below this 
-#' maximum as the test size decreases with `max_no_factors - min_no_factors`. 
+#' \insertRef{onatski2009testing_supl}{TwoStepSDFM}. As the range of the 
+#' simulated critical values is limited, the minimum and maximum number of 
+#' potential factors is limited such that `max_no_factors` should be no more 
+#' than `min_no_factors + 17`. However, it is recommended to operate well below 
+#' this maximum as the test size decreases with 
+#' `max_no_factors - min_no_factors`. 
+#' 
+#' The \insertCite{bai2002determining}{TwoStepSDFM} information criterion 
+#' determines the number of factors by minimising a BIC. Here, three different 
+#' penalty terms are provided. It is up to the user to determine the most 
+#' appropriate for the problem at hand. In general, however, the second 
+#' information criterion is used.
 #' 
 #' @return 
 #' An object of class `NoOfFactorsFit` with components:
@@ -85,7 +96,10 @@ NULL
 #'                                    max_no_factors = 5, confidence_threshold = 0.05)
 #' print(no_of_factors_estim)
 #' factor_estim_plots <- plot(no_of_factors_estim)
-#' factor_estim_plots$`Eigen Value Plot`
+#' factor_estim_plots$`Eigen Value Plot Test Procedure`
+#' factor_estim_plots$`IC plot for IC1`
+#' factor_estim_plots$`IC plot for IC2`
+#' factor_estim_plots$`IC plot for IC3`
 #' 
 #' @export
 noOfFactors <- function(data, min_no_factors = 1, max_no_factors = 7, confidence_threshold = 0.05){
@@ -148,12 +162,13 @@ noOfFactors <- function(data, min_no_factors = 1, max_no_factors = 7, confidence
   # The values for the test-statistics stem: https://www.econometricsociety.org/publications/econometrica/2009/09/01/testing-hypotheses-about-number-factors-large-factor-models (Last accessed: 25.11.2025, 10:03)
   file_path <- system.file("extdata", "Onatski_test_stats_csv.txt", package = "TwoStepSDFM")
   test_values <- as.matrix(read.table(file_path, sep = ",", header = FALSE))
-  results <- runNoOfFactors(no_na_data, test_values, min_no_factors, max_no_factors, confidence_threshold)
-  
-  if(results$no_of_factors == max_no_factors - 1){
-    warning(paste0("No. of factors has been chosen as max_no_factors - 1 = ", max_no_factors - 1, 
-                   ". It might be necessary to increase max_no_factors and repeat the procedure"))
-  }
+  results <- list()
+  results$test <- runNoOfFactorsTest(no_na_data, test_values, min_no_factors, max_no_factors, confidence_threshold)
+  results$ic <- runNoOfFactorsInfoCrit(no_na_data, max_no_factors)
+  results$ic$ic_one_min <- which.min(results$ic$information_crit[, 1])
+  results$ic$ic_two_min <- which.min(results$ic$information_crit[, 2])
+  results$ic$ic_three_min <- which.min(results$ic$information_crit[, 3])
+  results$max_no_factors <- max_no_factors
   
   results$call <- call
   class(results) <- "NoOfFactorsFit"
@@ -177,7 +192,18 @@ noOfFactors <- function(data, min_no_factors = 1, max_no_factors = 7, confidence
 #' 
 #' @export
 print.NoOfFactorsFit <- function(x, ...) {
-  cat(paste0("The estimated no. of factors is ", x$no_of_factors, " with a p-value of ", x$p_value, " and a critical value of alpha = ", x$confidence_threshold))
+  cat("Results of the Onatsky testing procedure:\n")
+  cat(paste0("The estimated no. of factors is ", x$test$no_of_factors, " with a p-value of ", x$test$p_value, " and a critical value of alpha = ", x$test$confidence_threshold))
+  if(x$test$no_of_factors == x$max_no_factors - 1){
+    cat("\n")
+    warning(paste0("No. of factors has been chosen as max_no_factors - 1 = ", x$max_no_factors - 1, 
+                   ". It might be necessary to increase max_no_factors and repeat the procedure"))
+  }
+  cat("\n\n")
+  cat("Results of the Bai and Ng information criteria:\n")
+  cat(paste0("No. of factors according to IC1: ", x$ic$ic_one_min, "\n"))
+  cat(paste0("No. of factors according to IC2: ", x$ic$ic_one_min, "\n"))
+  cat(paste0("No. of factors according to IC3: ", x$ic$ic_one_min, "\n"))
   invisible(x)
 }
 
@@ -206,16 +232,22 @@ print.NoOfFactorsFit <- function(x, ...) {
 #' 
 #' @export
 plot.NoOfFactorsFit <- function(x, 
-                         axis_text_size = 20, 
-                         legend_title_text_size = 20, 
-                         ...) {
+                                axis_text_size = 20, 
+                                legend_title_text_size = 20, 
+                                ...) {
   out_list <- list()
   
-  # Complex gram matrix eigenvalue decomposition plot
-  out_list$`Eigen Value Plot` <- plotMeasVarCovEigenvalues(x$eigen_values,
-                                                           x$no_of_factors,
-                                                           axis_text_size,
-                                                           legend_title_text_size)
+  # Result plot for Onatsky testing procedure
+  out_list$`Eigen Value Plot Test Procedure` <- plotMeasVarCovEigenvalues(x$test$eigen_values,
+                                                                          x$test$no_of_factors,
+                                                                          axis_text_size,
+                                                                          legend_title_text_size)
+  
+  # Result plots for IC criteria of Bai and Ng
+  out_list$`IC plot for IC1` <- plotInformationCrit(x$ic$information_crit[, 1], x$ic$ic_one_min, axis_text_size)
+  out_list$`IC plot for IC2` <- plotInformationCrit(x$ic$information_crit[, 2], x$ic$ic_two_min, axis_text_size)
+  out_list$`IC plot for IC3` <- plotInformationCrit(x$ic$information_crit[, 3], x$ic$ic_three_min, axis_text_size)
+  
   return(out_list)
 }
 

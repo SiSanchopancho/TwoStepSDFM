@@ -138,6 +138,23 @@ plotMeasVarCovEigenvalues <- function(eigen_values, no_of_factors, axis_text_siz
   return(eig_val_plot)
 }
 
+#' Helper for plotting ICs for selecting the number of factors
+#' @keywords internal
+plotInformationCrit <- function(information_crit, no_of_factors, axis_text_size){
+  data <- data.frame("no_of_factors" = 1:length(information_crit),
+                     "information_crit" = information_crit)
+  ggplot(data, aes(x = no_of_factors, y = information_crit)) +
+    geom_point(size = 5, colour = "#88ccee") +
+    geom_point(x = no_of_factors, y = min(information_crit), color = "#117733", size = 5) +
+    labs(x = "Number of Factors", y = "BIC") +
+    theme_minimal() + 
+    scale_x_continuous(breaks = 1:length(information_crit)) +
+    theme(
+      axis.title = element_text(size = axis_text_size),
+      axis.text  = element_text(size = axis_text_size)
+    )
+}
+
 
 
 

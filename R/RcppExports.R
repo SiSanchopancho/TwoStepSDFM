@@ -13,8 +13,12 @@ runDL <- function(target_variable, predictor_variable, max_predictor_lags, crit,
     .Call(`_TwoStepSDFM_runDL`, target_variable, predictor_variable, max_predictor_lags, crit, jitter)
 }
 
-runNoOfFactors <- function(data_matrix_in, test_values, min_no_factors, max_no_factors, confidence_threshold) {
-    .Call(`_TwoStepSDFM_runNoOfFactors`, data_matrix_in, test_values, min_no_factors, max_no_factors, confidence_threshold)
+runNoOfFactorsTest <- function(data_matrix_in, test_values, min_no_factors, max_no_factors, confidence_threshold) {
+    .Call(`_TwoStepSDFM_runNoOfFactorsTest`, data_matrix_in, test_values, min_no_factors, max_no_factors, confidence_threshold)
+}
+
+runNoOfFactorsInfoCrit <- function(data_matrix_in, max_no_factors) {
+    .Call(`_TwoStepSDFM_runNoOfFactorsInfoCrit`, data_matrix_in, max_no_factors)
 }
 
 #' @description
