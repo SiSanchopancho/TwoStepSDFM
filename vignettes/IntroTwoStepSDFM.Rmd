@@ -124,11 +124,13 @@ spca_plots$`Loading Matrix Heatmap`
 
 ## Estimate the Number of Factors
 
-In the next step, we need to estimate the number of factors. We do so by using the procedure described in @onatski2009testing. Very loosely, this test infers the number of factors by looking at the maximum slopes between the eigenvalues of a special data Gram matrix. For more information on the procedure, see the literature cited above. Note that as mentioned above, data should be standardised prior to the analysis. Also, only provide monthly observations to `noOfFactors()`, as otherwise results might get skewed.
+In the next step, we need to estimate the number of factors. We do so by using the procedure described in @onatski2009testing.[^estim_no_fact] Very loosely, this test infers the number of factors by looking at the maximum slopes between the eigenvalues of a special data Gram matrix. For more information on the procedure, see the literature cited above. Note that as mentioned above, data should be standardised prior to the analysis. Also, only provide monthly observations to `noOfFactors()`, as otherwise results might get skewed.
 
 The @onatski2009testing procedure is a repeated testing procedure with non-standard distributions of the slope coefficients of the eigenvalues. This distribution depends on the number of eigenvalues considered in the test. Therefore, a minimum and maximum number of factors must be provided. These values should be close enough such that the test has enough power, but also far enough apart such that we do not reject too early due to hitting the maximum number of factors. When working with this test, we found that using `max_no_factors - min_no_factors = 1` works quite well. 
 
 We also need to set a confidence threshold as a stopping rule of the testing procedure. In general, for finite samples, the @onatski2009testing procedure works quite well and in our experience better than information-based criteria, especially when working with data simulated from an SDFM with a high degree of sparsity. However, we also found that in some cases, the testing procedure seems to underestimate the number of factors if the threshold is set too strictly. Users should therefore set `confidence_threshold` comparatively large if the cost of underestimating the number of factors, i.e., including too few factors, is large.
+
+[^estim_no_fact]: We also provide the @bai2002determining information-criterion based method to determine the number of factors in our package. The ICs are computed automatically when calling `noOfFactors()`, and the results are provided along with the results of the @onatski2009testing testing procedure.
 
 ```{r no_of_fact_test, eval = TRUE, message = FALSE}
 mtly_data <- scale(factor_model$data[, which(factor_model$frequency == 12)])
@@ -154,7 +156,7 @@ no_of_mtly_vars <- sum(factor_model$frequency == 12)
 all_data <- scale(factor_model$data)
 cross_val_res <- crossVal(data = all_data, variable_of_interest = 1, fcast_horizon = 0,
                                  delay = factor_model$delay, frequency = factor_model$frequency, 
-                                 no_of_factors = no_of_fact_test$no_of_factors, seed = seed, 
+                                 no_of_factors = no_of_fact_test$test$no_of_factors, seed = seed, 
                                  min_ridge_penalty = 1e-6, max_ridge_penalty = 1e+5, cv_repetitions = 5,
                                  cv_size = 100, lasso_penalty_type = "selected", min_max_penalty = c(5, no_of_mtly_vars),
                                  verbose = FALSE)
@@ -170,10 +172,10 @@ Before turning to the main prediction routine, we want to focus on the estimatio
 ```{r estim_sparse_dfm, eval = TRUE, message = FALSE}
 mtly_data <- scale(factor_model$data[, which(factor_model$frequency == 12)])
 mtly_delay <- factor_model$delay[which(factor_model$frequency == 12)]
-inferred_no_of_selected <- cross_val_res$CV$`Min. CV`[3:(3 + no_of_fact_test$no_of_factors - 1)]
+inferred_no_of_selected <- cross_val_res$CV$`Min. CV`[3:(3 + no_of_fact_test$test$no_of_factors - 1)]
 inferred_ridge_penalty <- cross_val_res$CV$`Min. CV`[1]
 sdfm_fit <- twoStepSDFM(data = mtly_data, delay = mtly_delay, selected = inferred_no_of_selected, 
-                        no_of_fact_test$no_of_factors, ridge_penalty = inferred_ridge_penalty)
+                        no_of_fact_test$test$no_of_factors, ridge_penalty = inferred_ridge_penalty)
 print(sdfm_fit)
 sdfm_fit_plot <- plot(sdfm_fit)
 sdfm_fit_plot$`Factor Time Series Plots`
@@ -192,10 +194,10 @@ To show off the abilities of this function, however, we still predict multiple t
 
 ```{r predict, eval = TRUE, message = FALSE}
 all_data <- scale(factor_model$data)
-inferred_no_of_selected <- cross_val_res$CV$`Min. CV`[3:(3 + no_of_fact_test$no_of_factors - 1)]
+inferred_no_of_selected <- cross_val_res$CV$`Min. CV`[3:(3 + no_of_fact_test$test$no_of_factors - 1)]
 inferred_ridge_penalty <- cross_val_res$CV$`Min. CV`[1]
 nc_results <- nowcast(data = all_data, variables_of_interest = c(1, 2), max_fcast_horizon = 2, 
-                      delay = factor_model$delay, ridge_penalty = inferred_ridge_penalty, selected = inferred_no_of_selected, frequency = factor_model$frequency, no_of_factors = no_of_fact_test$no_of_factors)
+                      delay = factor_model$delay, ridge_penalty = inferred_ridge_penalty, selected = inferred_no_of_selected, frequency = factor_model$frequency, no_of_factors = no_of_fact_test$test$no_of_factors)
 nc_plot <- plot(nc_results)
 nc_plot$`Single Pred. Fcast Density Plots Series 1`
 nc_plot$`Single Pred. Fcast Density Plots Series 2`

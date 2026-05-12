@@ -44,9 +44,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// runNoOfFactors
-Rcpp::List runNoOfFactors(Rcpp::NumericMatrix data_matrix_in, Rcpp::NumericMatrix test_values, const int min_no_factors, const int max_no_factors, const double confidence_threshold);
-RcppExport SEXP _TwoStepSDFM_runNoOfFactors(SEXP data_matrix_inSEXP, SEXP test_valuesSEXP, SEXP min_no_factorsSEXP, SEXP max_no_factorsSEXP, SEXP confidence_thresholdSEXP) {
+// runNoOfFactorsTest
+Rcpp::List runNoOfFactorsTest(Rcpp::NumericMatrix data_matrix_in, Rcpp::NumericMatrix test_values, const int min_no_factors, const int max_no_factors, const double confidence_threshold);
+RcppExport SEXP _TwoStepSDFM_runNoOfFactorsTest(SEXP data_matrix_inSEXP, SEXP test_valuesSEXP, SEXP min_no_factorsSEXP, SEXP max_no_factorsSEXP, SEXP confidence_thresholdSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -55,7 +55,19 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type min_no_factors(min_no_factorsSEXP);
     Rcpp::traits::input_parameter< const int >::type max_no_factors(max_no_factorsSEXP);
     Rcpp::traits::input_parameter< const double >::type confidence_threshold(confidence_thresholdSEXP);
-    rcpp_result_gen = Rcpp::wrap(runNoOfFactors(data_matrix_in, test_values, min_no_factors, max_no_factors, confidence_threshold));
+    rcpp_result_gen = Rcpp::wrap(runNoOfFactorsTest(data_matrix_in, test_values, min_no_factors, max_no_factors, confidence_threshold));
+    return rcpp_result_gen;
+END_RCPP
+}
+// runNoOfFactorsInfoCrit
+Rcpp::List runNoOfFactorsInfoCrit(Rcpp::NumericMatrix data_matrix_in, const int max_no_factors);
+RcppExport SEXP _TwoStepSDFM_runNoOfFactorsInfoCrit(SEXP data_matrix_inSEXP, SEXP max_no_factorsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type data_matrix_in(data_matrix_inSEXP);
+    Rcpp::traits::input_parameter< const int >::type max_no_factors(max_no_factorsSEXP);
+    rcpp_result_gen = Rcpp::wrap(runNoOfFactorsInfoCrit(data_matrix_in, max_no_factors));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -186,7 +198,8 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_TwoStepSDFM_runARDL", (DL_FUNC) &_TwoStepSDFM_runARDL, 7},
     {"_TwoStepSDFM_runDL", (DL_FUNC) &_TwoStepSDFM_runDL, 5},
-    {"_TwoStepSDFM_runNoOfFactors", (DL_FUNC) &_TwoStepSDFM_runNoOfFactors, 5},
+    {"_TwoStepSDFM_runNoOfFactorsTest", (DL_FUNC) &_TwoStepSDFM_runNoOfFactorsTest, 5},
+    {"_TwoStepSDFM_runNoOfFactorsInfoCrit", (DL_FUNC) &_TwoStepSDFM_runNoOfFactorsInfoCrit, 2},
     {"_TwoStepSDFM_runSPCA", (DL_FUNC) &_TwoStepSDFM_runSPCA, 15},
     {"_TwoStepSDFM_runUVKFS", (DL_FUNC) &_TwoStepSDFM_runUVKFS, 13},
     {"_TwoStepSDFM_runSDFMKFS", (DL_FUNC) &_TwoStepSDFM_runSDFMKFS, 18},

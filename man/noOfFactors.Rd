@@ -12,11 +12,13 @@ noOfFactors(
 )
 }
 \arguments{
-\item{data}{Numeric (no_of_vars \eqn{\times}{x} no_of_obs) matrix of data or zoo/xts object sampled at the same frequency.}
+\item{data}{Numeric (no_of_vars \eqn{\times}{x} no_of_obs) matrix of data or
+zoo/xts object sampled at the same frequency.}
 
 \item{min_no_factors}{Integer minimum number of factors to be tested.}
 
-\item{max_no_factors}{Integer maximum number of factors to be tested (should be at most min_no_factors + 17).}
+\item{max_no_factors}{Integer maximum number of factors to be tested (should
+be at most min_no_factors + 17).}
 
 \item{confidence_threshold}{Numeric threshold value to stop the testing procedure.}
 }
@@ -33,15 +35,17 @@ matrix.}
 }
 \description{
 Estimate the number of factors of a linear Gaussian latent factor model using
-via an eigenvalue slope test according to  \insertRef{onatski2009testing}{TwoStepSDFM}.
+the eigenvalue slope test of \insertRef{onatski2009testing}{TwoStepSDFM} and
+the infromation criterion based approach of
+\insertRef{bai2002determining}{TwoStepSDFM}.
 }
 \details{
-The procedure splits the data matrix along the time dimension into
-two equally sized (\code{no_of_vars} \eqn{\times}{x} \code{cut_off}) sub-matrices
-\eqn{\bm{X}_{1/2}}{`data_fst_half`} and
-\eqn{\bm{X}_{2/2}}{`data_snd_half`}. It then proceeds to build
+The \insertCite{onatski2009testing}{TwoStepSDFM} procedure splits the data
+matrix along the time dimension into two equally sized (\code{no_of_vars}
+\eqn{\times}{x} \code{cut_off}) sub-matrices \eqn{\bm{X}_{1/2}}{`data_fst_half`}
+and \eqn{\bm{X}_{2/2}}{`data_snd_half`}. It then proceeds to build
 \eqn{\tilde{\bm{X}} := \bm{X}_{1/2} + i\bm{X}_{2/2}}{`complex_data = data_fst_half + i * data_snd_half`},
-where \eqn{i=\sqrt{-1}}{`i=sqrt(-1)`}. We then compute eigenvalues of the
+where \eqn{i=\sqrt{-1}}{`i=sqrt(-1)`}. We then compute the eigenvalues of the
 Gram matrix \eqn{\tilde{\bm{X}}
 \tilde{\bm{X}}^{\dagger}}{\code{complex_data \%*\% Conj(t(complex_data))}}, where
 \eqn{\tilde{\bm{X}}^{\dagger}}{`Conj(t(complex_data))`} represents the
@@ -55,11 +59,18 @@ no longer reject at \code{confidence_threshold} or \code{max_no_factors} is reac
 As the distribution of the eigenvalues under the null is nonstandard
 \insertCite{onatski2009testing}{TwoStepSDFM},
 simulated critical values are used. They are retrieved from
-\insertRef{onatski2009testing_supl}{TwoStepSDFM}. As the range of the simulated critical
-values is limited, the minimum and maximum number of potential factors
-is limited such that \code{max_no_factors} should be no more than
-\code{min_no_factors + 17}. However, it is recommended to operate well below this
-maximum as the test size decreases with \code{max_no_factors - min_no_factors}.
+\insertRef{onatski2009testing_supl}{TwoStepSDFM}. As the range of the
+simulated critical values is limited, the minimum and maximum number of
+potential factors is limited such that \code{max_no_factors} should be no more
+than \code{min_no_factors + 17}. However, it is recommended to operate well below
+this maximum as the test size decreases with
+\code{max_no_factors - min_no_factors}.
+
+The \insertCite{bai2002determining}{TwoStepSDFM} information criterion
+determines the number of factors by minimising a BIC. Here, three different
+penalty terms are provided. It is up to the user to determine the most
+appropriate for the problem at hand. In general, however, the second
+information criterion is used.
 }
 \examples{
 data(factor_model)
@@ -67,7 +78,10 @@ no_of_factors_estim <- noOfFactors(data = factor_model$data, min_no_factors = 1,
                                    max_no_factors = 5, confidence_threshold = 0.05)
 print(no_of_factors_estim)
 factor_estim_plots <- plot(no_of_factors_estim)
-factor_estim_plots$`Eigen Value Plot`
+factor_estim_plots$`Eigen Value Plot Test Procedure`
+factor_estim_plots$`IC plot for IC1`
+factor_estim_plots$`IC plot for IC2`
+factor_estim_plots$`IC plot for IC3`
 
 }
 \references{

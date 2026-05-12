@@ -95,18 +95,18 @@ Rcpp::List runSPCA(
   SparseDFM::SDFM<SparseDFM::Structure::SPARSE> results(X_in_eigen, R, order);
   if (svd_method == "fast") { // Use fast BDCSVD for the internal singular value decomposition
     if (comp_var_expl) {
-      results.sparsePrincipalComponents<SparseDFM::SPCAAdditionalComputations::YES, Eigen::BDCSVD>(X_in_eigen.rows() - delay_eigen.maxCoeff(), selected_eigen, l2, l1_eigen, steps, max_iterations, comp_null, spca_conv_crit, normalise, weights_eigen);
+      results.template sparsePrincipalComponents<SparseDFM::SPCAAdditionalComputations::YES, Eigen::BDCSVD>(X_in_eigen.rows() - delay_eigen.maxCoeff(), selected_eigen, l2, l1_eigen, steps, max_iterations, comp_null, spca_conv_crit, normalise, weights_eigen);
     }
     else {
-      results.sparsePrincipalComponents<SparseDFM::SPCAAdditionalComputations::NO, Eigen::BDCSVD>(X_in_eigen.rows() - delay_eigen.maxCoeff(), selected_eigen, l2, l1_eigen, steps, max_iterations, comp_null, spca_conv_crit, normalise, weights_eigen);
+      results.template sparsePrincipalComponents<SparseDFM::SPCAAdditionalComputations::NO, Eigen::BDCSVD>(X_in_eigen.rows() - delay_eigen.maxCoeff(), selected_eigen, l2, l1_eigen, steps, max_iterations, comp_null, spca_conv_crit, normalise, weights_eigen);
     }
   }
   else{
     if (comp_var_expl) { // Use precise JacobiSVD for the internal singular value decomposition
-      results.sparsePrincipalComponents<SparseDFM::SPCAAdditionalComputations::YES, Eigen::JacobiSVD>(X_in_eigen.rows() - delay_eigen.maxCoeff(), selected_eigen, l2, l1_eigen, steps, max_iterations, comp_null, spca_conv_crit, normalise, weights_eigen);
+      results.template sparsePrincipalComponents<SparseDFM::SPCAAdditionalComputations::YES, Eigen::JacobiSVD>(X_in_eigen.rows() - delay_eigen.maxCoeff(), selected_eigen, l2, l1_eigen, steps, max_iterations, comp_null, spca_conv_crit, normalise, weights_eigen);
     }
     else {
-      results.sparsePrincipalComponents<SparseDFM::SPCAAdditionalComputations::NO, Eigen::JacobiSVD>(X_in_eigen.rows() - delay_eigen.maxCoeff(), selected_eigen, l2, l1_eigen, steps, max_iterations, comp_null, spca_conv_crit, normalise, weights_eigen);
+      results.template sparsePrincipalComponents<SparseDFM::SPCAAdditionalComputations::NO, Eigen::JacobiSVD>(X_in_eigen.rows() - delay_eigen.maxCoeff(), selected_eigen, l2, l1_eigen, steps, max_iterations, comp_null, spca_conv_crit, normalise, weights_eigen);
     }
   }
 
