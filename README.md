@@ -69,6 +69,7 @@ If you have any questions or need assistance, please open an issue on the GitHub
 ## References
 
 ### Papers
+- Bai, J., & Ng, S. (2002). Determining the number of factors in approximate factor models. Econometrica, 70(1), 191-221.
 - Bergstra, James, and Yoshua Bengio (2012). [Random Search for Hyper-Parameter Optimization](http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf). *Journal of Machine Learning Research*, 13(2).
 - Doz, Catherine, Domenico Giannone, and Lucrezia Reichlin (2011). [A two-step estimator for large approximate dynamic factor models based on Kalman filtering](https://doi.org/10.1016/j.jeconom.2011.02.012). *Journal of Econometrics*, 164(1), 188–205.
 - Franjic, Domenic, and Karsten Schweikert (2024). [Nowcasting Macroeconomic Variables with a Sparse Mixed Frequency Dynamic Factor Model](https://ssrn.com/abstract=4733872). SSRN 4733872.
