@@ -94,23 +94,23 @@ Rcpp::List runNoOfFactorsInfoCrit(
   Eigen::MatrixXd data_var_cov = centered_data * centered_data.transpose() * (1.0 / (data.cols() - 1.0));
   Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigen_deco(data_var_cov);
   Eigen::MatrixXd loading_matrix = eigen_deco.eigenvectors().rowwise().reverse().leftCols(max_no_factors);
-  const int no_of_vars = static_cast<double>(data.rows());
-  const int no_of_obs = static_cast<double>(data.cols());
+  const double no_of_vars = static_cast<double>(data.rows());
+  const double no_of_obs = static_cast<double>(data.cols());
   for (int factor = 0; factor < max_no_factors; ++factor)
   {
     loading_matrix.col(factor).normalize();
   }
-  Eigen::MatrixXd factors = loading_matrix.transpose() * data;
+  Eigen::MatrixXd factors = loading_matrix.transpose() * centered_data;
 
   Eigen::MatrixXd information_crit = Eigen::MatrixXd(max_no_factors, 3);
   for (int curr_fact = 0; curr_fact < max_no_factors; ++curr_fact) {
-    Eigen::MatrixXd residuals = data - loading_matrix.leftCols(curr_fact + 1) * factors.topRows(curr_fact + 1);
+    Eigen::MatrixXd residuals = centered_data - loading_matrix.leftCols(curr_fact + 1) * factors.topRows(curr_fact + 1);
     const double dim_penalty = std::min(no_of_vars, no_of_obs);
-    const double common_penalty = static_cast<double>(curr_fact) * ((no_of_vars + no_of_obs) / (no_of_vars * no_of_obs));
-    const double log_rss = std::log(residuals.array().square().mean());
+    const double common_penalty = static_cast<double>(curr_fact + 1) * ((no_of_vars + no_of_obs) / (no_of_vars * no_of_obs));
+    const double log_rss = std::log(std::max(residuals.array().square().mean(), 1e-15));
     information_crit(curr_fact, 0) = log_rss + common_penalty * log((no_of_vars * no_of_obs) / (no_of_vars + no_of_obs));
     information_crit(curr_fact, 1) = log_rss + common_penalty * log(dim_penalty);
-    information_crit(curr_fact, 2) = log_rss + static_cast<double>(curr_fact) * (std::log(dim_penalty) / dim_penalty);
+    information_crit(curr_fact, 2) = log_rss + static_cast<double>(curr_fact + 1) * (std::log(dim_penalty) / dim_penalty);
   }
   // Convert the results back to Rcpp types and return
   return Rcpp::List::create(Rcpp::Named("information_crit") = Rcpp::wrap(information_crit)
