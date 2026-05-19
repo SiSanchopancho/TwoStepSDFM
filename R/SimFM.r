@@ -334,10 +334,11 @@ simFM <- function(no_of_obs, no_of_vars, no_of_factors, loading_matrix,
     beta_param <- .Machine$double.xmax
   }
   beta_param <- checkPositiveDouble(beta_param, "beta_param")
-  if(beta_param == .Machine$double.xmax && corr){
+  if((beta_param == .Machine$double.xmax || is.infinite(beta_param)) && corr){
     warning("corr is set to TRUE but beta_param = Inf. Measurement errors will not be cross-correlated.")
+    corr <- FALSE
   }
-  if(beta_param < .Machine$double.xmax && !corr){
+  if((beta_param < .Machine$double.xmax || !is.infinite(beta_param)) && !corr){
     warning("corr is set to FALSE but beta_param != Inf. Measurement errors will not be cross-correlated.")
   }
   if(beta_param == 0){

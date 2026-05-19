@@ -1,1 +1,1 @@
-# Upate notes for version 0.2.1* Added the Bai and Ng information criterion for determining the number of factors* Fixing compilation errors for some MacOS compilers
+# Upate notes for version 0.2.2* Bug fix in the Bai and Ng IC routine* Minor bugfix in the DFM simulation routine

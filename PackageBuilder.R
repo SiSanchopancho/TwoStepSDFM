@@ -36,3 +36,7 @@ Rcpp::compileAttributes()
 pkgload::load_all(compile = FALSE)
 roxygen2::roxygenise(load_code = "source")
 devtools::install()
+
+
+devtools::build()
+install.packages("../TwoStepSDFM_0.2.2.tar.gz", source = TRUE)
