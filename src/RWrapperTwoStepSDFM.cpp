@@ -116,10 +116,10 @@ Rcpp::List runSDFMKFS(
   
   SparseDFM::SDFM<SparseDFM::Structure::SPARSE> results(X_in_eigen, R, order);
   if (svd_method == "fast") {
-    results.estimModel<Eigen::BDCSVD>(delay_eigen, selected_eigen, weights_eigen, decorr_errors, crit, l2, l1_eigen, max_iterations, steps, comp_null, spca_conv_crit, fcast_horizon);
+    results.estimModel<Eigen::BDCSVD<Eigen::MatrixXd>>(delay_eigen, selected_eigen, weights_eigen, decorr_errors, crit, l2, l1_eigen, max_iterations, steps, comp_null, spca_conv_crit, fcast_horizon);
   }
   else if (svd_method == "precise") {
-    results.estimModel<Eigen::JacobiSVD>(delay_eigen, selected_eigen, weights_eigen, decorr_errors, crit, l2, l1_eigen, max_iterations, steps, comp_null, spca_conv_crit, fcast_horizon);
+    results.estimModel<Eigen::JacobiSVD<Eigen::MatrixXd>>(delay_eigen, selected_eigen, weights_eigen, decorr_errors, crit, l2, l1_eigen, max_iterations, steps, comp_null, spca_conv_crit, fcast_horizon);
   }
 
 
@@ -196,7 +196,7 @@ Rcpp::List runDFMKFS(
 
   SparseDFM::SDFM<SparseDFM::Structure::DENSE> results(X_in_eigen, R, order);
   // The SVD type does not matter here, as the dense case never calls repeated SVDs.
-  results.estimModel<Eigen::JacobiSVD>(delay_eigen, selected_place_holder, weights_placeholder, decorr_errors, crit, l2_placeholder, l1_placeholder, max_iterations_placeholder, steps_placeholder, comp_null, spca_conv_crit_placeholder, fcast_horizon);
+  results.estimModel<Eigen::JacobiSVD<Eigen::MatrixXd>>(delay_eigen, selected_place_holder, weights_placeholder, decorr_errors, crit, l2_placeholder, l1_placeholder, max_iterations_placeholder, steps_placeholder, comp_null, spca_conv_crit_placeholder, fcast_horizon);
   
 
   // Re-correlate the loadings fit if necessary

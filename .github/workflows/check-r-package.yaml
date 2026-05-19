@@ -34,8 +34,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        r-version: ['4.3.0']
+        os: [ubuntu-latest, windows-latest, macos-latest, macos-13]
+        r-version: ['4.6.0', '4.3.0', 'devel']
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}

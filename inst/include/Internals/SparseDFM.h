@@ -101,7 +101,7 @@ namespace SparseDFM {
 
     /* Main estimation funciton for the two-step sparse dnymamic factor model */
 
-    template <template <typename> class SVDType>
+    template <class SVDType>
     void estimModel(
       const Eigen::VectorXi& delay,
       const Eigen::VectorXi& selected,
@@ -290,7 +290,7 @@ namespace SparseDFM {
         - Zou, H., Hastie, T., & Zou, M. H. (2016). Package ?elasticnet?. (https://cran.r-project.org/web/packages/elasticnet/index.html)
         - Zou, Q., & Zhang, P. (2024, December). On General Weighted Adaptive Sparse Principal Component Analysis. In Proceedings of the 2024 4th International Conference on Computational Modeling, Simulation and Data Analysis (pp. 335-340).
     */
-    template <SPCAAdditionalComputations compute_add_stuff, template <typename> class SVDType> // The type of SVD is templated to give the user the choice between using Eigen's save JacobiSVD agains fast BDCSVD
+    template <SPCAAdditionalComputations compute_add_stuff, class SVDType> // The type of SVD is templated to give the user the choice between using Eigen's save JacobiSVD agains fast BDCSVD
     void sparsePrincipalComponents(
       const int effective_time,
       const Eigen::VectorXi& selected,
@@ -305,7 +305,7 @@ namespace SparseDFM {
     ) {
 
       // Compute initial data SVD and store its matrices
-      SVDType<Eigen::MatrixXd> svd;
+      SVDType svd;
       svd.compute(this->data(Eigen::seq(0, effective_time - 1), Eigen::all), Eigen::ComputeThinU | Eigen::ComputeThinV);
       if (compute_add_stuff == SPCAAdditionalComputations::YES) {
         this->total_var_expl = svd.singularValues().array().square().sum();

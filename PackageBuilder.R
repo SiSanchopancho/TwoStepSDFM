@@ -39,4 +39,5 @@ devtools::install()
 
 
 devtools::build()
+rcmdcheck::rcmdcheck("../TwoStepSDFM_0.2.2.tar.gz", args = "--as-cran")
 install.packages("../TwoStepSDFM_0.2.2.tar.gz", source = TRUE)

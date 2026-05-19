@@ -1,1 +1,1 @@
-# Upate notes for version 0.2.2* Bug fix in the Bai and Ng IC routine* Minor bugfix in the DFM simulation routine
+# Upate notes for version 0.2.2* Bug fix in the Bai and Ng IC routine* Minor bugfix in the DFM simulation routine* Fix comipilation issues on some older macOS machines
