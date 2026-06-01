@@ -2,7 +2,7 @@
 % Please edit documentation in R/TwoStepSDFM.R
 \name{predict.SDFMFit}
 \alias{predict.SDFMFit}
-\title{Generic plotting function for SDFMFit S3 objects}
+\title{Generic prediction function for \code{SDFMFit} S3 objects}
 \usage{
 \method{predict}{SDFMFit}(object, horizon = 0, ...)
 }

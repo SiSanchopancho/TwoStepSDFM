@@ -540,7 +540,7 @@ plot.SDFMFit <- function (x,
 }
 
 #' @name predict.SDFMFit
-#' @title Generic plotting function for SDFMFit S3 objects
+#' @title Generic prediction function for `SDFMFit` S3 objects
 #' @description
 #' Predict all missing observations due to ragged edges in the data set plus 
 #' horizon steps ahead.
@@ -601,7 +601,7 @@ predict.SDFMFit <- function (object,
     time_vector <- 1:dim(object$smoothed_factors)[2]
     factors <- t(object$smoothed_factors)
     factors <- as.zoo(ts(factors, start = c(1, 1), frequency = 12))
-    data <- as.zoo(ts(data, start = c(1, 1), frequency = 12))
+    data <- as.zoo(ts(t(object$data), start = c(1, 1), frequency = 12))
   }
   
   data_pred <- (object$loading_matrix_estimate %*% t(coredata(factors)))[, 1:(no_of_obs + horizon)]
