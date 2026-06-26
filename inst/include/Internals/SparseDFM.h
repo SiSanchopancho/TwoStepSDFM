@@ -71,7 +71,7 @@ namespace SparseDFM {
     int llt_success_code;
 
     // Default Constructor
-    SDFM() : no_of_factors(0), no_of_obs(0), no_of_vars(0), max_factor_var_order(0), conv(true), total_var_expl(0.0), llt_success_code(0){
+    SDFM() : no_of_factors(0), no_of_obs(0), no_of_vars(0), max_factor_var_order(0), conv(true), total_var_expl(0.0), llt_success_code(0) {
       this->data = Eigen::MatrixXd::Zero(0, 0);
       this->loading_matrix = Eigen::MatrixXd::Zero(0, 0);
       this->zero_indeces = Eigen::MatrixXi::Zero(0, 0);
@@ -130,7 +130,6 @@ namespace SparseDFM {
       }
       int factor_var_order = VARorder<BIC>(this->factors, this->max_factor_var_order, comp_null);
       int ind_of_first_companion_obs = factor_var_order - 1;
-
 
       /* Initialise the kalman filter */
 
@@ -205,11 +204,12 @@ namespace SparseDFM {
           }
           Eigen::MatrixXd lower_factor = meas_ldlt.matrixL();
           Eigen::VectorXd diagonal_matrix_diag = meas_ldlt.vectorD();
-          diagonal_matrix_diag.diagonal() = diagonal_matrix_diag.diagonal().unaryExpr([comp_null](double x) { return std::max(x, comp_null); }).eval();
-          Eigen::DiagonalMatrix<double, Eigen::Dynamic> sqrt_diagonal_matrix_diag = meas_ldlt.vectorD().cwiseSqrt().asDiagonal();
+          diagonal_matrix_diag = diagonal_matrix_diag.unaryExpr([comp_null](double x) { return std::max(x, comp_null); }).eval();
+          Eigen::DiagonalMatrix<double, Eigen::Dynamic> sqrt_diagonal_matrix_diag = diagonal_matrix_diag.cwiseSqrt().asDiagonal();
           Eigen::Transpositions<Eigen::Dynamic> permutation_matrix = meas_ldlt.transpositionsP();
           Eigen::MatrixXd chol_variable_var_cov = lower_factor * sqrt_diagonal_matrix_diag;
-          this->inv_chol_variable_var_cov = chol_variable_var_cov.triangularView<Eigen::Lower>().solve(Eigen::MatrixXd::Identity(this->no_of_vars, this->no_of_vars));;
+          this->inv_chol_variable_var_cov = chol_variable_var_cov.triangularView<Eigen::Lower>().solve(Eigen::MatrixXd::Identity(this->no_of_vars, this->no_of_vars)) * meas_ldlt.transpositionsP().transpose();
+
         }
         else {
           this->inv_chol_variable_var_cov = meas_llt.matrixL().solve(Eigen::MatrixXd::Identity(this->no_of_vars, this->no_of_vars));
@@ -298,8 +298,8 @@ namespace SparseDFM {
       Eigen::VectorXd lasso_penalties,
       int steps,
       const int max_iterations,
-      const double& comp_null, 
-      const double& spca_conv_crit, 
+      const double& comp_null,
+      const double& spca_conv_crit,
       const bool& normalise,
       const Eigen::VectorXd& weights
     ) {
@@ -337,7 +337,7 @@ namespace SparseDFM {
           this->loading_matrix.col(factor) = LARS<false>(artificial_target, effective_data, weights, ridge, lasso_penalties(factor), selected(factor), steps, comp_null);
         }
       }
-      
+
       /* End initial SPCA block */
 
       /* Start SPCA refinement loop */
@@ -372,20 +372,25 @@ namespace SparseDFM {
 
       /* End SPCA refinement loop */
 
-      // Calculate the factors
-      this->factors = (effective_data * this->loading_matrix).transpose();
-
-      if (compute_add_stuff == SPCAAdditionalComputations::YES) { // Calculate variance explained if additional information is asked for
-        Eigen::ColPivHouseholderQR<Eigen::MatrixXd> QR;
-        Eigen::MatrixXd R = QR.compute(this->factors.transpose()).matrixQR().template triangularView<Eigen::Upper>();
-        this->pct_var_expl= 1 / this->total_var_expl * (R.diagonal().array().square()).matrix();
-      }
-
       if (normalise) {
         for (int factor = 0; factor < this->no_of_factors; ++factor)
         {
           this->loading_matrix.col(factor).normalize();
         }
+      }
+
+      // Calculate the factors
+      Eigen::LDLT<Eigen::MatrixXd> loading_ldlt(this->loading_matrix.transpose() * this->loading_matrix);
+      Eigen::MatrixXd loading_gram_inv = Eigen::MatrixXd::Identity(this->no_of_factors, this->no_of_factors);
+      if (loading_ldlt.info() == Eigen::Success) {
+        loading_gram_inv = loading_ldlt.solve(Eigen::MatrixXd::Identity(this->no_of_factors, this->no_of_factors));
+      }
+      this->factors = (effective_data * this->loading_matrix * loading_gram_inv).transpose();
+
+      if (compute_add_stuff == SPCAAdditionalComputations::YES) { // Calculate variance explained if additional information is asked for
+        Eigen::ColPivHouseholderQR<Eigen::MatrixXd> QR;
+        Eigen::MatrixXd R = QR.compute(this->factors.transpose()).matrixQR().template triangularView<Eigen::Upper>();
+        this->pct_var_expl = 1 / this->total_var_expl * (R.diagonal().array().square()).matrix();
       }
 
       return;

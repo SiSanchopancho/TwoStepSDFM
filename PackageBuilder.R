@@ -35,9 +35,13 @@ devtools::clean_vignettes()
 Rcpp::compileAttributes()
 pkgload::load_all(compile = FALSE)
 roxygen2::roxygenise(load_code = "source")
-devtools::install()
+# devtools::install()
 
 
-devtools::build()
+callr::r(
+  function() devtools::build(),
+  stdout = "build_output.txt",
+  stderr = "build_output.txt"
+)
 rcmdcheck::rcmdcheck("../TwoStepSDFM_0.3.0.tar.gz", args = "--as-cran")
 install.packages("../TwoStepSDFM_0.3.0.tar.gz", source = TRUE)

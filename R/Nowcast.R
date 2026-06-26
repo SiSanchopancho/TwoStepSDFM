@@ -326,6 +326,8 @@ nowcast <- function(data,
   column_names <- c(colnames(data)[which(frequency == 4)], paste0("Factor ", 1:no_of_factors))
   fcast_data <- merge.zoo(data[, which(frequency == 4)], factor_ts)
   colnames(fcast_data) <- column_names
+  fcast_freq <- c(frequency[which(frequency == 4)], rep(12, no_of_factors))
+  fcast_voi_ind <- which(colnames(fcast_data) %in% colnames(data)[variables_of_interest])
   
   # If data does not start at the second month of the first quarter 
   #   available, add observations at the beginning of the panel: 
@@ -353,12 +355,12 @@ nowcast <- function(data,
   
   # Split the data set into target variables, quarterly predictors and monthly predictors
   modified_data <- t(coredata(fcast_data))
-  target_variables <- modified_data[variables_of_interest, , drop = FALSE]
-  quarterly_predictor_ind <- delay[which(frequency == 4)][-variables_of_interest]
+  target_variables <- modified_data[fcast_voi_ind, , drop = FALSE]
+  quarterly_predictor_ind <- delay[which(frequency == 4)][-fcast_voi_ind]
   if(length(quarterly_predictor_ind) == 0){
     quarterly_predictors <- NULL
   }else{
-    quarterly_predictors <- modified_data[which(frequency == 4)[-variables_of_interest], , drop = FALSE] 
+    quarterly_predictors <- modified_data[which(fcast_freq == 4)[-fcast_voi_ind], , drop = FALSE] 
   }
   factors <- modified_data[(dim(modified_data)[1] - no_of_factors + 1):(dim(modified_data)[1]), , drop = FALSE]
   
