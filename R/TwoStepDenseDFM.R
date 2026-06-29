@@ -194,15 +194,15 @@ twoStepDenseDFM <- function (data,
   }
   
   # Mishandling of dimensions and other misc. parameters
-  if (no_of_variables >= no_of_observations) {
-    stop(paste0("Too few observations as no_of_variables >= no_of_observations."))
-  }
+  # if (no_of_variables >= no_of_observations) {
+  #   stop(paste0("Too few observations as no_of_variables >= no_of_observations."))
+  # }
   no_of_factors <- checkPositiveSignedInteger(no_of_factors, "no_of_factors")
   if (no_of_factors == 0) {
     stop("no_of_factors must be strictly positive.")
   }
-  if (no_of_factors > no_of_variables) {
-    stop(paste0("no_of_factors must be smaller than no_of_variables."))
+  if (no_of_factors > min(no_of_variables, no_of_obs)) {
+    stop(paste0("no_of_factors must be smaller than min(no_of_variables, no_of_obs)."))
   }
   max_factor_lag_order <- checkPositiveSignedInteger(max_factor_lag_order, "max_factor_lag_order")
   if (max_factor_lag_order == 0) {

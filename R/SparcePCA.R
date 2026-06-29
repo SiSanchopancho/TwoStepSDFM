@@ -229,8 +229,8 @@ sparsePCA <- function(data,
   if(no_of_factors == 0){
     stop("no_of_factors must be strictly positive.")
   }
-  if(no_of_factors > no_of_variables){
-    stop(paste0("no_of_factors must be smaller than no_of_variables."))
+  if (no_of_factors > min(no_of_variables, no_of_obs)) {
+    stop(paste0("no_of_factors must be smaller than min(no_of_variables, no_of_obs)."))
   }
   
   # Mishandling of ridge penalty
