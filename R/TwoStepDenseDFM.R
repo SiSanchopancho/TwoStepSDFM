@@ -201,8 +201,8 @@ twoStepDenseDFM <- function (data,
   if (no_of_factors == 0) {
     stop("no_of_factors must be strictly positive.")
   }
-  if (no_of_factors > min(no_of_variables, no_of_obs)) {
-    stop(paste0("no_of_factors must be smaller than min(no_of_variables, no_of_obs)."))
+  if (no_of_factors > min(no_of_variables, no_of_observations)) {
+    stop(paste0("no_of_factors must be smaller than min(no_of_variables, no_of_observations)."))
   }
   max_factor_lag_order <- checkPositiveSignedInteger(max_factor_lag_order, "max_factor_lag_order")
   if (max_factor_lag_order == 0) {
