@@ -71,11 +71,11 @@ inline void computeVAROrder(
         }
 
         // OLS
-        Eigen::MatrixXd F_t = F_curr(Eigen::all, Eigen::seq(o + 1, Eigen::last)).transpose();
-        Eigen::MatrixXd F_t_lag = F_curr(Eigen::all, Eigen::seq(o, Eigen::last - 1)).transpose();
+        Eigen::MatrixXd F_t = F_curr(Eigen::indexing::all, Eigen::seq(o + 1, Eigen::indexing::last)).transpose();
+        Eigen::MatrixXd F_t_lag = F_curr(Eigen::indexing::all, Eigen::seq(o, Eigen::indexing::last - 1)).transpose();
         Eigen::MatrixXd Phi = ((F_t_lag.transpose() * F_t_lag).llt().solve(Eigen::MatrixXd::Identity(K * o, K * o)) * F_t_lag.transpose() * F_t).transpose();
         Phi = Phi.unaryExpr([comp_null](double x) {return (comp_null < std::abs(x)) ? x : 0.; });
-        Eigen::MatrixXd F_hat = (Phi.topLeftCorner(K, K * o) * F_curr(Eigen::all, Eigen::seq(o, Eigen::last - 1))).transpose();
+        Eigen::MatrixXd F_hat = (Phi.topLeftCorner(K, K * o) * F_curr(Eigen::indexing::all, Eigen::seq(o, Eigen::indexing::last - 1))).transpose();
 
         // Calculate the residuals variance-covariance-matrix and its determinant
         Eigen::MatrixXd Res_Var_Cov = (F_t(0, Eigen::seq(0, K - 1)) - F_hat.row(0)).transpose() * (F_t(0, Eigen::seq(0, K - 1)) - F_hat.row(0));

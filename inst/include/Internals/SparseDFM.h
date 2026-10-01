@@ -152,8 +152,8 @@ namespace SparseDFM {
       {
 
         // State equation parameters
-        Eigen::MatrixXd current_comp_form_factors = comp_form_factors(Eigen::all, Eigen::seq(ind_of_first_companion_obs + 1, Eigen::last)).transpose();
-        Eigen::MatrixXd lagged_comp_form_factors = comp_form_factors(Eigen::all, Eigen::seq(ind_of_first_companion_obs, Eigen::last - 1)).transpose();
+        Eigen::MatrixXd current_comp_form_factors = comp_form_factors(Eigen::indexing::all, Eigen::seq(ind_of_first_companion_obs + 1, Eigen::indexing::last)).transpose();
+        Eigen::MatrixXd lagged_comp_form_factors = comp_form_factors(Eigen::indexing::all, Eigen::seq(ind_of_first_companion_obs, Eigen::indexing::last - 1)).transpose();
         Eigen::MatrixXd ident_no_of_states = Eigen::MatrixXd::Identity(no_of_states, no_of_states);
         comp_form_factor_var_coeff = ((lagged_comp_form_factors.transpose() * lagged_comp_form_factors).llt().solve(ident_no_of_states) * lagged_comp_form_factors.transpose() * current_comp_form_factors).transpose();
         comp_form_factor_var_coeff.bottomLeftCorner(this->no_of_factors * (ind_of_first_companion_obs), this->no_of_factors * (ind_of_first_companion_obs)).setIdentity();
@@ -165,7 +165,7 @@ namespace SparseDFM {
 
         // Measurement equation parameters
         comp_form_loading_matrix.topLeftCorner(this->no_of_vars, this->no_of_factors) = this->loading_matrix;
-        Eigen::MatrixXd meas_equation_residuals = effective_data(Eigen::all, Eigen::seq(0, index_of_full_sample)) - comp_form_loading_matrix * comp_form_factors(Eigen::all, Eigen::seq(0, index_of_full_sample));
+        Eigen::MatrixXd meas_equation_residuals = effective_data(Eigen::indexing::all, Eigen::seq(0, index_of_full_sample)) - comp_form_loading_matrix * comp_form_factors(Eigen::indexing::all, Eigen::seq(0, index_of_full_sample));
         if (decorr_errors) {
           meas_equation_var_cov = meas_equation_residuals * meas_equation_residuals.transpose();
         }
@@ -240,9 +240,9 @@ namespace SparseDFM {
         comp_form_loading_matrix.topLeftCorner(this->no_of_vars, this->no_of_factors) = (this->inv_chol_variable_var_cov * comp_form_loading_matrix.topLeftCorner(this->no_of_vars, this->no_of_factors)).eval();
         meas_equation_var_cov.setZero();
         meas_equation_var_cov.diagonal() = (1. / double(this->no_of_obs - delay.maxCoeff()))
-          * (effective_data(Eigen::all, Eigen::seq(0, index_of_full_sample))
+          * (effective_data(Eigen::indexing::all, Eigen::seq(0, index_of_full_sample))
             - comp_form_loading_matrix
-            * comp_form_factors(Eigen::all, Eigen::seq(0, index_of_full_sample))
+            * comp_form_factors(Eigen::indexing::all, Eigen::seq(0, index_of_full_sample))
             ).array().square().rowwise().sum();
 
       }
@@ -270,8 +270,8 @@ namespace SparseDFM {
     void principalComponents(const int effective_time) {
 
       // PCA using the Eigen decomposition
-      Eigen::RowVectorXd mean = this->data(Eigen::seq(0, effective_time - 1), Eigen::all).array().colwise().mean();
-      Eigen::MatrixXd centered_data = this->data(Eigen::seq(0, effective_time - 1), Eigen::all) - mean.replicate(effective_time, 1);
+      Eigen::RowVectorXd mean = this->data(Eigen::seq(0, effective_time - 1), Eigen::indexing::all).array().colwise().mean();
+      Eigen::MatrixXd centered_data = this->data(Eigen::seq(0, effective_time - 1), Eigen::indexing::all) - mean.replicate(effective_time, 1);
       Eigen::MatrixXd data_var_cov = centered_data.transpose() * centered_data * 1.0 / (effective_time - 1.0);
       Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigen_deco(data_var_cov);
       this->loading_matrix = eigen_deco.eigenvectors().rightCols(this->no_of_factors); // Use the most right columns, as Eigen stores eigenvaluers from smallest to largest
@@ -279,7 +279,7 @@ namespace SparseDFM {
       {
         this->loading_matrix.col(factor).normalize();
       }
-      this->factors = (this->data(Eigen::seq(0, effective_time - 1), Eigen::all) * this->loading_matrix).transpose();
+      this->factors = (this->data(Eigen::seq(0, effective_time - 1), Eigen::indexing::all) * this->loading_matrix).transpose();
 
       return;
     }
@@ -306,12 +306,12 @@ namespace SparseDFM {
 
       // Compute initial data SVD and store its matrices
       SVDType svd;
-      svd.compute(this->data(Eigen::seq(0, effective_time - 1), Eigen::all), Eigen::ComputeThinU | Eigen::ComputeThinV);
+      svd.compute(this->data(Eigen::seq(0, effective_time - 1), Eigen::indexing::all), Eigen::ComputeThinU | Eigen::ComputeThinV);
       if (compute_add_stuff == SPCAAdditionalComputations::YES) {
         this->total_var_expl = svd.singularValues().array().square().sum();
       }
 
-      const Eigen::MatrixXd effective_data = data(Eigen::seq(0, effective_time - 1), Eigen::all);
+      const Eigen::MatrixXd effective_data = data(Eigen::seq(0, effective_time - 1), Eigen::indexing::all);
       Eigen::MatrixXd gram = effective_data.transpose() * effective_data;
       Eigen::VectorXd artificial_target = Eigen::VectorXd::Zero(effective_time);
       Eigen::MatrixXd data_lambda_gram = Eigen::MatrixXd::Zero(this->no_of_vars, this->no_of_vars);

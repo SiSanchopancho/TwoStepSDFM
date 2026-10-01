@@ -314,12 +314,12 @@ void DataGen::staticFM(
 
     // Binding the results
 
-    Results.F = F(Eigen::seq(0, R - 1), Eigen::seq(burn_in, Eigen::last));
+    Results.F = F(Eigen::seq(0, R - 1), Eigen::seq(burn_in, Eigen::indexing::last));
     Results.Lambda = Lambda;
     Results.Phi = A;
-    Results.X = X(Eigen::seq(burn_in, Eigen::last), Eigen::all);
+    Results.X = X(Eigen::seq(burn_in, Eigen::indexing::last), Eigen::indexing::all);
     Results.frequency = Eigen::VectorXi::Constant(N, 12);
-    Results.e = e(Eigen::all, Eigen::seq(burn_in, Eigen::last));
+    Results.e = e(Eigen::indexing::all, Eigen::seq(burn_in, Eigen::indexing::last));
 
     if (quarterfy)
     {

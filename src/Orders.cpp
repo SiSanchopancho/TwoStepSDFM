@@ -42,7 +42,7 @@ Rcpp::List runNoOfFactorsTest(
   double p_value = DBL_MIN, test_statistic = DBL_MIN;
   std::complex<double> i(0, 1);
 
-  Eigen::MatrixXcd data_complex = data(Eigen::all, Eigen::seq(0, cutoff - 1)) + i * data(Eigen::all, Eigen::seq(cutoff, 2 * cutoff - 1));
+  Eigen::MatrixXcd data_complex = data(Eigen::indexing::all, Eigen::seq(0, cutoff - 1)) + i * data(Eigen::indexing::all, Eigen::seq(cutoff, 2 * cutoff - 1));
 
   // Eigen decompositions
   Eigen::MatrixXcd gram = data_complex * data_complex.adjoint();
@@ -59,7 +59,7 @@ Rcpp::List runNoOfFactorsTest(
 
     // Calculate the test statistic
     test_statistic = ((eigen_values(Eigen::seq(no_of_factors, max_no_factors - 1)) - eigen_values(Eigen::seq(no_of_factors + 1, max_no_factors))).array() / (eigen_values(Eigen::seq(no_of_factors + 1, max_no_factors)) - eigen_values(Eigen::seq(no_of_factors + 2, max_no_factors + 1))).array()).maxCoeff();
-    p_value = static_cast<double>((test_values_eigen(Eigen::all, max_no_factors - no_of_factors - 1).array() > test_statistic).count()) / 1000.0;
+    p_value = static_cast<double>((test_values_eigen(Eigen::indexing::all, max_no_factors - no_of_factors - 1).array() > test_statistic).count()) / 1000.0;
 
   }
 
