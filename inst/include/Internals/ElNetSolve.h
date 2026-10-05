@@ -145,7 +145,7 @@ Eigen::MatrixXd LARS(
       {
 
         // Update Cholesky
-        CholUpDown::cholUpdate(L, X(Eigen::all, curr_var_index), X(Eigen::all, A_set.head(size_A - 1)), -1, l2);
+        CholUpDown::cholUpdate(L, X(Eigen::indexing::all, curr_var_index), X(Eigen::indexing::all, A_set.head(size_A - 1)), -1, l2);
 
       }
     }
@@ -167,7 +167,7 @@ Eigen::MatrixXd LARS(
     A_A = 1.0 / (std::sqrt((G_A_inv_one.head(size_A).transpose() * sign.head(size_A))(0)));
     Eigen::VectorXd w_A = A_A * G_A_inv_one.head(size_A);
     w_A_vec(A_set.head(size_A)) = w_A;
-    u_A.head(T) = l2_sqrt_inv * (X(Eigen::all, A_set.head(size_A)) * w_A);
+    u_A.head(T) = l2_sqrt_inv * (X(Eigen::indexing::all, A_set.head(size_A)) * w_A);
     u_A.tail(N) = l2_sqrt * l2_sqrt_inv * w_A_vec;
 
     /* Computing the step-sizes */
@@ -198,7 +198,7 @@ Eigen::MatrixXd LARS(
     {
 
       // Compute step size of the current LARS step
-      a.head(size_A_C) = (X(Eigen::all, A_C_set.head(size_A_C)).transpose() * u_A.head(T) + l2_sqrt * u_A.tail(N)(A_C_set.head(size_A_C))) * l2_sqrt_inv;
+      a.head(size_A_C) = (X(Eigen::indexing::all, A_C_set.head(size_A_C)).transpose() * u_A.head(T) + l2_sqrt * u_A.tail(N)(A_C_set.head(size_A_C))) * l2_sqrt_inv;
       gamma_hat = C_hat / A_A;
 
       for (int nn = 0; nn < size_A_C; ++nn)
@@ -273,7 +273,7 @@ Eigen::MatrixXd LARS(
       --size_A;
 
       // Downdate the Gram matrix
-      CholUpDown::cholDowndate(L, Eigen::VectorXd::Zero(1), X(Eigen::all, A_set.head(size_A)), drop_index, l2);
+      CholUpDown::cholDowndate(L, Eigen::VectorXd::Zero(1), X(Eigen::indexing::all, A_set.head(size_A)), drop_index, l2);
 
     }
     else

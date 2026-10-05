@@ -1,13 +1,13 @@
 ── R CMD build ─────────────────────────────────────────────────────────────────
-      ✔  checking for file 'C:\Users\520K-User\Desktop\TwoStepSDFM/DESCRIPTION'
-      ─  preparing 'TwoStepSDFM': (995ms)
+         checking for file 'C:\Users\520K-User\Dropbox\GitHub\Package_TwoStepSDFM\TwoStepSDFM/DESCRIPTION' ...  ✔  checking for file 'C:\Users\520K-User\Dropbox\GitHub\Package_TwoStepSDFM\TwoStepSDFM/DESCRIPTION'
+      ─  preparing 'TwoStepSDFM': (1.8s)
    checking DESCRIPTION meta-information ...     checking DESCRIPTION meta-information ...   ✔  checking DESCRIPTION meta-information
 ─  cleaning src
       ─  installing the package to process help pages
-      ─  saving partial Rd database (1m 50.7s)
-         creating vignettes ...     creating vignettes ...   ✔  creating vignettes (35.9s)
+      ─  saving partial Rd database (1m 48.7s)
+         creating vignettes ...     creating vignettes ...   ✔  creating vignettes (37.2s)
       ─  cleaning src
-      ─  checking for LF line-endings in source and make files and shell scripts (443ms)
+      ─  checking for LF line-endings in source and make files and shell scripts (426ms)
       ─  checking for empty or unneeded directories
       ─  building 'TwoStepSDFM_0.3.0.tar.gz'
      
