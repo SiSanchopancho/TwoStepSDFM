@@ -161,7 +161,7 @@ namespace SparseDFM {
         Eigen::MatrixXd factor_var_coeff_transposed = comp_form_factor_var_coeff.transpose();
         Eigen::MatrixXd state_equation_residuals = current_comp_form_factors - lagged_comp_form_factors * factor_var_coeff_transposed;
         //state_equation_var_cov.diagonal() = (1. / double(this->no_of_obs - factor_var_order - 1)) * state_equation_residuals.array().square().colwise().sum();
-        state_equation_var_cov.topLeftCorner(this->no_of_factors, this->no_of_factors) = (1. / double(this->no_of_obs - factor_var_order - 1)) * (state_equation_residuals * state_equation_residuals.transpose()).topLeftCorner(this->no_of_factors, this->no_of_factors);
+        state_equation_var_cov.topLeftCorner(this->no_of_factors, this->no_of_factors) = (1. / static_cast<double>(state_equation_residuals.rows())) * (state_equation_residuals.transpose() * state_equation_residuals).topLeftCorner(this->no_of_factors, this->no_of_factors);
 
         // Measurement equation parameters
         comp_form_loading_matrix.topLeftCorner(this->no_of_vars, this->no_of_factors) = this->loading_matrix;
@@ -170,7 +170,7 @@ namespace SparseDFM {
           meas_equation_var_cov = meas_equation_residuals * meas_equation_residuals.transpose();
         }
         else {
-          meas_equation_var_cov.diagonal() = meas_equation_residuals.array().square().colwise().sum();
+          meas_equation_var_cov.diagonal() = meas_equation_residuals.array().square().rowwise().sum();
         }
         meas_equation_var_cov *= (1. / double(this->no_of_obs - delay.maxCoeff()));
         meas_equation_var_cov.diagonal().array() += jitter; // jitter the matrix for numerical stability
@@ -255,10 +255,12 @@ namespace SparseDFM {
       Eigen::MatrixXd inv_meas_equation_var_cov = Eigen::MatrixXd::Zero(this->no_of_vars, this->no_of_obs);
       Eigen::MatrixXd kalman_gain = Eigen::MatrixXd::Zero(no_of_states, this->no_of_vars * this->no_of_obs);
       Eigen::MatrixXd filter_error = Eigen::MatrixXd::Zero(this->no_of_vars, this->no_of_obs);
+      Eigen::MatrixXd predicted_state = this->factors;
+      Eigen::MatrixXd predicted_var_cov = this->filter_var_cov;
 
       int kalman_filter_starting_index = ind_of_first_companion_obs;
-      univariateRepOfMultivariateKalmanFilter(comp_form_factors, inv_meas_equation_var_cov, kalman_gain, filter_error, kalman_filter_starting_index, this->no_of_obs, no_of_states, effective_data, comp_form_loading_matrix, comp_form_factor_var_coeff, meas_equation_var_cov, state_equation_var_cov, filter_var_cov_initial, delay, fcast_horizon);
-      univariateRepOfMultivariateKalmanSmoother(kalman_gain, inv_meas_equation_var_cov, filter_error, this->no_of_obs, no_of_states, effective_data, comp_form_loading_matrix, comp_form_factor_var_coeff, meas_equation_var_cov, state_equation_var_cov, delay);
+      univariateRepOfMultivariateKalmanFilter(predicted_state, predicted_var_cov, comp_form_factors, inv_meas_equation_var_cov, kalman_gain, filter_error, kalman_filter_starting_index, this->no_of_obs, no_of_states, effective_data, comp_form_loading_matrix, comp_form_factor_var_coeff, meas_equation_var_cov, state_equation_var_cov, filter_var_cov_initial, delay, fcast_horizon);
+      univariateRepOfMultivariateKalmanSmoother(predicted_state, predicted_var_cov, kalman_gain, inv_meas_equation_var_cov, filter_error, this->no_of_obs, no_of_states, effective_data, comp_form_loading_matrix, comp_form_factor_var_coeff, meas_equation_var_cov, state_equation_var_cov, delay);
       this->loading_matrix = comp_form_loading_matrix;
       this->max_factor_var_order = factor_var_order;
 
@@ -400,6 +402,8 @@ namespace SparseDFM {
     /* Filter routines */
 
     void univariateRepOfMultivariateKalmanFilter(
+      Eigen::MatrixXd& predicted_state,
+      Eigen::MatrixXd& predicted_var_cov,
       Eigen::MatrixXd& comp_form_factors,
       Eigen::MatrixXd& inv_meas_equation_var_cov,
       Eigen::MatrixXd& kalman_gain,
@@ -431,6 +435,8 @@ namespace SparseDFM {
       for (int curr_obs = 0; curr_obs < no_of_obs; ++curr_obs) {
         current_state_estimate = this->factors.col(curr_obs);
         current_uncertainty = this->filter_var_cov.block(0, curr_obs * no_of_states, no_of_states, no_of_states);
+        predicted_state.col(curr_obs) = current_state_estimate;
+        predicted_var_cov.block(0, curr_obs * no_of_states, no_of_states, no_of_states) = current_uncertainty;
 
         /* Start loop over variables */
 
@@ -454,7 +460,6 @@ namespace SparseDFM {
         /* End loop over variables */
 
         /* Store and propagade */
-
         this->factors.col(curr_obs) = current_state_estimate;
         this->filter_var_cov.block(0, (curr_obs)*no_of_states, no_of_states, no_of_states) = current_uncertainty;
         this->factors.col(curr_obs + 1) = comp_form_factor_var_coeff * current_state_estimate;
@@ -463,12 +468,17 @@ namespace SparseDFM {
 
       /* End loop over observarions */
 
+      predicted_state.col(no_of_obs) = this->factors.col(no_of_obs);
+      predicted_var_cov.block(0, no_of_obs * no_of_states, no_of_states, no_of_states) = this->filter_var_cov.block(0, no_of_obs * no_of_states, no_of_states, no_of_states);
+
       /* Forecast */
 
       if (0 < forecast_horizon) {
         for (int curr_obs = no_of_obs; curr_obs < no_of_obs + forecast_horizon; ++curr_obs) {
           this->factors.col(curr_obs + 1) = comp_form_factor_var_coeff * this->factors.col(curr_obs);
+          predicted_state.col(curr_obs + 1) = this->factors.col(curr_obs + 1);
           this->filter_var_cov.block(0, (curr_obs + 1) * no_of_states, no_of_states, no_of_states) = comp_form_factor_var_coeff * this->filter_var_cov.block(0, curr_obs * no_of_states, no_of_states, no_of_states) * comp_form_factor_var_coeff.transpose() + state_equation_var_cov;
+          predicted_var_cov.block(0, (curr_obs + 1) * no_of_states, no_of_states, no_of_states) = this->filter_var_cov.block(0, (curr_obs + 1) * no_of_states, no_of_states, no_of_states);
         }
       }
       return;
@@ -479,6 +489,8 @@ namespace SparseDFM {
     Koopman, S. J., & Durbin, J. (2000). Fast filtering and smoothing for multivariate state space models. Journal of time series analysis, 21(3), 281-296. (https://doi.org/10.1111/1467-9892.00186)
     */
     void univariateRepOfMultivariateKalmanSmoother(
+      Eigen::MatrixXd& predicted_state,
+      Eigen::MatrixXd& predicted_var_cov,
       Eigen::MatrixXd& kalman_gain,
       Eigen::MatrixXd& inv_meas_equation_var_cov,
       Eigen::MatrixXd& filter_error,
@@ -522,8 +534,10 @@ namespace SparseDFM {
         /* End loop over variables */
 
         /* Smooth and propagade */
-        this->factors.col(curr_obs) += this->filter_var_cov.block(0, curr_obs * no_of_states, no_of_states, no_of_states) * current_smoothed_state;
-        this->smoother_var_cov.block(0, curr_obs * no_of_states, no_of_states, no_of_states) = this->filter_var_cov.block(0, curr_obs * no_of_states, no_of_states, no_of_states) - this->filter_var_cov.block(0, curr_obs * no_of_states, no_of_states, no_of_states) * current_smoothed_uncert * this->filter_var_cov.block(0, curr_obs * no_of_states, no_of_states, no_of_states);
+        this->factors.col(curr_obs) = predicted_state.col(curr_obs) + predicted_var_cov.block(0, curr_obs * no_of_states, no_of_states, no_of_states) * current_smoothed_state;
+        this->smoother_var_cov.block(0, curr_obs * no_of_states, no_of_states, no_of_states) 
+          = predicted_var_cov.block(0, curr_obs * no_of_states, no_of_states, no_of_states) 
+          - predicted_var_cov.block(0, curr_obs * no_of_states, no_of_states, no_of_states) * current_smoothed_uncert * predicted_var_cov.block(0, curr_obs * no_of_states, no_of_states, no_of_states);
         current_smoothed_state = (comp_form_factor_var_coeff.transpose() * current_smoothed_state).eval();
         current_smoothed_uncert = (comp_form_factor_var_coeff.transpose() * current_smoothed_uncert * comp_form_factor_var_coeff).eval();
 

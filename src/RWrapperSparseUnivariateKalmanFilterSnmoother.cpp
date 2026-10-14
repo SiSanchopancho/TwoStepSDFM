@@ -179,8 +179,10 @@ Rcpp::List runUVKFS(
 
   int kalman_filter_starting_index = ind_of_first_companion_obs;
   Eigen::MatrixXd comp_form_factors = Eigen::MatrixXd::Zero(results.no_of_factors * results.max_factor_var_order, results.no_of_obs - delay_eigen.maxCoeff());
-  results.univariateRepOfMultivariateKalmanFilter(comp_form_factors, inv_meas_equation_var_cov, kalman_gain, filter_error, kalman_filter_starting_index, results.no_of_obs, no_of_states, effective_data, comp_form_loading_matrix, comp_form_factor_var_coeff, meas_equation_var_cov, state_equation_var_cov, filter_var_cov_initial, delay_eigen, fcast_horizon);
-  results.univariateRepOfMultivariateKalmanSmoother(kalman_gain, inv_meas_equation_var_cov, filter_error, results.no_of_obs, no_of_states, effective_data, comp_form_loading_matrix, comp_form_factor_var_coeff, meas_equation_var_cov, state_equation_var_cov, delay_eigen);
+  Eigen::MatrixXd predicted_state = results.factors;
+  Eigen::MatrixXd predicted_var_cov = results.filter_var_cov;
+  results.univariateRepOfMultivariateKalmanFilter(predicted_state, predicted_var_cov, comp_form_factors, inv_meas_equation_var_cov, kalman_gain, filter_error, kalman_filter_starting_index, results.no_of_obs, no_of_states, effective_data, comp_form_loading_matrix, comp_form_factor_var_coeff, meas_equation_var_cov, state_equation_var_cov, filter_var_cov_initial, delay_eigen, fcast_horizon);
+  results.univariateRepOfMultivariateKalmanSmoother(predicted_state, predicted_var_cov, kalman_gain, inv_meas_equation_var_cov, filter_error, results.no_of_obs, no_of_states, effective_data, comp_form_loading_matrix, comp_form_factor_var_coeff, meas_equation_var_cov, state_equation_var_cov, delay_eigen);
   results.loading_matrix = comp_form_loading_matrix;
 
   Eigen::setNbThreads(0);

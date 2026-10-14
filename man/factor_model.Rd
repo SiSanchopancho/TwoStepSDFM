@@ -32,7 +32,7 @@ months since the latest available observation.}
 Generated via \code{simFM()}. For details see \code{factor_model$call}.
 }
 \usage{
-factor_model
+data(factor_model)
 }
 \description{
 This is a simulated factor model dataset for demonstration and testing

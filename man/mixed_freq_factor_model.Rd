@@ -33,7 +33,7 @@ Generated via Generated via \code{simFM()}. For details see
 \code{mixed_freq_factor_model$call}.
 }
 \usage{
-mixed_freq_factor_model
+data(mixed_freq_factor_model)
 }
 \description{
 This dataset contains simulated mixed-frequency factor model data
