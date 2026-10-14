@@ -7,6 +7,7 @@
 *.pdf
 .Rdata
 .Rhistory
+build_output.txt
 compilation_log.txt
 temp_debug_log.txt
 test_values_eigen.txt
